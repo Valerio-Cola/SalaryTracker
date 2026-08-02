@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shift, ContractConfig, DayType, QuickTemplate } from '../types';
 import { checkDayTypeInfo } from '../utils/holidays';
 import { computeShiftData, checkShiftOverlap } from '../utils/calculator';
-import { X, Calendar, Clock, AlertTriangle, Sparkles, Check, Info, Moon, Sun, Trash2 } from 'lucide-react';
+import { X, Calendar, Clock, AlertTriangle, Check, Info, Moon, Sun, Trash2 } from 'lucide-react';
 
 interface ShiftFormModalProps {
   isOpen: boolean;
@@ -184,12 +184,12 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
             <div className="mt-1.5 text-[11px] rounded-lg p-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-1.5 transition-all">
               {tipoGiorno === 'festivo' ? (
                 <div className="text-rose-800 dark:text-rose-300 flex items-center gap-1.5 font-medium">
-                  <Sparkles className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <Info className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
                   <span>Rilevata autonomamente: <strong>Festività Rossa ({nomeFestivita || 'Festivo'})</strong> (+Bonus Festivo)</span>
                 </div>
               ) : tipoGiorno === 'domenica' ? (
                 <div className="text-blue-900 dark:text-blue-300 flex items-center gap-1.5 font-medium">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span>Rilevata autonomamente: <strong>Domenica</strong> (+Bonus Domenicale)</span>
                 </div>
               ) : (

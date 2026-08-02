@@ -7,7 +7,6 @@ import {
   Printer,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -160,7 +159,6 @@ export const Header: React.FC<HeaderProps> = ({
                 className="px-3 py-2 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap"
                 title="Carica turni di prova"
               >
-                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Carica Esempi
               </button>
             )}

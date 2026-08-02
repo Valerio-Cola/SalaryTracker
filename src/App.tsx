@@ -25,7 +25,6 @@ import {
   Calendar,
   List,
   BarChart2,
-  Sparkles,
   Upload,
   Download,
   Info,
@@ -236,7 +235,6 @@ export default function App() {
           <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800">
             <div className="space-y-1 text-center sm:text-left">
               <h2 className="text-lg font-extrabold flex items-center justify-center sm:justify-start gap-2">
-                <Sparkles className="w-5 h-5 text-blue-400" />
                 Benvenuto nel Salary Tracker SK!
               </h2>
               <p className="text-xs text-slate-300 max-w-xl">
