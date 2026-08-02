@@ -1,0 +1,6 @@
+{
+  "name": "Salary Tracker",
+  "description": "Applicazione per la gestione dei turni di lavoro, calcolo automatico della busta paga, maggiorazioni notturne, festive, domenicali e straordinari.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
