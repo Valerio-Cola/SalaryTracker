@@ -10,6 +10,14 @@ export interface ContractConfig {
   aliquotaNettoStimata: number; // percentuale stima trattenute (es. 15%)
   nomeLavoratore?: string; // opzionale, es. "Chiara"
   nomeAzienda?: string; // opzionale, es. "Burger King"
+  
+  // Ratei mensili e bonus in busta paga
+  includeTredicesimaMensile?: boolean;
+  importoTredicesimaMensile?: number; // es. 53.84 €
+  includeQuattordicesimaMensile?: boolean;
+  importoQuattordicesimaMensile?: number; // es. 53.84 €
+  includeBonusRenzi?: boolean;
+  importoBonusRenzi?: number; // es. 98.63 €
 }
 
 export interface Shift {

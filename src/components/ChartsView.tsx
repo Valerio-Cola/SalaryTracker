@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shift } from '../types';
+import { Shift, ContractConfig } from '../types';
 import {
   PieChart,
   Pie,
@@ -17,9 +17,10 @@ import { BarChart3, PieChart as PieIcon } from 'lucide-react';
 interface ChartsViewProps {
   shifts: Shift[];
   monthTitle: string;
+  config?: ContractConfig;
 }
 
-export const ChartsView: React.FC<ChartsViewProps> = ({ shifts, monthTitle }) => {
+export const ChartsView: React.FC<ChartsViewProps> = ({ shifts, monthTitle, config }) => {
   if (shifts.length === 0) return null;
 
   // Calcolo dati per il grafico a torta (Composizione Stipendio)
@@ -28,11 +29,18 @@ export const ChartsView: React.FC<ChartsViewProps> = ({ shifts, monthTitle }) =>
   const totalFestivo = shifts.reduce((acc, curr) => acc + curr.guadagnoFestivoDomenicale, 0);
   const totalSupp = shifts.reduce((acc, curr) => acc + curr.guadagnoSupplementare, 0);
 
+  const rateo13 = config?.includeTredicesimaMensile ? (config.importoTredicesimaMensile ?? 53.84) : 0;
+  const rateo14 = config?.includeQuattordicesimaMensile ? (config.importoQuattordicesimaMensile ?? 53.84) : 0;
+  const bonusRenzi = config?.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
+
   const pieData = [
     { name: 'Paga Base', value: Number(totalBase.toFixed(2)), color: '#3b82f6' },
     { name: 'Bonus Notte', value: Number(totalNotte.toFixed(2)), color: '#6366f1' },
     { name: 'Festivi & Domeniche', value: Number(totalFestivo.toFixed(2)), color: '#f43f5e' },
     { name: 'Straordinari', value: Number(totalSupp.toFixed(2)), color: '#10b981' },
+    { name: 'Rateo 13ª', value: Number(rateo13.toFixed(2)), color: '#f59e0b' },
+    { name: 'Rateo 14ª', value: Number(rateo14.toFixed(2)), color: '#d97706' },
+    { name: 'Bonus Renzi', value: Number(bonusRenzi.toFixed(2)), color: '#14b8a6' },
   ].filter((item) => item.value > 0);
 
   // Calcolo dati per il grafico a barre (Ore per giorno)

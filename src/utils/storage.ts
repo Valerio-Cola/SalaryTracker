@@ -15,6 +15,12 @@ export const DEFAULT_CONFIG: ContractConfig = {
   aliquotaNettoStimata: 15,
   nomeLavoratore: '',
   nomeAzienda: '',
+  includeTredicesimaMensile: false,
+  importoTredicesimaMensile: 53.84,
+  includeQuattordicesimaMensile: false,
+  importoQuattordicesimaMensile: 53.84,
+  includeBonusRenzi: false,
+  importoBonusRenzi: 98.63,
 };
 
 export const DEFAULT_TEMPLATES: QuickTemplate[] = [

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ContractConfig } from '../types';
-import { X, Save, Sliders, CheckCircle2, RotateCcw } from 'lucide-react';
+import { X, Save, Sliders, CheckCircle2, RotateCcw, Coins } from 'lucide-react';
 
 interface ContractSetupModalProps {
   isOpen: boolean;
@@ -22,12 +22,14 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleChange = (field: keyof ContractConfig, value: string | number) => {
+  const handleChange = (field: keyof ContractConfig, value: string | number | boolean) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: typeof value === 'string' && field !== 'nomeLavoratore' && field !== 'nomeAzienda' 
-        ? (value === '' ? 0 : parseFloat(value) || 0)
-        : value,
+      [field]: typeof value === 'boolean'
+        ? value
+        : (typeof value === 'string' && field !== 'nomeLavoratore' && field !== 'nomeAzienda' 
+          ? (value === '' ? 0 : parseFloat(value) || 0)
+          : value),
     }));
   };
 
@@ -223,6 +225,117 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
                 className="w-full p-2 text-xs font-bold text-center border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
               />
               <span className="absolute right-2 top-2 text-xs text-slate-400 font-bold">%</span>
+            </div>
+          </div>
+
+          {/* Ratei Mensili e Bonus Fissi */}
+          <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <Coins className="w-3.5 h-3.5 text-amber-500" /> Ratei Mensili e Bonus Fissi in Busta
+              </h3>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">Aggiunti ogni mese</span>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Tredicesima Mensile */}
+              <div className="p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-xl border border-amber-200/70 dark:border-amber-900/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-amber-950 dark:text-amber-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.includeTredicesimaMensile}
+                      onChange={(e) => handleChange('includeTredicesimaMensile', e.target.checked)}
+                      className="w-4 h-4 text-amber-600 rounded-md border-slate-300 focus:ring-amber-500"
+                    />
+                    Rateo Tredicesima (ogni mese in busta)
+                  </label>
+                  {formData.includeTredicesimaMensile && (
+                    <span className="text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded">Lordo</span>
+                  )}
+                </div>
+                {formData.includeTredicesimaMensile && (
+                  <div className="flex items-center justify-between pl-6 gap-2">
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Importo lordo mensile:</span>
+                    <div className="relative w-32">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.importoTredicesimaMensile ?? 53.84}
+                        onChange={(e) => handleChange('importoTredicesimaMensile', e.target.value)}
+                        className="w-full p-1.5 text-xs font-bold border border-amber-300 dark:border-amber-800 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                      <span className="absolute right-2 top-1.5 text-xs text-slate-400 font-medium">€</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Quattordicesima Mensile */}
+              <div className="p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-xl border border-amber-200/70 dark:border-amber-900/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-amber-950 dark:text-amber-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.includeQuattordicesimaMensile}
+                      onChange={(e) => handleChange('includeQuattordicesimaMensile', e.target.checked)}
+                      className="w-4 h-4 text-amber-600 rounded-md border-slate-300 focus:ring-amber-500"
+                    />
+                    Rateo Quattordicesima (ogni mese in busta)
+                  </label>
+                  {formData.includeQuattordicesimaMensile && (
+                    <span className="text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded">Lordo</span>
+                  )}
+                </div>
+                {formData.includeQuattordicesimaMensile && (
+                  <div className="flex items-center justify-between pl-6 gap-2">
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Importo lordo mensile:</span>
+                    <div className="relative w-32">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.importoQuattordicesimaMensile ?? 53.84}
+                        onChange={(e) => handleChange('importoQuattordicesimaMensile', e.target.value)}
+                        className="w-full p-1.5 text-xs font-bold border border-amber-300 dark:border-amber-800 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                      <span className="absolute right-2 top-1.5 text-xs text-slate-400 font-medium">€</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bonus Renzi / Trattamento Integrativo */}
+              <div className="p-3 bg-teal-50/50 dark:bg-teal-950/30 rounded-xl border border-teal-200/70 dark:border-teal-900/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-teal-950 dark:text-teal-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.includeBonusRenzi}
+                      onChange={(e) => handleChange('includeBonusRenzi', e.target.checked)}
+                      className="w-4 h-4 text-teal-600 rounded-md border-slate-300 focus:ring-teal-500"
+                    />
+                    Bonus Renzi / Trattamento Integrativo
+                  </label>
+                  {formData.includeBonusRenzi && (
+                    <span className="text-[10px] bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 font-bold px-1.5 py-0.5 rounded">Netto</span>
+                  )}
+                </div>
+                {formData.includeBonusRenzi && (
+                  <div className="flex items-center justify-between pl-6 gap-2">
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Importo netto mensile:</span>
+                    <div className="relative w-32">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.importoBonusRenzi ?? 98.63}
+                        onChange={(e) => handleChange('importoBonusRenzi', e.target.value)}
+                        className="w-full p-1.5 text-xs font-bold border border-teal-300 dark:border-teal-800 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                      <span className="absolute right-2 top-1.5 text-xs text-slate-400 font-medium">€</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

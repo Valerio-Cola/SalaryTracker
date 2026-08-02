@@ -106,8 +106,18 @@ export function printMonthlyReport(
   const totalOre = sortedShifts.reduce((acc, curr) => acc + curr.oreTotali, 0);
   const totalNotte = sortedShifts.reduce((acc, curr) => acc + curr.oreNotturne, 0);
   const totalExtra = sortedShifts.reduce((acc, curr) => acc + curr.oreSupplementari, 0);
-  const totalLordo = sortedShifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
-  const totalNetto = sortedShifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
+  const totalShiftsLordo = sortedShifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
+  const totalShiftsNetto = sortedShifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
+
+  const rateo13 = config.includeTredicesimaMensile ? (config.importoTredicesimaMensile ?? 53.84) : 0;
+  const rateo14 = config.includeQuattordicesimaMensile ? (config.importoQuattordicesimaMensile ?? 53.84) : 0;
+  const rateiLordoMensili = rateo13 + rateo14;
+  const rateiNettoMensili = rateiLordoMensili * (1 - (config.aliquotaNettoStimata || 15) / 100);
+
+  const bonusRenziNetto = config.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
+
+  const totalLordo = totalShiftsLordo + rateiLordoMensili;
+  const totalNetto = totalShiftsNetto + rateiNettoMensili + bonusRenziNetto;
 
   const rowsHtml = sortedShifts
     .map((s) => {

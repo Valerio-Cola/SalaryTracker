@@ -352,7 +352,7 @@ export default function App() {
         )}
 
         {activeTab === 'charts' && (
-          <ChartsView shifts={currentMonthShifts} monthTitle={formattedMonthTitle} />
+          <ChartsView shifts={currentMonthShifts} monthTitle={formattedMonthTitle} config={config} />
         )}
       </main>
 

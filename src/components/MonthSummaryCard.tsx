@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shift, ContractConfig } from '../types';
-import { DollarSign, Clock, Moon, Sun, TrendingUp, Info } from 'lucide-react';
+import { DollarSign, Clock, Moon, Sun, TrendingUp, Coins, Gift } from 'lucide-react';
 
 interface MonthSummaryCardProps {
   shifts: Shift[];
@@ -22,8 +22,21 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
   const totalFestivoExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoFestivoDomenicale, 0);
   const totalSuppExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoSupplementare, 0);
   
-  const totalLordo = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
-  const totalNetto = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
+  const totalShiftsLordo = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
+  const totalShiftsNetto = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
+
+  // Calcolo ratei mensili 13esima, 14esima e Bonus Renzi
+  const rateo13 = config.includeTredicesimaMensile ? (config.importoTredicesimaMensile ?? 53.84) : 0;
+  const rateo14 = config.includeQuattordicesimaMensile ? (config.importoQuattordicesimaMensile ?? 53.84) : 0;
+  const rateiLordoMensili = rateo13 + rateo14;
+  const rateiNettoMensili = rateiLordoMensili * (1 - (config.aliquotaNettoStimata || 15) / 100);
+
+  const bonusRenziNetto = config.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
+
+  const totalLordoCompleto = totalShiftsLordo + rateiLordoMensili;
+  const totalNettoCompleto = totalShiftsNetto + rateiNettoMensili + bonusRenziNetto;
+
+  const hasMonthlyAdditions = config.includeTredicesimaMensile || config.includeQuattordicesimaMensile || config.includeBonusRenzi;
 
   // Stima monte ore del mese (indicativamente 4.33 settimane * ore contrattuali)
   const targetOreMese = (config.oreSettimanali || 24) * 4.33;
@@ -56,15 +69,39 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           <div>
             <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Stima Busta Paga Lorda</div>
             <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
-              € {totalLordo.toFixed(2)}
+              € {totalLordoCompleto.toFixed(2)}
             </div>
             <div className="text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
               <span>Netto stimato (~{100 - config.aliquotaNettoStimata}%):</span>
-              <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">€ {totalNetto.toFixed(2)}</span>
+              <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">€ {totalNettoCompleto.toFixed(2)}</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Badges per Ratei Mensili e Bonus Fissi */}
+      {hasMonthlyAdditions && (
+        <div className="p-3 bg-amber-50/60 dark:bg-amber-950/30 rounded-xl border border-amber-200/60 dark:border-amber-900/40 flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
+            <Coins className="w-3.5 h-3.5 text-amber-600" /> Ratei e Bonus Inclusi nel Mese:
+          </span>
+          {config.includeTredicesimaMensile && (
+            <span className="bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold text-[11px]">
+              13ª Mensile: +€{rateo13.toFixed(2)} lordo
+            </span>
+          )}
+          {config.includeQuattordicesimaMensile && (
+            <span className="bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold text-[11px]">
+              14ª Mensile: +€{rateo14.toFixed(2)} lordo
+            </span>
+          )}
+          {config.includeBonusRenzi && (
+            <span className="bg-white dark:bg-slate-800 text-teal-900 dark:text-teal-200 px-2 py-0.5 rounded-lg border border-teal-200 dark:border-teal-800 font-semibold text-[11px]">
+              Bonus Renzi: +€{bonusRenziNetto.toFixed(2)} netto
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Progress Bar target ore */}
       <div className="space-y-1.5">
