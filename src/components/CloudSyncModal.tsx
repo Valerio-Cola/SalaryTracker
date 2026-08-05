@@ -10,12 +10,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp,
   RefreshCw,
-  Copy,
-  Check,
 } from 'lucide-react';
 import {
   SyncCredentials,
@@ -48,8 +43,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   const [creds, setCreds] = useState<SyncCredentials>(getSyncCredentials());
   const [loadingAction, setLoadingAction] = useState<'push' | 'pull' | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [showGuide, setShowGuide] = useState<boolean>(false);
-  const [copiedCode, setCopiedCode] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -120,58 +113,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     }
   };
 
-  const workerCodeSnippet = `export default {
-  async fetch(request, env) {
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-User-Key, X-Passcode',
-    };
-
-    if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-    if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders });
-
-    try {
-      const { action, userKey, passcode, payload } = await request.json();
-      if (!userKey || !passcode) return new Response(JSON.stringify({ success: false, error: 'Credenziali mancanti' }), { status: 400, headers: corsHeaders });
-
-      const storageKey = 'user_data_' + userKey.toLowerCase().trim();
-      const authKey = 'user_auth_' + userKey.toLowerCase().trim();
-
-      if (!env.SALARY_TRACKER_KV) {
-        return new Response(JSON.stringify({ success: false, error: 'KV Namespace (SALARY_TRACKER_KV) non collegato nelle impostazioni.' }), { status: 500, headers: corsHeaders });
-      }
-
-      if (action === 'push') {
-        const existingAuth = await env.SALARY_TRACKER_KV.get(authKey);
-        if (existingAuth && existingAuth !== passcode) {
-          return new Response(JSON.stringify({ success: false, error: 'Password errata per questo utente' }), { status: 401, headers: corsHeaders });
-        }
-        if (!existingAuth) await env.SALARY_TRACKER_KV.put(authKey, passcode);
-        await env.SALARY_TRACKER_KV.put(storageKey, JSON.stringify(payload));
-        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
-      }
-
-      if (action === 'pull') {
-        const storedAuth = await env.SALARY_TRACKER_KV.get(authKey);
-        if (!storedAuth || storedAuth !== passcode) {
-          return new Response(JSON.stringify({ success: false, error: 'Password errata o utente non trovato' }), { status: 401, headers: corsHeaders });
-        }
-        const raw = await env.SALARY_TRACKER_KV.get(storageKey);
-        return new Response(JSON.stringify({ success: true, data: JSON.parse(raw) }), { status: 200, headers: corsHeaders });
-      }
-    } catch(e) {
-      return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: corsHeaders });
-    }
-  }
-};`;
-
-  const copyCodeToClipboard = () => {
-    navigator.clipboard.writeText(workerCodeSnippet);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-lg my-8 overflow-hidden transition-colors">
@@ -185,9 +126,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 Sincronizzazione Multi-Device
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Cloudflare Workers & KV (100% Gratuito)
-              </p>
             </div>
           </div>
           <button
@@ -201,14 +139,10 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         {/* Corpo Modale */}
         <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
           {/* Informazione iniziale */}
-          <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-xs text-blue-900 dark:text-blue-200 space-y-1">
+          <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-xs text-blue-900 dark:text-blue-200">
             <p className="font-semibold flex items-center gap-1.5">
               <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               Sincronizzazione riservata con credenziali
-            </p>
-            <p className="text-[11px] opacity-90 leading-relaxed">
-              Chiunque utilizzi il sito come visitatore salva i dati solo nel proprio browser.
-              Chi inserisce Utente e Password può salvare e sincronizzare il proprio storico tra PC e Telefono tramite il Worker Cloudflare.
             </p>
           </div>
 
@@ -222,14 +156,11 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               </label>
               <input
                 type="url"
-                placeholder="es: https://salary-tracker-sync.tuosottodominio.workers.dev"
+                placeholder=""
                 value={creds.workerUrl}
                 onChange={(e) => setCreds({ ...creds, workerUrl: e.target.value })}
                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono"
               />
-              <p className="text-[10px] text-slate-400 mt-1">
-                L'URL fornito da Cloudflare quando crei il Worker.
-              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -241,7 +172,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="es: ragazza / valerio"
+                  placeholder="Scegli nome utente"
                   value={creds.userKey}
                   onChange={(e) => setCreds({ ...creds, userKey: e.target.value })}
                   className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
@@ -341,55 +272,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               {new Date(creds.lastSyncedAt).toLocaleString('it-IT')}
             </div>
           )}
-
-          {/* Guida di configurazione Cloudflare (Fai-da-te in 2 minuti) */}
-          <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowGuide(!showGuide)}
-              className="w-full flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              <span className="flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-blue-500" />
-                Come creare il Worker gratuito su Cloudflare (3 passaggi)
-              </span>
-              {showGuide ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-
-            {showGuide && (
-              <div className="mt-3 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 space-y-3">
-                <ol className="list-decimal list-inside space-y-2 text-[11px] leading-relaxed">
-                  <li>
-                    <strong>Crea il KV Namespace:</strong> Vai su Cloudflare Console &gt; <em>Workers & KV</em> &gt; <em>KV</em> &gt; Clicca <strong>Create a Namespace</strong> e chiamalo <code>SALARY_TRACKER_KV</code>.
-                  </li>
-                  <li>
-                    <strong>Crea il Worker:</strong> Vai su <em>Workers & Pages</em> &gt; <strong>Create Application</strong> &gt; <strong>Create Worker</strong>. Assegnali un nome e incolla il codice JS sottostante.
-                  </li>
-                  <li>
-                    <strong>Collega il KV al Worker:</strong> Vai nelle <em>Settings</em> del Worker appena creato &gt; <em>Variables</em> &gt; <em>KV Namespace Bindings</em> &gt; Aggiungi un Binding col nome della variabile <code>SALARY_TRACKER_KV</code> selezionando il KV creato al punto 1.
-                  </li>
-                </ol>
-
-                <div className="pt-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                      Codice per il Worker (Incolla su Cloudflare):
-                    </span>
-                    <button
-                      onClick={copyCodeToClipboard}
-                      className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                    >
-                      {copiedCode ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                      {copiedCode ? 'Copiato!' : 'Copia Codice'}
-                    </button>
-                  </div>
-                  <pre className="p-2.5 bg-slate-900 text-slate-100 rounded-lg text-[10px] font-mono overflow-x-auto max-h-40 leading-normal border border-slate-800">
-                    {workerCodeSnippet}
-                  </pre>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Footer */}
