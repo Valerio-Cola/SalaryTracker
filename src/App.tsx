@@ -11,6 +11,7 @@ import {
 } from './utils/storage';
 import { recalculateAllShifts } from './utils/calculator';
 import { exportDataToJson, exportShiftsToCsv, printMonthlyReport } from './utils/export';
+import { getSyncCredentials, pushToCloud } from './utils/syncService';
 
 import { Header } from './components/Header';
 import { MonthSummaryCard } from './components/MonthSummaryCard';
@@ -20,6 +21,7 @@ import { ChartsView } from './components/ChartsView';
 import { ContractSetupModal } from './components/ContractSetupModal';
 import { ShiftFormModal } from './components/ShiftFormModal';
 import { PrivacyLegalModal } from './components/PrivacyLegalModal';
+import { CloudSyncModal } from './components/CloudSyncModal';
 
 import {
   Calendar,
@@ -72,10 +74,32 @@ export default function App() {
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
+  const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
 
   const [shiftToEdit, setShiftToEdit] = useState<Shift | null>(null);
   const [initialDateForShift, setInitialDateForShift] = useState<string | undefined>(undefined);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Auto-Sincronizzazione in background se abilitata
+  const checkAndAutoSync = async (latestConfig: ContractConfig, latestShifts: Shift[]) => {
+    const creds = getSyncCredentials();
+    if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
+      pushToCloud(creds, { config: latestConfig, shifts: latestShifts, templates }).catch(() => {});
+    }
+  };
+
+  // Applicazione dati scaricati dal cloud
+  const handleApplyCloudData = (data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[] }) => {
+    if (data.config) {
+      setConfig(data.config);
+      saveStoredConfig(data.config);
+    }
+    if (data.shifts && Array.isArray(data.shifts)) {
+      const recalculated = recalculateAllShifts(data.shifts, data.config || config);
+      setShifts(recalculated);
+      saveStoredShifts(recalculated);
+    }
+  };
 
   // Mostra notifica temporanea
   const showNotification = (msg: string) => {
@@ -93,6 +117,8 @@ export default function App() {
     setShifts(updatedShifts);
     saveStoredShifts(updatedShifts);
     showNotification('Tariffe aggiornate! Tutti i turni sono stati ricalcolati.');
+
+    checkAndAutoSync(newConfig, updatedShifts);
   };
 
   // Salva (Aggiungi o Modifica) Turno
@@ -123,6 +149,8 @@ export default function App() {
     const recalculated = recalculateAllShifts(updatedShifts, config);
     setShifts(recalculated);
     saveStoredShifts(recalculated);
+
+    checkAndAutoSync(config, recalculated);
   };
 
   // Elimina Turno
@@ -132,6 +160,8 @@ export default function App() {
     setShifts(recalculated);
     saveStoredShifts(recalculated);
     showNotification('Turno eliminato dallo storico.');
+
+    checkAndAutoSync(config, recalculated);
   };
 
   // Reset solo storico turni
@@ -219,6 +249,7 @@ export default function App() {
         onMonthChange={setCurrentMonthKey}
         onOpenAddShift={() => handleOpenAddShift()}
         onOpenConfig={() => setIsConfigOpen(true)}
+        onOpenCloudSync={() => setIsCloudSyncOpen(true)}
         onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         onExportCsv={() => exportShiftsToCsv(currentMonthShifts, formattedMonthTitle)}
         onPrintReport={() => printMonthlyReport(currentMonthShifts, config, formattedMonthTitle)}
@@ -226,6 +257,10 @@ export default function App() {
         hasShifts={shifts.length > 0}
         theme={theme}
         onToggleTheme={toggleTheme}
+        isCloudConnected={(() => {
+          const c = getSyncCredentials();
+          return !!(c.workerUrl && c.userKey && c.passcode);
+        })()}
       />
 
       {/* Main Content Area */}
@@ -380,6 +415,16 @@ export default function App() {
         onClose={() => setIsPrivacyModalOpen(false)}
       />
 
+      <CloudSyncModal
+        isOpen={isCloudSyncOpen}
+        onClose={() => setIsCloudSyncOpen(false)}
+        config={config}
+        shifts={shifts}
+        templates={templates}
+        onApplyCloudData={handleApplyCloudData}
+        onShowNotification={showNotification}
+      />
+
       {/* Footer Legal & Privacy */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 text-xs text-slate-500 dark:text-slate-400 mt-auto transition-colors">
         <div className="max-w-7xl mx-auto px-4 space-y-3">
@@ -404,8 +449,8 @@ export default function App() {
               Strumento di calcolo indicativo ad uso personale. Non costituisce documento ufficiale né busta paga aziendale.
             </div>
             <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
-              <strong className="text-slate-700 dark:text-slate-300 block mb-0.5">🔒 Nessun Dato Trasmesso (100% Locale / Client-side):</strong>
-              L&apos;app non possiede backend o database remoti. Tutti i dati sui turni e la configurazione risiedono unicamente nel LocalStorage del browser. Nessun dato viene memorizzato o inviato a server terzi, né si utilizzano cookie di tracciamento.
+              <strong className="text-slate-700 dark:text-slate-300 block mb-0.5">🔒 Privacy & Storage Flessibile:</strong>
+              Di default i dati risiedono solo nel browser (LocalStorage). Se attivi la sincronizzazione cloud inserendo le tue credenziali, i dati vengono salvati sul tuo Worker Cloudflare KV privato per sincronizzarli tra i tuoi dispositivi.
             </div>
           </div>
         </div>

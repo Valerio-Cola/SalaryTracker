@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Cloud,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -16,6 +17,7 @@ interface HeaderProps {
   onMonthChange: (monthKey: string) => void;
   onOpenAddShift: () => void;
   onOpenConfig: () => void;
+  onOpenCloudSync?: () => void;
   onOpenPrivacy?: () => void;
   onExportCsv: () => void;
   onPrintReport: () => void;
@@ -23,6 +25,7 @@ interface HeaderProps {
   hasShifts: boolean;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  isCloudConnected?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,12 +33,14 @@ export const Header: React.FC<HeaderProps> = ({
   onMonthChange,
   onOpenAddShift,
   onOpenConfig,
+  onOpenCloudSync,
   onExportCsv,
   onPrintReport,
   onGenerateSampleData,
   hasShifts,
   theme,
   onToggleTheme,
+  isCloudConnected = false,
 }) => {
   // Parsing del mese corrente (es. "2026-08")
   const [yearStr, monthStr] = currentMonthKey.split('-');
@@ -193,6 +198,24 @@ export const Header: React.FC<HeaderProps> = ({
               <Settings className="w-4 h-4 text-slate-600 dark:text-slate-400" />
               <span className="hidden md:inline">Tariffe</span>
             </button>
+
+            {onOpenCloudSync && (
+              <button
+                onClick={onOpenCloudSync}
+                className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors relative ${
+                  isCloudConnected
+                    ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700'
+                }`}
+                title="Sincronizzazione Cloud (Cloudflare Worker)"
+              >
+                <Cloud className={`w-4 h-4 ${isCloudConnected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`} />
+                <span className="hidden md:inline">Cloud</span>
+                {isCloudConnected && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5 ring-2 ring-white dark:ring-slate-900" />
+                )}
+              </button>
+            )}
 
             <button
               onClick={onOpenAddShift}
