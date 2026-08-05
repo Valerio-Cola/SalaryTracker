@@ -14,7 +14,14 @@ export function getSyncCredentials(): SyncCredentials {
   try {
     const raw = localStorage.getItem(SYNC_CREDS_KEY);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return {
+        workerUrl: parsed.workerUrl || '',
+        userKey: parsed.userKey || '',
+        passcode: parsed.passcode || '',
+        autoSync: !!parsed.autoSync,
+        lastSyncedAt: parsed.lastSyncedAt,
+      };
     }
   } catch (e) {
     console.error('Error reading sync credentials', e);
