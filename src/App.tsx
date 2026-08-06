@@ -345,7 +345,6 @@ export default function App() {
             <button
               onClick={() => exportDataToJson(config, shifts)}
               className="px-2.5 py-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-medium flex items-center gap-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors"
-              title="Scarica file di backup JSON"
             >
               <Download className="w-3.5 h-3.5" />
               Backup JSON

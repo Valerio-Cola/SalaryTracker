@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shift, ContractConfig } from '../types';
-import { DollarSign, Clock, Moon, Sun, TrendingUp, Coins, Gift } from 'lucide-react';
+import { DollarSign, Clock, Moon, Sun, TrendingUp, Coins } from 'lucide-react';
 
 interface MonthSummaryCardProps {
   shifts: Shift[];

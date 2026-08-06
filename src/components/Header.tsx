@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div>
                 <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-tight flex items-center gap-2">
-                  Salary Tracker
+                  Salary Tracker SK
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   Calcolo Stipendio & Turni
