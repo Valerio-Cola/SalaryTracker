@@ -7,11 +7,13 @@ import {
   getStoredShifts,
   saveStoredShifts,
   getStoredTemplates,
+  saveStoredTemplates,
   generateSampleShifts,
+  DEFAULT_CONFIG,
 } from './utils/storage';
 import { recalculateAllShifts } from './utils/calculator';
 import { exportDataToJson, exportShiftsToCsv, printMonthlyReport } from './utils/export';
-import { getSyncCredentials, pushToCloud } from './utils/syncService';
+import { getSyncCredentials, pushToCloud, pullFromCloud } from './utils/syncService';
 
 import { Header } from './components/Header';
 import { MonthSummaryCard } from './components/MonthSummaryCard';
@@ -37,7 +39,7 @@ export default function App() {
   // Configurazione e Stato dati
   const [config, setConfig] = useState<ContractConfig>(getStoredConfig());
   const [shifts, setShifts] = useState<Shift[]>(getStoredShifts());
-  const [templates] = useState<QuickTemplate[]>(getStoredTemplates());
+  const [templates, setTemplates] = useState<QuickTemplate[]>(getStoredTemplates());
 
   // Gestione Tema Notte / Giorno
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -88,18 +90,39 @@ export default function App() {
     }
   };
 
-  // Applicazione dati scaricati dal cloud
-  const handleApplyCloudData = (data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[] }) => {
+  // Applicazione dati scaricati dal cloud (con unione sicura del contratto per non perdere le tariffe)
+  const handleApplyCloudData = (data: { config?: ContractConfig; shifts?: Shift[]; templates?: QuickTemplate[] }) => {
+    let activeConfig = config;
     if (data.config) {
-      setConfig(data.config);
-      saveStoredConfig(data.config);
+      activeConfig = { ...DEFAULT_CONFIG, ...data.config };
+      setConfig(activeConfig);
+      saveStoredConfig(activeConfig);
     }
     if (data.shifts && Array.isArray(data.shifts)) {
-      const recalculated = recalculateAllShifts(data.shifts, data.config || config);
+      const recalculated = recalculateAllShifts(data.shifts, activeConfig);
       setShifts(recalculated);
       saveStoredShifts(recalculated);
     }
+    if (data.templates && Array.isArray(data.templates)) {
+      setTemplates(data.templates);
+      saveStoredTemplates(data.templates);
+    }
   };
+
+  // Auto-Pull dal Cloud all'avvio dell'applicazione se collegato
+  useEffect(() => {
+    const creds = getSyncCredentials();
+    if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
+      pullFromCloud(creds).then((res) => {
+        if (res.success && res.data) {
+          handleApplyCloudData(res.data);
+          showNotification('Sincronizzazione cloud completata: tariffe e turni aggiornati!');
+        }
+      }).catch((e) => {
+        console.error('Errore auto-pull cloud all\'avvio:', e);
+      });
+    }
+  }, []);
 
   // Mostra notifica temporanea
   const showNotification = (msg: string) => {
