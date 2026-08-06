@@ -19,7 +19,7 @@ export function getSyncCredentials(): SyncCredentials {
         workerUrl: parsed.workerUrl || '',
         userKey: parsed.userKey || '',
         passcode: parsed.passcode || '',
-        autoSync: !!parsed.autoSync,
+        autoSync: parsed.autoSync !== undefined ? !!parsed.autoSync : true,
         lastSyncedAt: parsed.lastSyncedAt,
       };
     }
@@ -30,7 +30,7 @@ export function getSyncCredentials(): SyncCredentials {
     workerUrl: '',
     userKey: '',
     passcode: '',
-    autoSync: false,
+    autoSync: true,
   };
 }
 
