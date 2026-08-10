@@ -39,13 +39,13 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
     shiftToEdit?.dataGrezza || initialDate || getTodayIso()
   );
   const [orarioInizio, setOrarioInizio] = useState<string>(
-    shiftToEdit?.orarioInizio || '18:30'
+    shiftToEdit ? shiftToEdit.orarioInizio : ''
   );
   const [orarioFine, setOrarioFine] = useState<string>(
-    shiftToEdit?.orarioFine || '01:30'
+    shiftToEdit ? shiftToEdit.orarioFine : ''
   );
   const [pausaMinuti, setPausaMinuti] = useState<number>(
-    shiftToEdit?.pausaMinuti ?? 30
+    shiftToEdit?.pausaMinuti ?? 0
   );
   const [tipoGiorno, setTipoGiorno] = useState<DayType>(
     shiftToEdit?.tipoGiorno || 'feriale'
@@ -70,9 +70,9 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
     } else {
       const dateToUse = initialDate || getTodayIso();
       setDataGrezza(dateToUse);
-      setOrarioInizio('18:30');
-      setOrarioFine('01:30');
-      setPausaMinuti(30);
+      setOrarioInizio('');
+      setOrarioFine('');
+      setPausaMinuti(0);
       setNote('');
       setManualOverride(false);
 

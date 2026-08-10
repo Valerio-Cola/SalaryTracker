@@ -1,4 +1,4 @@
-import { ContractConfig, Shift, QuickTemplate } from '../types';
+import { ContractConfig, Shift, QuickTemplate, Expense } from '../types';
 
 export interface SyncCredentials {
   workerUrl: string;
@@ -46,6 +46,7 @@ export interface CloudPayload {
   config: ContractConfig;
   shifts: Shift[];
   templates: QuickTemplate[];
+  expenses?: Expense[];
   updatedAt: number;
 }
 
@@ -54,7 +55,7 @@ export interface CloudPayload {
  */
 export async function pushToCloud(
   creds: SyncCredentials,
-  data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[] }
+  data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[]; expenses?: Expense[] }
 ): Promise<{ success: boolean; message: string; updatedAt?: number }> {
   if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
     return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
@@ -63,6 +64,7 @@ export async function pushToCloud(
   const cleanUrl = creds.workerUrl.trim();
   const payload: CloudPayload = {
     ...data,
+    expenses: data.expenses || [],
     updatedAt: Date.now(),
   };
 

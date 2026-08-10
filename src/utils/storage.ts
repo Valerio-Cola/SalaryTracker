@@ -1,9 +1,10 @@
-import { ContractConfig, Shift, QuickTemplate } from '../types';
+import { ContractConfig, Shift, QuickTemplate, Expense } from '../types';
 import { computeShiftData } from './calculator';
 
 const CONFIG_KEY = 'bk_config_v2';
 const SHIFTS_KEY = 'bk_storico_v2';
 const TEMPLATES_KEY = 'bk_templates_v2';
+const EXPENSES_KEY = 'bk_expenses_v2';
 
 export const DEFAULT_CONFIG: ContractConfig = {
   oreSettimanali: 24,
@@ -192,4 +193,23 @@ export function generateSampleShifts(config: ContractConfig): Shift[] {
     result.push(shift);
   }
   return result;
+}
+
+export function getStoredExpenses(): Expense[] {
+  try {
+    const raw = localStorage.getItem(EXPENSES_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error reading expenses from localStorage', e);
+    return [];
+  }
+}
+
+export function saveStoredExpenses(expenses: Expense[]): void {
+  try {
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
+  } catch (e) {
+    console.error('Error saving expenses to localStorage', e);
+  }
 }

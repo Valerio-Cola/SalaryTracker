@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Shift, ContractConfig } from '../types';
-import { DollarSign, Clock, Moon, Sun, TrendingUp, Coins, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shift, ContractConfig, Expense } from '../types';
+import { DollarSign, Clock, Moon, Sun, TrendingUp, Coins, Info, ChevronDown, ChevronUp, Receipt } from 'lucide-react';
 
 interface MonthSummaryCardProps {
   shifts: Shift[];
+  expenses?: Expense[];
   config: ContractConfig;
   monthTitle: string;
 }
 
 export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
   shifts,
+  expenses = [],
   config,
   monthTitle,
 }) => {
@@ -41,6 +43,10 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
 
   const hasMonthlyAdditions = config.includeTredicesimaMensile || config.includeQuattordicesimaMensile || config.includeBonusRenzi;
 
+  // Spese
+  const totalExpenses = expenses.reduce((acc, curr) => acc + curr.importo, 0);
+  const finalBalance = totalNettoCompleto - totalExpenses;
+
   // Stima monte ore del mese (indicativamente 4.33 settimane * ore contrattuali)
   const targetOreMese = (config.oreSettimanali || 24) * 4.33;
   const progressPercent = Math.min(100, Math.round((totalOre / targetOreMese) * 100));
@@ -67,18 +73,38 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
         </div>
 
         {/* Big Earnings Box */}
-        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-          <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
-            <DollarSign className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Stima Busta Paga Lorda</div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
-              € {totalLordoCompleto.toFixed(2)}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
+              <DollarSign className="w-6 h-6" />
             </div>
-            <div className="text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
-              <span>Netto stimato in tasca:</span>
-              <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">€ {totalNettoCompleto.toFixed(2)}</span>
+            <div>
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Busta Paga Lorda</div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
+                € {totalLordoCompleto.toFixed(2)}
+              </div>
+              <div className="text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+                <span>Netto in tasca:</span>
+                <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">€ {totalNettoCompleto.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/30 p-3.5 rounded-2xl border border-rose-200 dark:border-rose-900/50">
+            <div className="w-11 h-11 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-rose-500/20">
+              <Receipt className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-rose-500 dark:text-rose-400 uppercase">Totale Uscite</div>
+              <div className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-400 leading-tight">
+                - € {totalExpenses.toFixed(2)}
+              </div>
+              <div className={`text-xs font-bold flex items-center gap-1 mt-0.5 ${finalBalance >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
+                <span>Rimanenza:</span>
+                <span className={`px-1.5 py-0.2 rounded-md ${finalBalance >= 0 ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'}`}>
+                  € {finalBalance.toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
         </div>

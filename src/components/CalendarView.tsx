@@ -1,19 +1,25 @@
 import React from 'react';
-import { Shift } from '../types';
-import { Plus, Moon, Sun, Clock } from 'lucide-react';
+import { Shift, Expense } from '../types';
+import { Plus, Moon, Sun, Clock, Receipt } from 'lucide-react';
 
 interface CalendarViewProps {
   currentMonthKey: string; // YYYY-MM
   shifts: Shift[];
+  expenses?: Expense[];
   onSelectDate: (dateIso: string) => void;
+  onAddExpense: (dateIso: string) => void;
   onEditShift: (shift: Shift) => void;
+  onEditExpense: (expense: Expense) => void;
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
   currentMonthKey,
   shifts,
+  expenses = [],
   onSelectDate,
+  onAddExpense,
   onEditShift,
+  onEditExpense,
 }) => {
   const [yearStr, monthStr] = currentMonthKey.split('-');
   const year = parseInt(yearStr, 10);
@@ -23,11 +29,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7; // 0 = Lunedì, 6 = Domenica
 
-  // Mappa dei turni per giorno (chiave: YYYY-MM-DD)
+  // Mappa dei turni e delle spese per giorno (chiave: YYYY-MM-DD)
   const shiftMap: Record<string, Shift[]> = {};
   shifts.forEach((s) => {
     if (!shiftMap[s.dataGrezza]) shiftMap[s.dataGrezza] = [];
     shiftMap[s.dataGrezza].push(s);
+  });
+
+  const expenseMap: Record<string, Expense[]> = {};
+  expenses.forEach((e) => {
+    if (!expenseMap[e.data]) expenseMap[e.data] = [];
+    expenseMap[e.data].push(e);
   });
 
   const weekDayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -47,6 +59,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       dayNumber: d,
       dateIso,
       dayShifts: shiftMap[dateIso] || [],
+      dayExpenses: expenseMap[dateIso] || [],
     });
   }
 
@@ -56,10 +69,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 transition-colors">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-          <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Calendario Turni Mensili
+          <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Calendario Mensile
         </h3>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
-          Clicca su un giorno per aggiungere un turno
+        <span className="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline-block">
+          Clicca su un giorno per aggiungere un turno, oppure usa i pulsanti per le spese
         </span>
       </div>
 
@@ -94,6 +107,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
               const isToday = cell.dateIso === todayIso;
               const hasShifts = cell.dayShifts && cell.dayShifts.length > 0;
+              const hasExpenses = cell.dayExpenses && cell.dayExpenses.length > 0;
               const dateObj = new Date(cell.dateIso + 'T00:00:00');
               const isSunday = dateObj.getDay() === 0;
 
@@ -104,7 +118,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   className={`min-h-[68px] sm:min-h-[85px] p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between group overflow-hidden min-w-0 ${
                     isToday
                       ? 'border-blue-500 bg-blue-50/30 dark:bg-blue-950/40 ring-2 ring-blue-400/20'
-                      : hasShifts
+                      : (hasShifts || hasExpenses)
                       ? 'border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-blue-950/20 hover:border-blue-300 dark:hover:border-blue-700'
                       : isSunday
                       ? 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
@@ -125,17 +139,30 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       {cell.dayNumber}
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectDate(cell.dateIso!);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-md transition-all hidden sm:block"
-                      title="Aggiungi turno in questo giorno"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectDate(cell.dateIso!);
+                        }}
+                        className="p-1.5 sm:p-1 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-md transition-all block"
+                        title="Aggiungi turno"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddExpense(cell.dateIso!);
+                        }}
+                        className="p-1.5 sm:p-1 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-md transition-all"
+                        title="Aggiungi spesa"
+                      >
+                        <Receipt className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Badge Turno/i */}
@@ -149,17 +176,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         }}
                         className="p-1 sm:p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs hover:border-blue-400 transition-colors text-left min-w-0"
                       >
-                        {/* Riga 1: Orario ben visibile e separato */}
                         <div className="text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-slate-100 font-mono leading-tight">
                           {s.orarioInizio}-{s.orarioFine}
                         </div>
-
-                        {/* Riga 2: Guadagno in verde + Ore e Badge */}
                         <div className="flex items-center justify-between gap-1 mt-1 text-[9px] text-slate-500 dark:text-slate-400 font-medium flex-wrap">
                           <span className="text-emerald-700 dark:text-emerald-400 font-black text-[10px] sm:text-[11px] whitespace-nowrap">
                             +€{Math.round(s.guadagnoTotaleLordo)}
                           </span>
-                          
                           <div className="flex items-center gap-1">
                             <span>{s.oreTotali}h</span>
                             {s.oreNotturne > 0 && (
@@ -174,6 +197,25 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               <span className="px-1 py-0.2 rounded-sm bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-300 font-bold text-[8px] sm:text-[9px]">Fest</span>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Badge Spese */}
+                    {cell.dayExpenses?.map((e) => (
+                      <div
+                        key={e.id}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          onEditExpense(e);
+                        }}
+                        className="p-1 sm:p-1.5 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 shadow-xs hover:border-rose-400 transition-colors text-left min-w-0 flex justify-between items-center"
+                      >
+                        <div className="text-[10px] sm:text-[11px] font-bold text-rose-800 dark:text-rose-200 truncate">
+                          {e.categoria}
+                        </div>
+                        <div className="text-rose-600 dark:text-rose-400 font-black text-[10px] sm:text-[11px] whitespace-nowrap pl-1">
+                          -€{Math.round(e.importo)}
                         </div>
                       </div>
                     ))}

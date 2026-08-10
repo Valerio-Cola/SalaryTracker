@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { ContractConfig, Shift, QuickTemplate } from './types';
+import { ContractConfig, Shift, QuickTemplate, Expense } from './types';
 import {
   getStoredConfig,
   saveStoredConfig,
@@ -8,6 +8,8 @@ import {
   saveStoredShifts,
   getStoredTemplates,
   saveStoredTemplates,
+  getStoredExpenses,
+  saveStoredExpenses,
   generateSampleShifts,
   DEFAULT_CONFIG,
 } from './utils/storage';
@@ -20,8 +22,10 @@ import { MonthSummaryCard } from './components/MonthSummaryCard';
 import { CalendarView } from './components/CalendarView';
 import { ShiftList } from './components/ShiftList';
 import { ChartsView } from './components/ChartsView';
+import { ExpensesList } from './components/ExpensesList';
 import { ContractSetupModal } from './components/ContractSetupModal';
 import { ShiftFormModal } from './components/ShiftFormModal';
+import { ExpenseFormModal } from './components/ExpenseFormModal';
 import { PrivacyLegalModal } from './components/PrivacyLegalModal';
 import { CloudSyncModal } from './components/CloudSyncModal';
 
@@ -33,6 +37,7 @@ import {
   Download,
   Info,
   CheckCircle2,
+  Receipt,
 } from 'lucide-react';
 
 export default function App() {
@@ -40,6 +45,7 @@ export default function App() {
   const [config, setConfig] = useState<ContractConfig>(getStoredConfig());
   const [shifts, setShifts] = useState<Shift[]>(getStoredShifts());
   const [templates, setTemplates] = useState<QuickTemplate[]>(getStoredTemplates());
+  const [expenses, setExpenses] = useState<Expense[]>(getStoredExpenses());
 
   // Gestione Tema Notte / Giorno
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -70,28 +76,33 @@ export default function App() {
   };
 
   const [currentMonthKey, setCurrentMonthKey] = useState<string>(getInitialMonthKey());
-  const [activeTab, setActiveTab] = useState<'calendar' | 'list' | 'charts'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'list' | 'expenses' | 'charts'>('calendar');
 
   // Modali
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [isExpenseFormOpen, setIsExpenseFormOpen] = useState<boolean>(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
 
   const [shiftToEdit, setShiftToEdit] = useState<Shift | null>(null);
   const [initialDateForShift, setInitialDateForShift] = useState<string | undefined>(undefined);
+  
+  const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
+  const [initialDateForExpense, setInitialDateForExpense] = useState<string | undefined>(undefined);
+
   const [notification, setNotification] = useState<string | null>(null);
 
   // Auto-Sincronizzazione in background se abilitata
-  const checkAndAutoSync = async (latestConfig: ContractConfig, latestShifts: Shift[]) => {
+  const checkAndAutoSync = async (latestConfig: ContractConfig, latestShifts: Shift[], latestExpenses: Expense[]) => {
     const creds = getSyncCredentials();
     if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
-      pushToCloud(creds, { config: latestConfig, shifts: latestShifts, templates }).catch(() => {});
+      pushToCloud(creds, { config: latestConfig, shifts: latestShifts, templates, expenses: latestExpenses }).catch(() => {});
     }
   };
 
   // Applicazione dati scaricati dal cloud (con unione sicura del contratto per non perdere le tariffe)
-  const handleApplyCloudData = (data: { config?: ContractConfig; shifts?: Shift[]; templates?: QuickTemplate[] }) => {
+  const handleApplyCloudData = (data: { config?: ContractConfig; shifts?: Shift[]; templates?: QuickTemplate[]; expenses?: Expense[] }) => {
     let activeConfig = config;
     if (data.config) {
       activeConfig = { ...DEFAULT_CONFIG, ...data.config };
@@ -106,6 +117,10 @@ export default function App() {
     if (data.templates && Array.isArray(data.templates)) {
       setTemplates(data.templates);
       saveStoredTemplates(data.templates);
+    }
+    if (data.expenses && Array.isArray(data.expenses)) {
+      setExpenses(data.expenses);
+      saveStoredExpenses(data.expenses);
     }
   };
 
@@ -141,7 +156,7 @@ export default function App() {
     saveStoredShifts(updatedShifts);
     showNotification('Tariffe aggiornate! Tutti i turni sono stati ricalcolati.');
 
-    checkAndAutoSync(newConfig, updatedShifts);
+    checkAndAutoSync(newConfig, updatedShifts, expenses);
   };
 
   // Salva (Aggiungi o Modifica) Turno
@@ -173,7 +188,7 @@ export default function App() {
     setShifts(recalculated);
     saveStoredShifts(recalculated);
 
-    checkAndAutoSync(config, recalculated);
+    checkAndAutoSync(config, recalculated, expenses);
   };
 
   // Elimina Turno
@@ -184,7 +199,45 @@ export default function App() {
     saveStoredShifts(recalculated);
     showNotification('Turno eliminato dallo storico.');
 
-    checkAndAutoSync(config, recalculated);
+    checkAndAutoSync(config, recalculated, expenses);
+  };
+
+  // Salva (Aggiungi o Modifica) Spesa
+  const handleSaveExpense = (expense: Expense) => {
+    let updatedExpenses: Expense[];
+    const exists = expenses.some((e) => e.id === expense.id);
+
+    if (exists) {
+      updatedExpenses = expenses.map((e) => (e.id === expense.id ? expense : e));
+      showNotification('Spesa modificata con successo!');
+    } else {
+      updatedExpenses = [...expenses, expense];
+      showNotification('Nuova spesa aggiunta con successo!');
+    }
+
+    setExpenses(updatedExpenses);
+    saveStoredExpenses(updatedExpenses);
+    checkAndAutoSync(config, shifts, updatedExpenses);
+  };
+
+  // Elimina Spesa
+  const handleDeleteExpense = (expenseId: string) => {
+    const filtered = expenses.filter((e) => e.id !== expenseId);
+    setExpenses(filtered);
+    saveStoredExpenses(filtered);
+    showNotification('Spesa eliminata.');
+    checkAndAutoSync(config, shifts, filtered);
+  };
+
+  const handleOpenAddExpense = (dateIso?: string) => {
+    setExpenseToEdit(null);
+    setInitialDateForExpense(dateIso || `${currentMonthKey}-01`);
+    setIsExpenseFormOpen(true);
+  };
+
+  const handleOpenEditExpense = (expense: Expense) => {
+    setExpenseToEdit(expense);
+    setIsExpenseFormOpen(true);
   };
 
   // Reset solo storico turni
@@ -221,6 +274,12 @@ export default function App() {
             const updated = recalculateAllShifts(parsed.shifts, parsed.config || config);
             setShifts(updated);
             saveStoredShifts(updated);
+            
+            if (parsed.expenses && Array.isArray(parsed.expenses)) {
+              setExpenses(parsed.expenses);
+              saveStoredExpenses(parsed.expenses);
+            }
+            
             showNotification('Backup ripristinato con successo!');
           } else {
             alert('File JSON non valido o formato errato.');
@@ -247,6 +306,7 @@ export default function App() {
 
   // Filtraggio turni del mese corrente
   const currentMonthShifts = shifts.filter((s) => s.dataGrezza.startsWith(currentMonthKey));
+  const currentMonthExpenses = expenses.filter((e) => e.data.startsWith(currentMonthKey));
 
   // Formattazione titolo mese per stampa/export
   const [yStr, mStr] = currentMonthKey.split('-');
@@ -321,52 +381,65 @@ export default function App() {
           shifts={currentMonthShifts}
           config={config}
           monthTitle={formattedMonthTitle}
+          expenses={currentMonthExpenses}
         />
 
-        {/* Tab Navigation: Calendario / Elenco Turni / Grafici */}
+        {/* Tab Navigation: Calendario / Elenco Turni / Spese / Grafici */}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl overflow-x-auto w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('calendar')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
                 activeTab === 'calendar'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              Vista Calendario
+              Calendario
             </button>
 
             <button
               onClick={() => setActiveTab('list')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
                 activeTab === 'list'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <List className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              Elenco Turni ({currentMonthShifts.length})
+              Turni ({currentMonthShifts.length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('expenses')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                activeTab === 'expenses'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Receipt className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+              Spese ({currentMonthExpenses.length})
             </button>
 
             <button
               onClick={() => setActiveTab('charts')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
                 activeTab === 'charts'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <BarChart2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              Grafici & Statistiche
+              Statistiche
             </button>
           </div>
 
           {/* Backup Actions JSON */}
           <div className="hidden sm:flex items-center gap-2">
             <button
-              onClick={() => exportDataToJson(config, shifts)}
+              onClick={() => exportDataToJson(config, shifts, expenses)}
               className="px-2.5 py-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-medium flex items-center gap-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
@@ -391,8 +464,11 @@ export default function App() {
           <CalendarView
             currentMonthKey={currentMonthKey}
             shifts={currentMonthShifts}
+            expenses={currentMonthExpenses}
             onSelectDate={(dateIso) => handleOpenAddShift(dateIso)}
+            onAddExpense={(dateIso) => handleOpenAddExpense(dateIso)}
             onEditShift={handleOpenEditShift}
+            onEditExpense={handleOpenEditExpense}
           />
         )}
 
@@ -406,8 +482,25 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'expenses' && (
+          <ExpensesList
+            expenses={currentMonthExpenses}
+            onSaveExpense={handleSaveExpense}
+            onDeleteExpense={handleDeleteExpense}
+            monthTitle={formattedMonthTitle}
+            currentMonthKey={currentMonthKey}
+          />
+        )}
+
         {activeTab === 'charts' && (
-          <ChartsView shifts={currentMonthShifts} monthTitle={formattedMonthTitle} config={config} />
+          <ChartsView 
+            shifts={currentMonthShifts} 
+            expenses={currentMonthExpenses}
+            allShifts={shifts}
+            allExpenses={expenses}
+            monthTitle={formattedMonthTitle} 
+            config={config} 
+          />
         )}
       </main>
 
@@ -431,6 +524,15 @@ export default function App() {
         onDeleteShift={handleDeleteShift}
         initialDate={initialDateForShift}
       />
+
+      {isExpenseFormOpen && (
+        <ExpenseFormModal
+          expense={expenseToEdit}
+          defaultDate={initialDateForExpense}
+          onClose={() => setIsExpenseFormOpen(false)}
+          onSave={handleSaveExpense}
+        />
+      )}
 
       <PrivacyLegalModal
         isOpen={isPrivacyModalOpen}

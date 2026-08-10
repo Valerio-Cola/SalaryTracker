@@ -168,6 +168,11 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
                   />
                   <span className="absolute right-2.5 top-2 text-[11px] text-emerald-400">€/h</span>
                 </div>
+                {formData.pagaBaseOraria > 0 && (
+                  <p className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-1 font-medium">
+                    Es. 15% di {formData.pagaBaseOraria}€ = <strong>{(formData.pagaBaseOraria * 0.15).toFixed(2)}€/h</strong> extra
+                  </p>
+                )}
               </div>
 
               <div className="p-2.5 bg-blue-50/50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900/60">

@@ -1,3 +1,52 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+svg,
+path,
+g,
+rect,
+circle,
+.recharts-surface,
+.recharts-layer,
+.recharts-sector,
+.recharts-bar-rectangle,
+.recharts-pie,
+.recharts-wrapper,
+.recharts-container,
+.recharts-legend-item,
+.recharts-active-shape,
+.recharts-tooltip-wrapper {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none;
+}
+
+svg:focus,
+path:focus,
+g:focus,
+rect:focus,
+circle:focus,
+.recharts-surface:focus,
+.recharts-layer:focus,
+.recharts-wrapper:focus,
+.recharts-sector:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+svg:focus-visible,
+path:focus-visible,
+g:focus-visible,
+rect:focus-visible,
+circle:focus-visible,
+.recharts-surface:focus-visible,
+.recharts-layer:focus-visible,
+.recharts-wrapper:focus-visible,
+.recharts-sector:focus-visible {
+  outline: none !important;
+}

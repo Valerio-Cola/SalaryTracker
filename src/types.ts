@@ -51,6 +51,14 @@ export interface QuickTemplate {
   note?: string;
 }
 
+export interface Expense {
+  id: string;
+  data: string; // YYYY-MM-DD
+  importo: number;
+  categoria: string;
+  descrizione?: string;
+}
+
 export interface MonthlyStats {
   annoMese: string; // YYYY-MM
   nomeMeseAnno: string; // "Agosto 2026"
