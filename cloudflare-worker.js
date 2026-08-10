@@ -1,7 +1,7 @@
 /**
  * Cloudflare Worker Backend per Salary Tracker SK
  * 
- * ISTRUZIONI PER LA RAGAZZA / UTENTE PRIVILEGIATO:
+ * UTENTE PRIVILEGIATO:
  * 1. Crea un KV Namespace su Cloudflare Dashboard -> Storage & Databases -> KV -> "Crea Namespace" (es. nome: SALARY_TRACKER_KV)
  * 2. Incolla questo codice nel tuo Worker su Cloudflare Workers
  * 3. Vai su Impostazioni Worker -> Bindings -> Aggiungi KV Namespace Binding col nome variabile: SALARY_TRACKER_KV
