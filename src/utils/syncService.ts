@@ -51,11 +51,65 @@ export interface CloudPayload {
 }
 
 /**
+ * Autenticazione / Login al Cloudflare Worker con supporto Turnstile
+ */
+export async function loginToCloud(
+  creds: SyncCredentials,
+  turnstileToken?: string
+): Promise<{ success: boolean; message: string; data?: CloudPayload }> {
+  if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
+    return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
+  }
+
+  const cleanUrl = creds.workerUrl.trim();
+
+  try {
+    const res = await fetch(cleanUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'login',
+        userKey: creds.userKey,
+        passcode: creds.passcode,
+        turnstileToken,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      return {
+        success: false,
+        message: `Errore server (${res.status}): ${errText || 'Verifica credenziali o URL Worker.'}`,
+      };
+    }
+
+    const json = await res.json();
+    if (json.success) {
+      return {
+        success: true,
+        message: 'Login effettuato con successo!',
+        data: json.data || undefined,
+      };
+    } else {
+      return { success: false, message: json.error || 'Autenticazione fallita.' };
+    }
+  } catch (e: any) {
+    return {
+      success: false,
+      message: `Impossibile collegarsi al Worker: ${e?.message || 'Verifica la connessione o l\'URL del Worker.'}`,
+    };
+  }
+}
+
+/**
  * Invia i dati locali al Cloudflare Worker
  */
 export async function pushToCloud(
   creds: SyncCredentials,
-  data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[]; expenses?: Expense[] }
+  data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[]; expenses?: Expense[] },
+  turnstileToken?: string
 ): Promise<{ success: boolean; message: string; updatedAt?: number }> {
   if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
     return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
@@ -80,6 +134,7 @@ export async function pushToCloud(
         action: 'push',
         userKey: creds.userKey,
         passcode: creds.passcode,
+        turnstileToken,
         payload,
       }),
     });
@@ -119,7 +174,8 @@ export async function pushToCloud(
  * Scarica i dati dal Cloudflare Worker
  */
 export async function pullFromCloud(
-  creds: SyncCredentials
+  creds: SyncCredentials,
+  turnstileToken?: string
 ): Promise<{ success: boolean; message: string; data?: CloudPayload }> {
   if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
     return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
@@ -139,6 +195,7 @@ export async function pullFromCloud(
         action: 'pull',
         userKey: creds.userKey,
         passcode: creds.passcode,
+        turnstileToken,
       }),
     });
 

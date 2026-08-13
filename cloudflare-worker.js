@@ -1,130 +1,164 @@
 /**
  * Cloudflare Worker Backend per Salary Tracker SK
  * 
- * UTENTE PRIVILEGIATO:
- * 1. Crea un KV Namespace su Cloudflare Dashboard -> Storage & Databases -> KV -> "Crea Namespace" (es. nome: SALARY_TRACKER_KV)
- * 2. Incolla questo codice nel tuo Worker su Cloudflare Workers
- * 3. Vai su Impostazioni Worker -> Bindings -> Aggiungi KV Namespace Binding col nome variabile: SALARY_TRACKER_KV
- * 4. Salva e Distribuisci!
+ * Include:
+ * 1. Controllo Utenti Autorizzati (Whitelist ALLOWED_USERS)
+ * 2. Verifica Anti-bot Cloudflare Turnstile per il Login
+ * 3. Gestione Salvataggio/Download dati nel KV (SALARY_TRACKER_KV)
  */
+
+// Helper per convalidare il token Turnstile con le API Cloudflare
+async function verifyTurnstileToken(token, secretKey, clientIp) {
+  if (!token) return false;
+  try {
+    const formData = new FormData();
+    formData.append('secret', secretKey);
+    formData.append('response', token);
+    if (clientIp) formData.append('remoteip', clientIp);
+
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: formData,
+    });
+    const outcome = await res.json();
+    return outcome.success === true;
+  } catch (e) {
+    return false;
+  }
+}
 
 export default {
   async fetch(request, env) {
-    // Gestione CORS preflight (permette chiamate da qualsiasi dominio / da Cloudflare Pages)
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Key, X-Passcode',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Key, X-Passcode, X-Turnstile-Token',
     };
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Accetta solo richieste POST
     if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Metodo non consentito. Usa POST.' }), {
-        status: 405,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+      return new Response('Method not allowed', { status: 405, headers: corsHeaders });
     }
 
     try {
       const body = await request.json();
-      const { action, userKey, passcode, payload } = body;
+      const { action, userKey, passcode, payload, turnstileToken } = body;
 
-      // Controlli base di validazione
       if (!userKey || !passcode) {
         return new Response(
-          JSON.stringify({ success: false, error: 'UserKey e Passcode sono obbligatori.' }),
-          { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          JSON.stringify({ success: false, error: 'Credenziali mancanti (Utente e Password obbligatori).' }),
+          { status: 400, headers: corsHeaders }
         );
       }
 
-      // Genera una chiave sicura separata nel KV basata su userKey e un hash/prefisso
-      const storageKey = `user_data_${userKey.toLowerCase().trim()}`;
-      const authKey = `user_auth_${userKey.toLowerCase().trim()}`;
+      // LISTA UTENTI AUTORIZZATI (scrivili in minuscolo qui dentro)
+      const ALLOWED_USERS = ['fedemorrri67'];
 
-      // Verifica se il KV Namespace è collegato correttamente
+      // Normalizziamo il nome utente eliminando spazi e convertendolo in minuscolo
+      const cleanUser = userKey.trim().toLowerCase();
+
+      // Controllo Whitelist
+      if (!ALLOWED_USERS.includes(cleanUser)) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Nome utente non autorizzato.' }),
+          { status: 403, headers: corsHeaders }
+        );
+      }
+
+      const storageKey = 'user_data_' + cleanUser;
+      const authKey = 'user_auth_' + cleanUser;
+
       if (!env.SALARY_TRACKER_KV) {
         return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'KV Namespace (SALARY_TRACKER_KV) non associato nelle impostazioni del Worker.',
-          }),
-          { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          JSON.stringify({ success: false, error: 'KV Namespace (SALARY_TRACKER_KV) non collegato.' }),
+          { status: 500, headers: corsHeaders }
+        );
+      }
+
+      // VERIFICA TURNSTILE ANTI-BOT (eseguita solo durante il Login o se inviato il token)
+      if (env.TURNSTILE_SECRET_KEY && (action === 'auth' || action === 'login' || turnstileToken)) {
+        const clientIp = request.headers.get('CF-Connecting-IP');
+        const isBotCheckPassed = await verifyTurnstileToken(turnstileToken, env.TURNSTILE_SECRET_KEY, clientIp);
+        if (!isBotCheckPassed) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Verifica di sicurezza Turnstile fallita o token scaduto. Riprova.' }),
+            { status: 403, headers: corsHeaders }
+          );
+        }
+      }
+
+      // --- AZIONE: LOGIN / AUTH ---
+      if (action === 'login' || action === 'auth') {
+        const existingAuth = await env.SALARY_TRACKER_KV.get(authKey);
+        if (existingAuth && existingAuth !== passcode) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Password errata per questo utente.' }),
+            { status: 401, headers: corsHeaders }
+          );
+        }
+
+        if (!existingAuth) {
+          await env.SALARY_TRACKER_KV.put(authKey, passcode);
+        }
+
+        const rawData = await env.SALARY_TRACKER_KV.get(storageKey);
+        const parsedData = rawData ? JSON.parse(rawData) : null;
+
+        return new Response(
+          JSON.stringify({ success: true, message: 'Autenticato con successo!', data: parsedData }),
+          { status: 200, headers: corsHeaders }
         );
       }
 
       // --- AZIONE: PUSH (Salva dati) ---
       if (action === 'push') {
-        // Verifica se l'utente ha già una password salvata nel KV
         const existingAuth = await env.SALARY_TRACKER_KV.get(authKey);
-
         if (existingAuth && existingAuth !== passcode) {
           return new Response(
-            JSON.stringify({ success: false, error: 'Password o Passcode non corretta per questo Utente.' }),
-            { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+            JSON.stringify({ success: false, error: 'Password errata per questo utente.' }),
+            { status: 401, headers: corsHeaders }
           );
         }
 
-        // Se è la prima volta che l'utente salva, registra la sua passcode
         if (!existingAuth) {
           await env.SALARY_TRACKER_KV.put(authKey, passcode);
         }
 
-        // Salva il payload JSON contenente turni, tariffe e data di aggiornamento
         await env.SALARY_TRACKER_KV.put(storageKey, JSON.stringify(payload));
-
-        return new Response(
-          JSON.stringify({ success: true, message: 'Dati salvati con successo su Cloudflare KV!' }),
-          { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-        );
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
       }
 
       // --- AZIONE: PULL (Scarica dati) ---
       if (action === 'pull') {
         const storedAuth = await env.SALARY_TRACKER_KV.get(authKey);
-
-        if (!storedAuth) {
+        if (!storedAuth || storedAuth !== passcode) {
           return new Response(
-            JSON.stringify({ success: false, error: 'Utente non trovato o nessun dato ancora salvato.' }),
-            { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+            JSON.stringify({ success: false, error: 'Password errata o utente non trovato.' }),
+            { status: 401, headers: corsHeaders }
           );
         }
 
-        if (storedAuth !== passcode) {
-          return new Response(
-            JSON.stringify({ success: false, error: 'Password o Passcode errata.' }),
-            { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-          );
-        }
-
-        const rawData = await env.SALARY_TRACKER_KV.get(storageKey);
-        if (!rawData) {
-          return new Response(
-            JSON.stringify({ success: false, error: 'Nessun dato trovato per questo utente.' }),
-            { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-          );
-        }
-
-        const parsedData = JSON.parse(rawData);
+        const raw = await env.SALARY_TRACKER_KV.get(storageKey);
+        const data = raw ? JSON.parse(raw) : null;
 
         return new Response(
-          JSON.stringify({ success: true, data: parsedData }),
-          { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          JSON.stringify({ success: true, data }),
+          { status: 200, headers: corsHeaders }
         );
       }
 
       return new Response(
-        JSON.stringify({ success: false, error: 'Azione non valida. Usa "push" o "pull".' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ success: false, error: 'Azione non valida.' }),
+        { status: 400, headers: corsHeaders }
       );
-    } catch (err) {
+    } catch (e) {
       return new Response(
-        JSON.stringify({ success: false, error: `Errore interno al Worker: ${err.message}` }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ success: false, error: e.message }),
+        { status: 500, headers: corsHeaders }
       );
     }
-  },
+  }
 };

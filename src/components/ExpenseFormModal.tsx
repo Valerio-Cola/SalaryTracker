@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Expense } from '../types';
-import { Receipt, Calendar as CalendarIcon, Tag, AlignLeft } from 'lucide-react';
+import { Receipt, Calendar as CalendarIcon, Tag, AlignLeft, Trash2 } from 'lucide-react';
 
 interface ExpenseFormModalProps {
   expense?: Expense | null;
   defaultDate?: string;
   onClose: () => void;
   onSave: (expense: Expense) => void;
+  onDelete?: (expenseId: string) => void;
 }
 
 export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
@@ -14,6 +15,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
   defaultDate,
   onClose,
   onSave,
+  onDelete,
 }) => {
   const [dateStr, setDateStr] = useState(defaultDate || '');
   const [importoStr, setImportoStr] = useState('');
@@ -121,17 +123,30 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
             />
           </div>
 
-          <div className="pt-4 flex gap-3">
+          <div className="pt-4 flex flex-wrap gap-2.5 sm:gap-3">
+            {expense && onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  onDelete(expense.id);
+                  onClose();
+                }}
+                className="py-3 px-4 text-rose-600 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-xl transition-colors flex items-center justify-center gap-1.5 border border-rose-200 dark:border-rose-800 text-sm cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                Rimuovi
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors"
+              className="flex-1 py-3 text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors text-sm cursor-pointer"
             >
               Annulla
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 text-white font-bold bg-rose-600 hover:bg-rose-700 shadow-sm shadow-rose-500/30 rounded-xl transition-colors"
+              className="flex-1 py-3 text-white font-bold bg-rose-600 hover:bg-rose-700 shadow-sm shadow-rose-500/30 rounded-xl transition-colors text-sm cursor-pointer"
             >
               Salva Spesa
             </button>

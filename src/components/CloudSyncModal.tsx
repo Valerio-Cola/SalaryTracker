@@ -12,16 +12,19 @@ import {
   LogIn,
   LogOut,
   ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   SyncCredentials,
   getSyncCredentials,
   saveSyncCredentials,
+  loginToCloud,
   pushToCloud,
   pullFromCloud,
 } from '../utils/syncService';
 import { DEFAULT_CONFIG, DEFAULT_TEMPLATES } from '../utils/storage';
 import { ContractConfig, Shift, QuickTemplate } from '../types';
+import { TurnstileWidget } from './TurnstileWidget';
 
 interface CloudSyncModalProps {
   isOpen: boolean;
@@ -49,6 +52,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   });
   const [loading, setLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +60,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setCreds(stored);
       setIsLoggedIn(Boolean(stored.workerUrl && stored.userKey && stored.passcode));
       setStatusMessage(null);
+      setTurnstileToken('');
     }
   }, [isOpen]);
 
@@ -76,32 +81,38 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     const updatedCreds = { ...creds, autoSync: true };
     saveSyncCredentials(updatedCreds);
 
-    const res = await pullFromCloud(updatedCreds);
-    setLoading(false);
-
-    if (res.success && res.data) {
-      onApplyCloudData({
-        config: res.data.config,
-        shifts: res.data.shifts,
-        templates: res.data.templates,
-      });
-      setIsLoggedIn(true);
-      setStatusMessage({ type: 'success', text: 'Login effettuato! Dati scaricati dal cloud e sincronizzazione automatica attiva.' });
-      onShowNotification('Login effettuato e dati sincronizzati!');
-      setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: res.data?.updatedAt }));
-    } else if (res.success) {
-      const pushRes = await pushToCloud(updatedCreds, { config, shifts, templates });
-      if (pushRes.success) {
+    // Effettua login/auth con il token Turnstile
+    const res = await loginToCloud(updatedCreds, turnstileToken);
+    
+    if (res.success) {
+      if (res.data) {
+        // Se il cloud ha già dati per questo utente, applicali
+        onApplyCloudData({
+          config: res.data.config,
+          shifts: res.data.shifts,
+          templates: res.data.templates,
+        });
         setIsLoggedIn(true);
-        setStatusMessage({ type: 'success', text: 'Login effettuato! Account collegato e dati sincronizzati sul cloud.' });
-        onShowNotification('Account collegato con successo!');
-        setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: pushRes.updatedAt }));
+        setStatusMessage({ type: 'success', text: 'Login effettuato! Dati scaricati dal cloud e sincronizzazione automatica attiva.' });
+        onShowNotification('Login effettuato e dati sincronizzati!');
+        setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: res.data?.updatedAt }));
       } else {
-        setStatusMessage({ type: 'error', text: pushRes.message });
+        // Se l'utente non ha ancora dati salvati nel cloud, carica quelli locali attuali
+        const pushRes = await pushToCloud(updatedCreds, { config, shifts, templates });
+        if (pushRes.success) {
+          setIsLoggedIn(true);
+          setStatusMessage({ type: 'success', text: 'Login effettuato! Account creato e dati locali sincronizzati sul cloud.' });
+          onShowNotification('Account collegato e dati salvati sul cloud!');
+          setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: pushRes.updatedAt }));
+        } else {
+          setStatusMessage({ type: 'error', text: pushRes.message });
+        }
       }
     } else {
       setStatusMessage({ type: 'error', text: res.message });
     }
+
+    setLoading(false);
   };
 
   const handleManualSync = async () => {
@@ -180,7 +191,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -252,7 +263,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               </div>
             </div>
           ) : (
-            /* VISTA NON LOGGATO (FORM ACCESSO) */
+            /* VISTA NON LOGGATO (FORM ACCESSO CON TURNSTILE) */
             <div className="space-y-4">
               <div className="space-y-4">
                 {/* URL Worker */}
@@ -300,6 +311,19 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+                </div>
+
+                {/* Widget Anti-bot Cloudflare Turnstile */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1 text-center flex items-center justify-center gap-1">
+                    <ShieldAlert className="w-3.5 h-3.5 text-blue-500" />
+                    Verifica di sicurezza anti-bot prima dell'accesso
+                  </div>
+                  <TurnstileWidget
+                    onVerify={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken('')}
+                    onError={() => setTurnstileToken('')}
+                  />
                 </div>
               </div>
 

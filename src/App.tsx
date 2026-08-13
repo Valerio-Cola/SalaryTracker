@@ -531,6 +531,10 @@ export default function App() {
           defaultDate={initialDateForExpense}
           onClose={() => setIsExpenseFormOpen(false)}
           onSave={handleSaveExpense}
+          onDelete={(id) => {
+            handleDeleteExpense(id);
+            setIsExpenseFormOpen(false);
+          }}
         />
       )}
 

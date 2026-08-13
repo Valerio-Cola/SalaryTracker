@@ -86,10 +86,8 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm('Vuoi eliminare questa spesa?')) onDeleteExpense(exp.id);
-                      }}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                      onClick={() => onDeleteExpense(exp.id)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                       title="Elimina"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -112,6 +110,10 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({
           defaultDate={`${currentMonthKey}-01`}
           onClose={() => setIsFormOpen(false)}
           onSave={handleSave}
+          onDelete={(id) => {
+            onDeleteExpense(id);
+            setIsFormOpen(false);
+          }}
         />
       )}
     </div>
