@@ -581,6 +581,10 @@ export default function App() {
               Di default i dati risiedono solo nel browser (LocalStorage). Se attivi la sincronizzazione cloud inserendo le tue credenziali, i dati vengono salvati sul tuo Worker Cloudflare KV privato per sincronizzarli tra i tuoi dispositivi.
             </div>
           </div>
+
+          <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[12px] text-slate-500 dark:text-slate-400">
+            Sito realizzato da <a href="https://valeriocola.it" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Valerio Cola</a>
+          </div>
         </div>
       </footer>
     </div>
