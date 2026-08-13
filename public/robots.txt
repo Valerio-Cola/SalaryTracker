@@ -19,4 +19,4 @@ Allow: /
 User-agent: FacebookBot
 Allow: /
 
-Sitemap: https://app.valeriocola.it/sitemap.xml
+Sitemap: https://salarytracker.valeriocola.it/sitemap.xml
