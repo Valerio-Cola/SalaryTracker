@@ -26,8 +26,8 @@ declare global {
   }
 }
 
-// Key universale di test di Cloudflare Turnstile (passa sempre in ambiente dev/test)
-const DEMO_TEST_SITE_KEY = '1x00000000000000000000AA';
+// Key specifica del tuo progetto Turnstile
+const DEFAULT_SITE_KEY = '0x4AAAAAAEO0zS_26uGaZDVQ';
 
 export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   siteKey,
@@ -37,7 +37,7 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   theme = 'auto',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const activeKey = siteKey || import.meta.env.VITE_TURNSTILE_SITE_KEY || DEMO_TEST_SITE_KEY;
+  const activeKey = siteKey || import.meta.env.VITE_TURNSTILE_SITE_KEY || DEFAULT_SITE_KEY;
 
   useEffect(() => {
     const scriptId = 'cf-turnstile-script';
