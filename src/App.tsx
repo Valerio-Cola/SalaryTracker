@@ -348,6 +348,12 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        
+        {/* SEO Hidden H1 */}
+        <h1 className="sr-only">
+          Calcolo Stipendio Netto e Gestione Turni Lavorativi - Work & Salary Tracker
+        </h1>
+
         {/* Banner Benvenuto / Setup rapido se prima volta */}
         {shifts.length === 0 && (
           <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800">
