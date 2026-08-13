@@ -37,7 +37,9 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   theme = 'auto',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const activeKey = siteKey || import.meta.env.VITE_TURNSTILE_SITE_KEY || DEFAULT_SITE_KEY;
+  const activeKey = siteKey || (import.meta as any).env?.VITE_TURNSTILE_SITE_KEY || DEFAULT_SITE_KEY;
+
+  const widgetIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const scriptId = 'cf-turnstile-script';
@@ -53,15 +55,20 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
     }
 
     const renderWidget = () => {
-      if (window.turnstile && containerRef.current) {
-        containerRef.current.innerHTML = '';
+      if (window.turnstile && containerRef.current && !widgetIdRef.current) {
         try {
-          window.turnstile.render(containerRef.current, {
+          widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: activeKey,
-            callback: onVerify,
-            'error-callback': onError,
-            'expired-callback': onExpire,
-            theme,
+            callback: (token: string) => {
+              if (onVerify) onVerify(token);
+            },
+            'error-callback': () => {
+              if (onError) onError();
+            },
+            'expired-callback': () => {
+              if (onExpire) onExpire();
+            },
+            theme: theme as 'light' | 'dark' | 'auto',
           });
         } catch {
           // Ignora se già renderizzato
@@ -72,9 +79,19 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
     if (window.turnstile) {
       renderWidget();
     } else {
-      script.onload = renderWidget;
+      script.addEventListener('load', renderWidget);
     }
-  }, [activeKey, onVerify, onError, onExpire, theme]);
+    
+    // Cleanup - ma attenzione a non rimuovere il div container
+    return () => {
+      // Non resettiamo qui per evitare loop continui se l'app si ricarica spesso
+      if (script && !window.turnstile) {
+         script.removeEventListener('load', renderWidget);
+      }
+    };
+    // Disabilitiamo eslint per le dipendenze per non causare re-render quando onVerify cambia
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeKey, theme]);
 
   return <div ref={containerRef} className="my-2 flex justify-center" />;
 };
