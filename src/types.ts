@@ -1,4 +1,4 @@
-export type DayType = 'feriale' | 'domenica' | 'festivo';
+export type DayType = 'feriale' | 'domenica' | 'festivo' | 'ferie';
 
 export interface ContractConfig {
   oreSettimanali: number; // es. 24
@@ -29,6 +29,7 @@ export interface Shift {
   tipoGiorno: DayType;
   nomeFestivita?: string; // es. "Pasquetta", "25 Aprile"
   note?: string; // es. "Chiusura cassa"
+  isFerie?: boolean; // true se giorno di ferie/permesso
   
   // Campi calcolati
   oreTotali: number;
@@ -63,7 +64,10 @@ export interface MonthlyStats {
   annoMese: string; // YYYY-MM
   nomeMeseAnno: string; // "Agosto 2026"
   totaleTurni: number;
+  totaleFerie?: number;
   totaleOre: number;
+  totaleOreLavorate?: number;
+  totaleOreFerie?: number;
   totaleNotturne: number;
   totaleSupplementari: number;
   totaleFestiveDomenicali: number;
