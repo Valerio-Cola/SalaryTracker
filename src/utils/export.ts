@@ -54,16 +54,17 @@ export function exportShiftsToCsv(shifts: Shift[], monthTitle: string = 'Turni')
     const dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
     const formattedDate = d.toLocaleDateString('it-IT');
 
+    const isFerie = s.tipoGiorno === 'ferie' || s.isFerie;
     return [
       `"${formattedDate}"`,
       `"${dayName}"`,
-      `"${s.orarioInizio}"`,
-      `"${s.orarioFine}"`,
-      s.pausaMinuti,
+      isFerie ? '"Ferie"' : `"${s.orarioInizio}"`,
+      isFerie ? '"Ferie"' : `"${s.orarioFine}"`,
+      isFerie ? 0 : s.pausaMinuti,
       s.oreTotali.toString().replace('.', ','),
       s.oreNotturne.toString().replace('.', ','),
       s.oreSupplementari.toString().replace('.', ','),
-      `"${s.tipoGiorno}"`,
+      isFerie ? '"Ferie / ROL"' : `"${s.tipoGiorno}"`,
       `"${(s.note || '').replace(/"/g, '""')}"`,
       s.guadagnoBase.toString().replace('.', ','),
       s.guadagnoNotturno.toString().replace('.', ','),
@@ -128,14 +129,15 @@ export function printMonthlyReport(
         day: '2-digit',
         month: '2-digit',
       });
+      const isFerie = s.tipoGiorno === 'ferie' || s.isFerie;
       return `
         <tr>
           <td><strong>${dateFormatted}</strong></td>
-          <td>${s.orarioInizio} - ${s.orarioFine}</td>
+          <td>${isFerie ? '🏖️ Ferie' : `${s.orarioInizio} - ${s.orarioFine}`}</td>
           <td>${s.oreTotali.toFixed(2)} h</td>
           <td>${s.oreNotturne > 0 ? s.oreNotturne.toFixed(2) + ' h' : '-'}</td>
           <td>${s.oreSupplementari > 0 ? s.oreSupplementari.toFixed(2) + ' h' : '-'}</td>
-          <td style="text-transform: capitalize;">${s.tipoGiorno}</td>
+          <td style="text-transform: capitalize;">${isFerie ? 'Ferie / ROL' : s.tipoGiorno}</td>
           <td><strong>€ ${s.guadagnoTotaleLordo.toFixed(2)}</strong></td>
         </tr>
       `;
