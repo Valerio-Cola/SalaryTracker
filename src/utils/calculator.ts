@@ -178,17 +178,23 @@ export function computeShiftData(
     }
     oreNotturne = 0;
   } else {
-    const startMin = timeToMinutes(orarioInizio);
-    let endMin = timeToMinutes(orarioFine);
-    if (endMin <= startMin) {
-      endMin += 24 * 60;
+    // Se non sono ancora stati inseriti entrambi gli orari per il turno di lavoro, non calcolare ore fittizie
+    if (!orarioInizio || !orarioFine || orarioInizio.trim() === '' || orarioFine.trim() === '') {
+      oreTotali = 0;
+      oreNotturne = 0;
+    } else {
+      const startMin = timeToMinutes(orarioInizio);
+      let endMin = timeToMinutes(orarioFine);
+      if (endMin <= startMin) {
+        endMin += 24 * 60;
+      }
+
+      const minutiLavoratiNetto = Math.max(0, endMin - startMin - pausaMinuti);
+      oreTotali = Number((minutiLavoratiNetto / 60).toFixed(2));
+
+      // Ore notturne (22:00 - 06:00)
+      oreNotturne = calculateNightHours(startMin, endMin, pausaMinuti);
     }
-
-    const minutiLavoratiNetto = Math.max(0, endMin - startMin - pausaMinuti);
-    oreTotali = Number((minutiLavoratiNetto / 60).toFixed(2));
-
-    // Ore notturne (22:00 - 06:00)
-    oreNotturne = calculateNightHours(startMin, endMin, pausaMinuti);
   }
 
   // Calcolo ore supplementari/straordinarie settimanali (tenendo conto delle ferie per il monte ore)
@@ -211,6 +217,9 @@ export function computeShiftData(
 
   if (isFerie) {
     // Le ferie non prendono maggiorazione straordinario di per sé, ma contano per il monte ore
+    oreSupplementari = 0;
+  } else if (oreTotali === 0) {
+    // Nessun orario o 0 ore: nessun calcolo di straordinario
     oreSupplementari = 0;
   } else if (isCrossMonthWeek && currentShiftMonth === monthOfMonday) {
     // Settimana a cavallo tra 2 mesi: i giorni che ricadono nel primo mese NON maturano straordinari in questo mese;
