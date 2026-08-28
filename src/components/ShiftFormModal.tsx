@@ -382,6 +382,11 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                         {previewShift.oreNotturne.toFixed(2)} h notturne
                       </span>
                     </div>
+                  ) : (!orarioInizio || !orarioFine) ? (
+                    <div className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>Inserisci gli orari per calcolare durata e maggiorazioni</span>
+                    </div>
                   ) : (
                     <div className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
