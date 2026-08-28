@@ -165,41 +165,59 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Badge Turno/i */}
+                  {/* Badge Turno/i o Ferie */}
                   <div className="space-y-1 mt-1">
-                    {cell.dayShifts?.map((s) => (
-                      <div
-                        key={s.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditShift(s);
-                        }}
-                        className="p-1 sm:p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs hover:border-blue-400 transition-colors text-left min-w-0"
-                      >
-                        <div className="text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-slate-100 font-mono leading-tight">
-                          {s.orarioInizio}-{s.orarioFine}
-                        </div>
-                        <div className="flex items-center justify-between gap-1 mt-1 text-[9px] text-slate-500 dark:text-slate-400 font-medium flex-wrap">
-                          <span className="text-emerald-700 dark:text-emerald-400 font-black text-[10px] sm:text-[11px] whitespace-nowrap">
-                            +€{Math.round(s.guadagnoTotaleLordo)}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <span>{s.oreTotali}h</span>
-                            {s.oreNotturne > 0 && (
-                              <span className="px-1 py-0.2 rounded-sm bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 font-bold flex items-center gap-0.5 text-[8px] sm:text-[9px]">
-                                <Moon className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> {s.oreNotturne}h
-                              </span>
-                            )}
-                            {s.tipoGiorno === 'domenica' && (
-                              <span className="px-1 py-0.2 rounded-sm bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-300 font-bold text-[8px] sm:text-[9px]">Dom</span>
-                            )}
-                            {s.tipoGiorno === 'festivo' && (
-                              <span className="px-1 py-0.2 rounded-sm bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-300 font-bold text-[8px] sm:text-[9px]">Fest</span>
+                    {cell.dayShifts?.map((s) => {
+                      const isFerie = s.tipoGiorno === 'ferie' || s.isFerie;
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditShift(s);
+                          }}
+                          className={`p-1 sm:p-1.5 rounded-lg border shadow-xs transition-colors text-left min-w-0 ${
+                            isFerie
+                              ? 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 hover:border-amber-400'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                          }`}
+                        >
+                          <div className={`text-[10px] sm:text-[11px] font-bold leading-tight ${
+                            isFerie ? 'text-amber-900 dark:text-amber-200 flex items-center gap-1' : 'text-slate-900 dark:text-slate-100 font-mono'
+                          }`}>
+                            {isFerie ? (
+                              <span>🏖️ Ferie ({s.oreTotali}h)</span>
+                            ) : (
+                              <span>{s.orarioInizio}-{s.orarioFine}</span>
                             )}
                           </div>
+                          <div className="flex items-center justify-between gap-1 mt-1 text-[9px] text-slate-500 dark:text-slate-400 font-medium flex-wrap">
+                            <span className="text-emerald-700 dark:text-emerald-400 font-black text-[10px] sm:text-[11px] whitespace-nowrap">
+                              +€{Math.round(s.guadagnoTotaleLordo)}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              {!isFerie && <span>{s.oreTotali}h</span>}
+                              {s.oreSupplementari > 0 && (
+                                <span className="px-1 py-0.2 rounded-sm bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold text-[8px] sm:text-[9px]">
+                                  +{s.oreSupplementari}h straord.
+                                </span>
+                              )}
+                              {s.oreNotturne > 0 && (
+                                <span className="px-1 py-0.2 rounded-sm bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 font-bold flex items-center gap-0.5 text-[8px] sm:text-[9px]">
+                                  <Moon className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> {s.oreNotturne}h
+                                </span>
+                              )}
+                              {s.tipoGiorno === 'domenica' && (
+                                <span className="px-1 py-0.2 rounded-sm bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-300 font-bold text-[8px] sm:text-[9px]">Dom</span>
+                              )}
+                              {s.tipoGiorno === 'festivo' && (
+                                <span className="px-1 py-0.2 rounded-sm bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-300 font-bold text-[8px] sm:text-[9px]">Fest</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Badge Spese */}
                     {cell.dayExpenses?.map((e) => (

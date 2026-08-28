@@ -61,6 +61,7 @@ export const ShiftList: React.FC<ShiftListProps> = ({
 
       <div className="space-y-2.5">
         {sortedShifts.map((s) => {
+          const isFerie = s.tipoGiorno === 'ferie' || s.isFerie;
           const isExpanded = expandedId === s.id;
           const dateObj = new Date(s.dataGrezza + 'T00:00:00');
           const dateFormatted = dateObj.toLocaleDateString('it-IT', {
@@ -73,7 +74,11 @@ export const ShiftList: React.FC<ShiftListProps> = ({
             <div
               key={s.id}
               className={`rounded-xl border transition-all overflow-hidden ${
-                isExpanded
+                isFerie
+                  ? isExpanded
+                    ? 'border-amber-300 dark:border-amber-700 bg-amber-50/30 dark:bg-amber-950/30 shadow-xs'
+                    : 'border-amber-200 dark:border-amber-900/60 bg-amber-50/10 dark:bg-amber-950/20 hover:border-amber-300'
+                  : isExpanded
                   ? 'border-blue-300 dark:border-blue-700 bg-blue-50/20 dark:bg-blue-950/20 shadow-xs'
                   : 'border-slate-200 dark:border-slate-800 hover:border-blue-200 dark:hover:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/40'
               }`}
@@ -84,7 +89,11 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                 className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-slate-800 text-blue-800 dark:text-blue-300 font-bold flex flex-col items-center justify-center shrink-0 border border-blue-200 dark:border-slate-700 text-center leading-tight">
+                  <div className={`w-10 h-10 rounded-xl font-bold flex flex-col items-center justify-center shrink-0 border text-center leading-tight ${
+                    isFerie
+                      ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                      : 'bg-blue-50 dark:bg-slate-800 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-slate-700'
+                  }`}>
                     <span className="text-xs">{dateObj.getDate()}</span>
                     <span className="text-[9px] uppercase font-semibold">
                       {dateObj.toLocaleDateString('it-IT', { month: 'short' })}
@@ -92,30 +101,43 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                   </div>
 
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-bold text-slate-900 dark:text-white capitalize">
                         {dateFormatted}
                       </span>
-                      {s.tipoGiorno === 'domenica' && (
+                      {isFerie && (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 text-[10px] font-bold">
+                          🏖️ Ferie / ROL
+                        </span>
+                      )}
+                      {!isFerie && s.tipoGiorno === 'domenica' && (
                         <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-300 text-[10px] font-bold">
                           Domenica
                         </span>
                       )}
-                      {s.tipoGiorno === 'festivo' && (
+                      {!isFerie && s.tipoGiorno === 'festivo' && (
                         <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-300 text-[10px] font-bold">
                           {s.nomeFestivita || 'Festività'}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      <span className="font-medium text-slate-700 dark:text-slate-300">
-                        {s.orarioInizio} - {s.orarioFine}
-                      </span>
-                      <span>•</span>
-                      <span>{s.oreTotali.toFixed(2)} h lavorate</span>
-                      {s.pausaMinuti > 0 && (
-                        <span className="text-[11px] text-slate-400 dark:text-slate-500">({s.pausaMinuti}m pausa)</span>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
+                      {isFerie ? (
+                        <span className="font-semibold text-amber-800 dark:text-amber-300">
+                          {s.oreTotali.toFixed(2)} h di ferie retribuite
+                        </span>
+                      ) : (
+                        <>
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            {s.orarioInizio} - {s.orarioFine}
+                          </span>
+                          <span>•</span>
+                          <span>{s.oreTotali.toFixed(2)} h lavorate</span>
+                          {s.pausaMinuti > 0 && (
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500">({s.pausaMinuti}m pausa)</span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -140,7 +162,7 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                         onEditShift(s);
                       }}
                       className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                      title="Modifica turno"
+                      title={isFerie ? "Modifica ferie" : "Modifica turno"}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -148,12 +170,12 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm('Sei sicuro di voler eliminare questo turno?')) {
+                        if (confirm(isFerie ? 'Sei sicuro di voler eliminare questa registrazione di ferie?' : 'Sei sicuro di voler eliminare questo turno?')) {
                           onDeleteShift(s.id);
                         }
                       }}
                       className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                      title="Elimina turno"
+                      title={isFerie ? "Elimina ferie" : "Elimina turno"}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -164,42 +186,55 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                 </div>
               </div>
 
-              {/* Dettaglio Espanso del Turno */}
+              {/* Dettaglio Espanso del Turno o Ferie */}
               {isExpanded && (
                 <div className="px-4 pb-4 pt-2 border-t border-slate-200/60 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 space-y-3">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 dark:text-slate-400 text-[10px]">Paga Base</span>
-                      <div className="font-bold text-slate-900 dark:text-white">€ {s.guadagnoBase.toFixed(2)}</div>
+                  {isFerie ? (
+                    <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 rounded-lg border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                      <div className="font-bold flex items-center gap-1.5">
+                        <span>🏖️ Dettaglio Giorno di Ferie:</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed">
+                        • Retribuzione Base: <strong>{s.oreTotali}h × paga oraria = €{s.guadagnoBase.toFixed(2)} lordo</strong>.
+                        <br />
+                        • <strong>Monte Ore</strong>: Questa giornata copre {s.oreTotali} ore per il conteggio settimanale, agevolando lo scatto di straordinari nei turni lavorati nella stessa settimana.
+                      </p>
                     </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <span className="text-slate-500 dark:text-slate-400 text-[10px]">Paga Base</span>
+                        <div className="font-bold text-slate-900 dark:text-white">€ {s.guadagnoBase.toFixed(2)}</div>
+                      </div>
 
-                    <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-indigo-700 dark:text-indigo-300 text-[10px] flex items-center gap-1">
-                        <Moon className="w-3 h-3 text-indigo-500 dark:text-indigo-400" /> Ore Notte (22-06)
-                      </span>
-                      <div className="font-bold text-indigo-950 dark:text-indigo-100">
-                        {s.oreNotturne.toFixed(2)} h (+€{s.guadagnoNotturno.toFixed(2)})
+                      <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <span className="text-indigo-700 dark:text-indigo-300 text-[10px] flex items-center gap-1">
+                          <Moon className="w-3 h-3 text-indigo-500 dark:text-indigo-400" /> Ore Notte (22-06)
+                        </span>
+                        <div className="font-bold text-indigo-950 dark:text-indigo-100">
+                          {s.oreNotturne.toFixed(2)} h (+€{s.guadagnoNotturno.toFixed(2)})
+                        </div>
+                      </div>
+
+                      <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <span className="text-rose-700 dark:text-rose-300 text-[10px] flex items-center gap-1">
+                          <Sun className="w-3 h-3 text-rose-500 dark:text-rose-400" /> Festivo/Domenica
+                        </span>
+                        <div className="font-bold text-rose-950 dark:text-rose-100">
+                          + € {s.guadagnoFestivoDomenicale.toFixed(2)}
+                        </div>
+                      </div>
+
+                      <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <span className="text-emerald-700 dark:text-emerald-300 text-[10px] flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> Straordinario
+                        </span>
+                        <div className="font-bold text-emerald-950 dark:text-emerald-100">
+                          {s.oreSupplementari.toFixed(2)} h (+€{s.guadagnoSupplementare.toFixed(2)})
+                        </div>
                       </div>
                     </div>
-
-                    <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-rose-700 dark:text-rose-300 text-[10px] flex items-center gap-1">
-                        <Sun className="w-3 h-3 text-rose-500 dark:text-rose-400" /> Festivo/Domenica
-                      </span>
-                      <div className="font-bold text-rose-950 dark:text-rose-100">
-                        + € {s.guadagnoFestivoDomenicale.toFixed(2)}
-                      </div>
-                    </div>
-
-                    <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-emerald-700 dark:text-emerald-300 text-[10px] flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> Straordinario
-                      </span>
-                      <div className="font-bold text-emerald-950 dark:text-emerald-100">
-                        {s.oreSupplementari.toFixed(2)} h (+€{s.guadagnoSupplementare.toFixed(2)})
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {s.note && (
                     <div className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">

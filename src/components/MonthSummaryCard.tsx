@@ -18,6 +18,10 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
   const [showCalculationDetails, setShowCalculationDetails] = useState(false);
 
   const totalOre = shifts.reduce((acc, curr) => acc + curr.oreTotali, 0);
+  const totalOreLavorate = shifts.filter((s) => s.tipoGiorno !== 'ferie' && !s.isFerie).reduce((acc, curr) => acc + curr.oreTotali, 0);
+  const totalOreFerie = shifts.filter((s) => s.tipoGiorno === 'ferie' || s.isFerie).reduce((acc, curr) => acc + curr.oreTotali, 0);
+  const totalFerieCount = shifts.filter((s) => s.tipoGiorno === 'ferie' || s.isFerie).length;
+
   const totalNotturne = shifts.reduce((acc, curr) => acc + curr.oreNotturne, 0);
   const totalSupplementari = shifts.reduce((acc, curr) => acc + curr.oreSupplementari, 0);
   
@@ -198,10 +202,15 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
 
       {/* Progress Bar target ore */}
       <div className="space-y-1.5">
-        <div className="flex justify-between items-center text-xs">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-1">
           <span className="text-slate-600 dark:text-slate-300 font-semibold flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            Ore Lavorate: <strong className="text-slate-900 dark:text-white">{totalOre.toFixed(2)} h</strong>
+            Ore Totali: <strong className="text-slate-900 dark:text-white">{totalOre.toFixed(2)} h</strong>
+            {totalOreFerie > 0 && (
+              <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                ({totalOreLavorate.toFixed(1)}h lavoro + <strong className="text-amber-600 dark:text-amber-400">{totalOreFerie.toFixed(1)}h ferie</strong>)
+              </span>
+            )}
           </span>
           <span className="text-slate-500 dark:text-slate-400 font-medium">
             Obiettivo contrattuale (~{targetOreMese.toFixed(0)}h): {progressPercent}%
@@ -217,14 +226,14 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
 
       {/* Grid delle maggiorazioni e dettagli */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-        {/* Paga Base */}
+        {/* Paga Base (inclusa quota ferie) */}
         <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Paga Base Oraria</div>
           <div className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
             € {totalBase.toFixed(2)}
           </div>
           <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-            {totalOre.toFixed(1)}h × €{config.pagaBaseOraria.toFixed(2)}/h
+            {totalOre.toFixed(1)}h {totalOreFerie > 0 ? `(incluso ${totalOreFerie.toFixed(1)}h ferie)` : ''} × €{config.pagaBaseOraria.toFixed(2)}/h
           </div>
         </div>
 
