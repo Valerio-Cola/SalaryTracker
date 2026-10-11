@@ -151,13 +151,35 @@ export function computeShiftData(
   // Rilevazione se si tratta di ferie
   const isFerie = params.isFerie || params.tipoGiorno === 'ferie';
 
-  // Auto-rilevazione festività e domenica se non specificato manualmente
+  // Rilevazione festività e domenica basata sul calendario reale della data del turno
   const autoDayInfo = checkDayTypeInfo(dataGrezza);
-  let tipoGiorno: DayType = params.tipoGiorno || autoDayInfo.suggestedDayType;
+  let tipoGiorno: DayType = 'feriale';
+  let nomeFestivita: string | undefined = undefined;
+
   if (isFerie) {
     tipoGiorno = 'ferie';
+  } else if (autoDayInfo.isHoliday) {
+    tipoGiorno = 'festivo';
+    nomeFestivita = autoDayInfo.holidayName;
+  } else if (autoDayInfo.isSunday) {
+    tipoGiorno = 'domenica';
+  } else if (params.tipoGiorno === 'festivo' && params.nomeFestivita && !params.nomeFestivita.toLowerCase().includes('ferragosto')) {
+    // Permette una festa patronale locale manuale
+    tipoGiorno = 'festivo';
+    nomeFestivita = params.nomeFestivita;
+  } else {
+    // Dal Lunedì al Sabato non festivo è sempre feriale
+    tipoGiorno = 'feriale';
+    nomeFestivita = undefined;
   }
-  const nomeFestivita = isFerie ? undefined : (params.nomeFestivita ?? autoDayInfo.holidayName);
+
+  let sanitizedNote = note;
+  if (sanitizedNote === 'Turno Ferragosto' && !dataGrezza.includes('-08-15')) {
+    sanitizedNote = 'Turno serale';
+  }
+  if (sanitizedNote === 'Chiusura Domenicale' && !autoDayInfo.isSunday) {
+    sanitizedNote = 'Chiusura serale';
+  }
 
   let oreTotali = 0;
   let oreNotturne = 0;
@@ -277,7 +299,7 @@ export function computeShiftData(
     pausaMinuti: isFerie ? 0 : pausaMinuti,
     tipoGiorno,
     nomeFestivita,
-    note: isFerie && !note ? 'Ferie / Permesso retribuito' : note,
+    note: isFerie && !sanitizedNote ? 'Ferie / Permesso retribuito' : sanitizedNote,
     isFerie,
     oreTotali,
     oreNotturne,
@@ -331,8 +353,36 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
     const processedWeekShifts: Shift[] = weekShifts.map((s) => {
       const isFerie = s.isFerie || s.tipoGiorno === 'ferie';
       const autoDayInfo = checkDayTypeInfo(s.dataGrezza);
-      const tipoGiorno: DayType = isFerie ? 'ferie' : (s.tipoGiorno || autoDayInfo.suggestedDayType);
-      const nomeFestivita = isFerie ? undefined : (s.nomeFestivita ?? autoDayInfo.holidayName);
+
+      // Determinazione rigorosa del tipo di giorno basata sul calendario reale
+      let tipoGiorno: DayType = 'feriale';
+      let nomeFestivita: string | undefined = undefined;
+
+      if (isFerie) {
+        tipoGiorno = 'ferie';
+      } else if (autoDayInfo.isHoliday) {
+        tipoGiorno = 'festivo';
+        nomeFestivita = autoDayInfo.holidayName;
+      } else if (autoDayInfo.isSunday) {
+        tipoGiorno = 'domenica';
+      } else if (s.tipoGiorno === 'festivo' && s.nomeFestivita && !s.nomeFestivita.toLowerCase().includes('ferragosto')) {
+        tipoGiorno = 'festivo';
+        nomeFestivita = s.nomeFestivita;
+      } else {
+        tipoGiorno = 'feriale';
+        nomeFestivita = undefined;
+      }
+
+      let cleanNote = s.note;
+      if (cleanNote === 'Turno Ferragosto' && !s.dataGrezza.includes('-08-15')) {
+        cleanNote = 'Turno serale';
+      }
+      if (cleanNote === 'Chiusura Domenicale' && !autoDayInfo.isSunday) {
+        cleanNote = 'Chiusura serale';
+      }
+      if (cleanNote === 'Chiusura weekend' && !autoDayInfo.isSunday && new Date(s.dataGrezza + 'T00:00:00').getDay() !== 6) {
+        cleanNote = 'Chiusura serale';
+      }
 
       let oreTotali = s.oreTotali;
       let oreNotturne = 0;
@@ -363,6 +413,7 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
 
       return {
         ...s,
+        note: cleanNote,
         isFerie,
         tipoGiorno,
         nomeFestivita,
@@ -484,4 +535,195 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
     return (a.orarioInizio || '').localeCompare(b.orarioInizio || '');
   });
 }
+
+export interface FerieBalanceResult {
+  mesiLavorati: number;
+  ferieMaturateTotali: number;
+  ferieGoduteTotali: number;
+  ferieResidue: number;
+  dataPrimoTurno: string | null;
+  dataUltimoTurno: string | null;
+  ferieMaturateMese: number;
+}
+
+/**
+ * Calcola il saldo ferie partendo dal turno più vecchio e il turno più recente,
+ * per determinare i mesi lavorati, i giorni maturati e quelli goduti.
+ */
+export function calculateFerieBalance(
+  allShifts: Shift[],
+  config: ContractConfig
+): FerieBalanceResult {
+  const rateoMensile = config.ferieAccumuloMensile ?? 2.16;
+  const saldoIniziale = config.ferieResiduoIniziale ?? 0;
+
+  const validShifts = allShifts.filter((s) => s.dataGrezza && s.dataGrezza.trim() !== '');
+  if (validShifts.length === 0) {
+    return {
+      mesiLavorati: 0,
+      ferieMaturateTotali: Number(saldoIniziale.toFixed(2)),
+      ferieGoduteTotali: 0,
+      ferieResidue: Number(saldoIniziale.toFixed(2)),
+      dataPrimoTurno: null,
+      dataUltimoTurno: null,
+      ferieMaturateMese: rateoMensile,
+    };
+  }
+
+  const sortedDates = [...validShifts]
+    .map((s) => s.dataGrezza)
+    .sort((a, b) => a.localeCompare(b));
+
+  const firstDateStr = sortedDates[0];
+  const lastDateStr = sortedDates[sortedDates.length - 1];
+
+  const d1 = new Date(firstDateStr + 'T00:00:00');
+  const d2 = new Date(lastDateStr + 'T00:00:00');
+
+  // Numero di mesi trascorsi dal mese del primo turno al mese dell'ultimo turno (inclusivo)
+  const diffYears = d2.getFullYear() - d1.getFullYear();
+  const diffMonths = d2.getMonth() - d1.getMonth();
+  const mesiLavorati = Math.max(1, diffYears * 12 + diffMonths + 1);
+
+  const ferieMaturateTotali = Number((mesiLavorati * rateoMensile + saldoIniziale).toFixed(2));
+
+  // Ferie godute: contiamo le giornate distinte con turno marcato come ferie
+  const ferieDates = new Set(
+    validShifts.filter((s) => s.tipoGiorno === 'ferie' || s.isFerie).map((s) => s.dataGrezza)
+  );
+  const ferieGoduteTotali = ferieDates.size;
+  const ferieResidue = Number((ferieMaturateTotali - ferieGoduteTotali).toFixed(2));
+
+  return {
+    mesiLavorati,
+    ferieMaturateTotali,
+    ferieGoduteTotali,
+    ferieResidue,
+    dataPrimoTurno: firstDateStr,
+    dataUltimoTurno: lastDateStr,
+    ferieMaturateMese: rateoMensile,
+  };
+}
+
+/**
+ * Calcola i totali completi della busta paga mensile (Lordo, Netto, Ratei 13ª/14ª, Bonus Renzi, Bonus L.207/2024 e Voci personalizzate)
+ */
+export function calculateMonthlyCompensation(
+  shifts: Shift[],
+  config: ContractConfig,
+  monthKey: string // YYYY-MM
+) {
+  const [, monthStr] = monthKey.split('-');
+  const monthNum = parseInt(monthStr, 10);
+
+  const totalShiftsLordo = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
+  const totalShiftsNetto = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
+  const taxRateDecimal = (config.aliquotaNettoStimata || 15) / 100;
+
+  // 13ª mensile o annuale
+  let lordo13 = 0;
+  let is13ErogataNelMese = false;
+  if (config.includeTredicesimaMensile) {
+    if (config.modalitaTredicesima === 'annuale') {
+      const meseErogazione = config.meseErogazioneTredicesima ?? 12;
+      if (monthNum === meseErogazione) {
+        lordo13 = config.importoTredicesimaAnnuale ?? ((config.importoTredicesimaMensile ?? 53.84) * 12);
+        is13ErogataNelMese = true;
+      }
+    } else {
+      lordo13 = config.importoTredicesimaMensile ?? 53.84;
+      is13ErogataNelMese = true;
+    }
+  }
+
+  // 14ª mensile o annuale
+  let lordo14 = 0;
+  let is14ErogataNelMese = false;
+  if (config.includeQuattordicesimaMensile) {
+    if (config.modalitaQuattordicesima === 'annuale') {
+      const meseErogazione = config.meseErogazioneQuattordicesima ?? 6;
+      if (monthNum === meseErogazione) {
+        lordo14 = config.importoQuattordicesimaAnnuale ?? ((config.importoQuattordicesimaMensile ?? 53.84) * 12);
+        is14ErogataNelMese = true;
+      }
+    } else {
+      lordo14 = config.importoQuattordicesimaMensile ?? 53.84;
+      is14ErogataNelMese = true;
+    }
+  }
+
+  const rateiLordoMensili = lordo13 + lordo14;
+  const rateiNettoMensili = rateiLordoMensili * (1 - taxRateDecimal);
+
+  // Bonus Renzi (esente IRPEF/INPS, 100% netto)
+  const bonusRenziNetto = config.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
+
+  // Bonus L. 207/2024 Art. 1 c. 4 (esente contributi e imposte, 100% netto)
+  let bonusL207Netto = 0;
+  if (config.includeBonusL207) {
+    if (config.modalitaBonusL207 === 'fisso') {
+      bonusL207Netto = config.importoBonusL207Fisso ?? 45.22;
+    } else {
+      // Modalità percentuale / scaglione
+      let pct = config.percentualeBonusL207 ?? 5.3;
+      if (config.scaglioneBonusL207 === '8500') pct = 7.1;
+      else if (config.scaglioneBonusL207 === '15000') pct = 5.3;
+      else if (config.scaglioneBonusL207 === '20000') pct = 4.8;
+
+      const imponibileLordoMese = totalShiftsLordo;
+      bonusL207Netto = Number(((imponibileLordoMese * pct) / 100).toFixed(2));
+    }
+  }
+
+  // Voci personalizzate
+  let vociLordeExtra = 0;
+  let vociNetteExtra = 0;
+  const activeCustomAllowances = (config.vociPersonalizzate || []).filter((v) => {
+    if (v.tipo === 'mensile' || !v.tipo) return true;
+    if (v.tipo === 'ogni_tot_mesi') {
+      const intervallo = Math.max(1, v.intervalloMesi || 1);
+      const meseInizio = v.meseInizio || 1;
+      const diff = (monthNum - meseInizio) % intervallo;
+      return (diff + intervallo) % intervallo === 0;
+    }
+    if (v.tipo === 'una_tantum') {
+      return v.meseUnaTantum === monthKey;
+    }
+    return false;
+  });
+
+  for (const voce of activeCustomAllowances) {
+    if (voce.tassabile) {
+      vociLordeExtra += voce.importo;
+      vociNetteExtra += voce.importo * (1 - taxRateDecimal);
+    } else {
+      vociNetteExtra += voce.importo;
+    }
+  }
+
+  const totalLordoCompleto = Number((totalShiftsLordo + rateiLordoMensili + vociLordeExtra).toFixed(2));
+  const totalNettoCompleto = Number(
+    (totalShiftsNetto + rateiNettoMensili + bonusRenziNetto + bonusL207Netto + vociNetteExtra).toFixed(2)
+  );
+
+  return {
+    totalShiftsLordo,
+    totalShiftsNetto,
+    lordo13,
+    is13ErogataNelMese,
+    lordo14,
+    is14ErogataNelMese,
+    rateiLordoMensili,
+    rateiNettoMensili,
+    bonusRenziNetto,
+    bonusL207Netto,
+    vociLordeExtra,
+    vociNetteExtra,
+    activeCustomAllowances,
+    totalLordoCompleto,
+    totalNettoCompleto,
+    taxRateDecimal,
+  };
+}
+
 

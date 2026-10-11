@@ -117,9 +117,14 @@ export function printMonthlyReport(
   const rateiNettoMensili = rateiLordoMensili * (1 - (config.aliquotaNettoStimata || 15) / 100);
 
   const bonusRenziNetto = config.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
+  const bonusL207Netto = config.includeBonusL207
+    ? (config.modalitaBonusL207 === 'fisso'
+        ? (config.importoBonusL207Fisso ?? 45.22)
+        : Number(((totalShiftsLordo * (config.percentualeBonusL207 ?? 5.3)) / 100).toFixed(2)))
+    : 0;
 
   const totalLordo = totalShiftsLordo + rateiLordoMensili;
-  const totalNetto = totalShiftsNetto + rateiNettoMensili + bonusRenziNetto;
+  const totalNetto = totalShiftsNetto + rateiNettoMensili + bonusRenziNetto + bonusL207Netto;
 
   const rowsHtml = sortedShifts
     .map((s) => {

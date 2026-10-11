@@ -17,11 +17,25 @@ export const DEFAULT_CONFIG: ContractConfig = {
   nomeLavoratore: '',
   nomeAzienda: '',
   includeTredicesimaMensile: false,
+  modalitaTredicesima: 'mensile',
   importoTredicesimaMensile: 53.84,
+  meseErogazioneTredicesima: 12,
+  importoTredicesimaAnnuale: 646.08,
   includeQuattordicesimaMensile: false,
+  modalitaQuattordicesima: 'mensile',
   importoQuattordicesimaMensile: 53.84,
+  meseErogazioneQuattordicesima: 6,
+  importoQuattordicesimaAnnuale: 646.08,
   includeBonusRenzi: false,
   importoBonusRenzi: 98.63,
+  includeBonusL207: false,
+  modalitaBonusL207: 'fisso',
+  importoBonusL207Fisso: 45.22,
+  scaglioneBonusL207: '15000',
+  percentualeBonusL207: 5.3,
+  ferieAccumuloMensile: 2.16,
+  ferieResiduoIniziale: 0,
+  vociPersonalizzate: [],
 };
 
 export const DEFAULT_TEMPLATES: QuickTemplate[] = [
@@ -164,19 +178,19 @@ export function generateSampleShifts(config: ContractConfig): Shift[] {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
 
-  const samples = [
-    { day: '02', start: '18:30', end: '01:30', pause: 30, type: 'domenica' as const, note: 'Chiusura weekend' },
-    { day: '04', start: '11:30', end: '16:00', pause: 0, type: 'feriale' as const, note: 'Servizio Pranzo' },
-    { day: '05', start: '18:00', end: '00:30', pause: 30, type: 'feriale' as const, note: 'Cassa e cucina' },
-    { day: '07', start: '19:00', end: '02:00', pause: 30, type: 'feriale' as const, note: 'Straordinario serale' },
-    { day: '08', start: '12:00', end: '16:00', pause: 0, type: 'feriale' as const, note: 'Pranzo Sabato' },
-    { day: '09', start: '18:30', end: '01:30', pause: 30, type: 'domenica' as const, note: 'Chiusura Domenicale' },
-    { day: '12', start: '11:30', end: '15:30', pause: 0, type: 'feriale' as const, note: 'Pranzo' },
-    { day: '15', start: '18:00', end: '02:00', pause: 30, type: 'festivo' as const, note: 'Turno Ferragosto' },
+  const sampleDays = [
+    { day: '02', start: '18:30', end: '01:30', pause: 30, note: 'Chiusura serale' },
+    { day: '04', start: '11:30', end: '16:00', pause: 0, note: 'Servizio Pranzo' },
+    { day: '05', start: '18:00', end: '00:30', pause: 30, note: 'Cassa e cucina' },
+    { day: '07', start: '19:00', end: '02:00', pause: 30, note: 'Straordinario serale' },
+    { day: '08', start: '12:00', end: '16:00', pause: 0, note: 'Pranzo' },
+    { day: '09', start: '18:30', end: '01:30', pause: 30, note: 'Chiusura serale' },
+    { day: '12', start: '11:30', end: '15:30', pause: 0, note: 'Pranzo' },
+    { day: '15', start: '18:00', end: '00:30', pause: 30, note: 'Turno serale' },
   ];
 
   const result: Shift[] = [];
-  for (const item of samples) {
+  for (const item of sampleDays) {
     const dateStr = `${year}-${month}-${item.day}`;
     const shift = computeShiftData(
       {
@@ -184,7 +198,6 @@ export function generateSampleShifts(config: ContractConfig): Shift[] {
         orarioInizio: item.start,
         orarioFine: item.end,
         pausaMinuti: item.pause,
-        tipoGiorno: item.type,
         note: item.note,
       },
       config,

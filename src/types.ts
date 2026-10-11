@@ -1,5 +1,16 @@
 export type DayType = 'feriale' | 'domenica' | 'festivo' | 'ferie';
 
+export interface CustomAllowance {
+  id: string;
+  nome: string; // es. "Indennità Cassa", "Ticket Restaurant", "Premio Presenza"
+  importo: number; // Valore in euro
+  tipo: 'mensile' | 'ogni_tot_mesi' | 'una_tantum';
+  intervalloMesi?: number; // es. ogni 2 mesi, ogni 3 mesi (trimestrale), ogni 6 mesi, ecc.
+  meseInizio?: number; // 1-12, mese da cui partire o cadenza (es. 1=Gennaio, 3=Marzo)
+  meseUnaTantum?: string; // YYYY-MM se attivo solo in un mese
+  tassabile?: boolean; // false = netto esente (non tassato), true = lordo soggetto a ritenuta
+}
+
 export interface ContractConfig {
   oreSettimanali: number; // es. 24
   pagaBaseOraria: number; // es. 6.22
@@ -11,13 +22,36 @@ export interface ContractConfig {
   nomeLavoratore?: string; // opzionale, es. "Chiara"
   nomeAzienda?: string; // opzionale, es. "Burger King"
   
-  // Ratei mensili e bonus in busta paga
+  // Ratei 13ª e 14ª
   includeTredicesimaMensile?: boolean;
+  modalitaTredicesima?: 'mensile' | 'annuale'; // 'mensile' = ratei 1/12, 'annuale' = unica soluzione
   importoTredicesimaMensile?: number; // es. 53.84 €
+  meseErogazioneTredicesima?: number; // es. 12 (Dicembre)
+  importoTredicesimaAnnuale?: number; // es. 646.08 €
+
   includeQuattordicesimaMensile?: boolean;
+  modalitaQuattordicesima?: 'mensile' | 'annuale'; // 'mensile' = ratei 1/12, 'annuale' = unica soluzione
   importoQuattordicesimaMensile?: number; // es. 53.84 €
+  meseErogazioneQuattordicesima?: number; // es. 6 (Giugno) o 7 (Luglio)
+  importoQuattordicesimaAnnuale?: number; // es. 646.08 €
+
+  // Bonus Renzi (Trattamento integrativo)
   includeBonusRenzi?: boolean;
   importoBonusRenzi?: number; // es. 98.63 €
+
+  // Bonus L. 207/2024 Art. 1 c. 4 (Nuovo bonus cuneo fiscale Legge di Bilancio 2025)
+  includeBonusL207?: boolean;
+  modalitaBonusL207?: 'percentuale' | 'fisso'; // 'fisso' = valore esatto in euro, 'percentuale' = calcolato su retribuzione
+  importoBonusL207Fisso?: number; // es. 45.22 € (quota maturata a settembre per PT 911,66 €)
+  scaglioneBonusL207?: '8500' | '15000' | '20000' | 'personalizzato'; // 7.1%, 5.3%, 4.8%
+  percentualeBonusL207?: number; // es. 5.3
+
+  // Ferie e Permessi
+  ferieAccumuloMensile?: number; // Giorni di ferie accumulati al mese (es. 2.16 o 2.08)
+  ferieResiduoIniziale?: number; // Saldo ferie arretrate/iniziali in giorni (default 0)
+
+  // Ratei o Bonus personalizzati in busta paga
+  vociPersonalizzate?: CustomAllowance[];
 }
 
 export interface Shift {

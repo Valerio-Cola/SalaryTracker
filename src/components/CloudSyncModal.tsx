@@ -199,11 +199,23 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
         {/* Corpo Modale */}
         <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-          {/* Banner Stato Sincronizzazione */}
-          <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-xs text-blue-900 dark:text-blue-200">
-            <p className="font-semibold flex items-center gap-1.5">
+          {/* Banner Stato e Condizioni di Accesso al Servizio */}
+          <div className="p-3.5 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-xs text-blue-950 dark:text-blue-200 space-y-2">
+            <div className="flex items-center gap-1.5 font-bold text-blue-900 dark:text-blue-100">
               <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              Sincronizzazione automatica attiva ad ogni modifica
+              Sincronizzazione Multi-Device Cloud
+            </div>
+            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-lg text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
+              <div className="font-bold flex items-center gap-1 text-amber-800 dark:text-amber-300">
+                <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                Accesso Limitato e Riservato
+              </div>
+              <p className="leading-relaxed">
+                Il servizio di sincronizzazione cloud è ad accesso limitato e riservato esclusivamente agli utenti espressamente autorizzati dall&apos;amministratore, <strong>senza registrazione pubblica</strong>. Non costituisce una piattaforma SaaS aperta al pubblico.
+              </p>
+            </div>
+            <p className="text-[11px] text-blue-800/90 dark:text-blue-300/90">
+              Se disponi delle credenziali rilasciate dall&apos;amministratore, inserisci di seguito l&apos;URL del Worker, il tuo Nome Utente e la Password.
             </p>
           </div>
 

@@ -28,6 +28,7 @@ import { ShiftFormModal } from './components/ShiftFormModal';
 import { ExpenseFormModal } from './components/ExpenseFormModal';
 import { PrivacyLegalModal } from './components/PrivacyLegalModal';
 import { CloudSyncModal } from './components/CloudSyncModal';
+import { HelpModal } from './components/HelpModal';
 
 import {
   Calendar,
@@ -43,7 +44,13 @@ import {
 export default function App() {
   // Configurazione e Stato dati
   const [config, setConfig] = useState<ContractConfig>(getStoredConfig());
-  const [shifts, setShifts] = useState<Shift[]>(getStoredShifts());
+  const [shifts, setShifts] = useState<Shift[]>(() => {
+    const raw = getStoredShifts();
+    const conf = getStoredConfig();
+    const cleaned = recalculateAllShifts(raw, conf);
+    saveStoredShifts(cleaned);
+    return cleaned;
+  });
   const [templates, setTemplates] = useState<QuickTemplate[]>(getStoredTemplates());
   const [expenses, setExpenses] = useState<Expense[]>(getStoredExpenses());
 
@@ -84,6 +91,7 @@ export default function App() {
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState<boolean>(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
 
   const [shiftToEdit, setShiftToEdit] = useState<Shift | null>(null);
   const [initialDateForShift, setInitialDateForShift] = useState<string | undefined>(undefined);
@@ -334,6 +342,7 @@ export default function App() {
         onOpenConfig={() => setIsConfigOpen(true)}
         onOpenCloudSync={() => setIsCloudSyncOpen(true)}
         onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
+        onOpenHelp={() => setIsHelpModalOpen(true)}
         onExportCsv={() => exportShiftsToCsv(currentMonthShifts, formattedMonthTitle)}
         onPrintReport={() => printMonthlyReport(currentMonthShifts, config, formattedMonthTitle)}
         onGenerateSampleData={handleGenerateSampleData}
@@ -385,8 +394,10 @@ export default function App() {
         {/* Card Sintesi del Mese */}
         <MonthSummaryCard
           shifts={currentMonthShifts}
+          allShifts={shifts}
           config={config}
           monthTitle={formattedMonthTitle}
+          currentMonthKey={currentMonthKey}
           expenses={currentMonthExpenses}
         />
 
@@ -559,6 +570,11 @@ export default function App() {
         onShowNotification={showNotification}
       />
 
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
+
       {/* Footer Legal & Privacy */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 text-xs text-slate-500 dark:text-slate-400 mt-auto transition-colors">
         <div className="max-w-7xl mx-auto px-4 space-y-3">
@@ -588,8 +604,26 @@ export default function App() {
             </div>
           </div>
 
-          <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[12px] text-slate-500 dark:text-slate-400">
-            Sito realizzato da <a href="https://valeriocola.it" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Valerio Cola</a>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[12px] text-slate-500 dark:text-slate-400">
+            <div>
+              Sito realizzato da <a href="https://valeriocola.it" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Valerio Cola</a>
+            </div>
+            <div className="flex items-center">
+              <a
+                href="https://ko-fi.com/I1A228L9XZ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                title="Offrimi un caffè su Ko-fi"
+              >
+                <img
+                  height="36"
+                  style={{ border: '0px', height: '36px' }}
+                  src="https://storage.ko-fi.com/cdn/kofi6.png?v=6"
+                  alt="Buy Me a Coffee at ko-fi.com"
+                />
+              </a>
+            </div>
           </div>
         </div>
       </footer>

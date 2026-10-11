@@ -12,6 +12,7 @@ import {
   Cookie,
   KeyRound,
   CheckCircle2,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface PrivacyLegalModalProps {
@@ -140,13 +141,28 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
 
                 <ul className="space-y-2.5 list-disc pl-5 text-slate-600 dark:text-slate-300">
                   <li>
-                    <strong>Assenza di Valore Ufficiale o Probatorio:</strong> I prospetti, i riepiloghi mensili e le stime economiche generate dall&apos;applicazione <strong>NON costituiscono</strong> busta paga o cedolino paga aziendale ai sensi della Legge 5 gennaio 1953, n. 4, né hanno alcun valore legale, fiscale, previdenziale o giuslavoristico nei confronti del datore di lavoro o degli enti previdenziali (INPS, INAIL, ecc.).
+                    <strong>Assenza di Valore Ufficiale o Probatorio:</strong> I prospetti, i riepiloghi mensili e le stime economiche generate dall&apos;applicazione <strong>NON costituiscono</strong> busta paga o cedolino paga aziendale ai sensi della Legge 5 gennaio 1953, n. 4, né hanno alcun valore legale, fiscale, previdenziale o giuslavoristico nei confronti del datore di lavoro o degli enti previdenziali (INPS, INAIL, Agenzia delle Entrate).
+                  </li>
+                  <li>
+                    <strong>Integrazioni Fiscali e Bonus (L. 207/2024 e Trattamento Integrativo):</strong> Le stime relative al <em>Bonus L. 207/2024 (Art. 1, C. 4 - Legge di Bilancio 2025)</em> e al <em>Bonus Renzi (D.L. 3/2020)</em> sono calcolate sulla base dei parametri inseriti o dello scaglione di reddito stimato (fino a 8.500€, da 8.501€ a 15.000€, da 15.001€ a 20.000€). L&apos;effettiva spettanza e l&apos;eventuale conguaglio a fine anno dipendono dal reddito complessivo annuo effettivo certificato nella Certificazione Unica (CU).
+                  </li>
+                  <li>
+                    <strong>Ratei 13ª, 14ª e Maturazione Ferie:</strong> I calcoli di rateizzazione o corresponsione annuale di tredicesima e quattordicesima, nonché il contatore dei giorni di ferie maturati e residui, costituiscono stime puramente indicative ad ausilio del lavoratore e non sostituiscono i conteggi dell&apos;ufficio risorse umane o del consulente del lavoro.
+                  </li>
+                  <li>
+                    <strong>Applicabilità CCNL e Contrattazione Collettiva:</strong> I parametri dell&apos;applicazione sono interamente flessibili e personalizzabili per adattarsi a qualsiasi Contratto Collettivo Nazionale di Lavoro (es. Pubblici Esercizi, Ristorazione Collettiva / Fast Food, Commercio e Terziario, Logistica, Multiservizi, Metalmeccanico). Tuttavia, i minimi tabellari orari, gli scatti di anzianità, le indennità di turno e le maggiorazioni per lavoro supplementare, straordinario, notturno e festivo devono essere verificati dal lavoratore sul proprio CCNL applicato.
+                  </li>
+                  <li>
+                    <strong>Voci e Bonus Personalizzabili & Spese:</strong> Le voci accessorie create dall&apos;utente (sia fisse mensili che a cadenza periodica ogni TOT mesi, lorde o esenti) e il registro spese/rimborsi sono gestiti a cura esclusiva dell&apos;utente a scopo di monitoraggio personale e non hanno efficacia vincolante nei confronti del datore di lavoro.
+                  </li>
+                  <li>
+                    <strong>Stima del Netto e Conguagli Fiscali IRPEF:</strong> La quantificazione del compenso netto si basa sull&apos;aliquota media stimata configurata dall&apos;utente e non comprende le addizionali regionali e comunali, le detrazioni per carichi di famiglia o eventuali altri redditi percepiti. Il conguaglio fiscale definitivo viene effettuato annualmente dal datore di lavoro in sede di modello 730/Redditi.
                   </li>
                   <li>
                     <strong>Dipendenza dai Dati Inseriti:</strong> L&apos;accuratezza delle stime calcolate dipende esclusivamente dalla precisione, completezza e veridicità dei dati di input forniti autonomamente dall&apos;utente (tariffa oraria base, maggiorazioni per turni diurni/notturni, ore straordinarie, lavoro festivo, riposi compensativi, trattenute e contributi).
                   </li>
                   <li>
-                    <strong>Invariabilità dei Contratti Collettivi (CCNL):</strong> Le formule di calcolo sono basate sui coefficienti e sui parametri standard impostati nelle configurazioni. L&apos;app non integra automaticamente tutte le specificità, le clausole locali o le varianti individuali di tutti i Contratti Collettivi Nazionali del Lavoro (CCNL) o accordi integrativi aziendali.
+                    <strong>Sincronizzazione Cloud Multi-Device ad Accesso Riservato:</strong> La funzionalità facoltativa di sincronizzazione cloud su Cloudflare Worker/KV Storage è un servizio ad accesso limitato e riservato esclusivamente agli utenti espressamente autorizzati dall&apos;amministratore, senza registrazione pubblica. Non costituisce un servizio SaaS o cloud storage aperto al pubblico. L&apos;utilizzo è circoscritto ad uso privato e amatoriale per le sole utenze abilitate.
                   </li>
                   <li>
                     <strong>Esenzione da Responsabilità Legale o Contabile:</strong> Lo sviluppatore, il distributore e i fornitori dell&apos;infrastruttura declinano espressamente qualsiasi responsabilità diretta, indiretta, incidentale o consequenziale per eventuali discrepanze tra gli importi stimati e gli importi effettivamente erogati dal datore di lavoro, nonché per eventuali decisioni finanziarie, vertenze di lavoro o contenziosi basati sui dati generati dall&apos;app.
@@ -186,8 +202,9 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     2. Categorie di Dati Trattati
                   </strong>
                   <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
-                    <li><strong>Dati di Configurazione Contrattuale:</strong> Parametri di tariffa oraria, stipendio lordo/netto teorico, monte ore settimanale, percentuali di maggiorazione e indennità.</li>
-                    <li><strong>Dati di Turnistica e Presenza:</strong> Date dei turni, orari di inizio/fine, pause non retribuite, tipologie di assenza (ferie, permessi, malattia, riposi) ed eventuali note personali.</li>
+                    <li><strong>Dati Contrattuali e Retributivi:</strong> Parametri di tariffa oraria, stipendio lordo/netto teorico, monte ore settimanale, percentuali di maggiorazione oraria, ratei 13ª/14ª, bonus Legge 207/2024 e voci personalizzate.</li>
+                    <li><strong>Dati di Turnistica e Presenza:</strong> Date dei turni, orari di entrata/uscita, pause non retribuite, giornate di ferie/permessi retribuiti e note personali di lavoro.</li>
+                    <li><strong>Gestione Spese e Rimborsi:</strong> Titoli delle spese, importi in euro, categorie e date (memorizzati unicamente per il bilancio personale dell&apos;utente).</li>
                     <li><strong>Dati di Autenticazione Sync (opzionali):</strong> Identificativo Utente e Passcode scelti dall&apos;utente per l&apos;accesso al proprio Cloudflare Worker privato.</li>
                   </ul>
                 </div>
@@ -198,7 +215,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     3. Finalità e Base Giuridica del Trattamento
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    La base giuridica (Art. 6 par. 1 lett. b, f GDPR) è costituita dall&apos;esecuzione del servizio richiesto dall&apos;utente e dal legittimo interesse dell&apos;utente ad usufruire di un gestionale personale per il calendario di lavoro. I dati <strong>non vengono mai utilizzati per finalità commerciali, profilazione o marketing</strong>.
+                    La base giuridica (Art. 6 par. 1 lett. b, f GDPR) è costituita dall&apos;esecuzione del servizio richiesto dall&apos;utente e dal legittimo interesse dell&apos;utente ad usufruire di un gestionale personale per il calendario di lavoro. I dati <strong>non vengono mai venduti, profilati o usati per finalità pubblicitarie</strong>.
                   </p>
                 </div>
 
@@ -211,8 +228,8 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     L&apos;utente possiede il controllo totale dei propri dati in qualsiasi momento:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
-                    <li><strong>Diritto di Accesso e Portabilità:</strong> Può scaricare o consultare immediatamente tutti i propri turni e la configurazione.</li>
-                    <li><strong>Diritto alla Cancellazione (Diritto all&apos;Oblio):</strong> Cliccando sul pulsante &quot;Disconnetti&quot; nella sezione Cloud o cancellando i dati del browser, l&apos;applicazione elimina istantaneamente tutti i dati locali del calendario e delle impostazioni da quel dispositivo.</li>
+                    <li><strong>Diritto di Accesso, Esportazione e Portabilità:</strong> Può scaricare o consultare immediatamente tutti i propri turni in formato CSV per Excel o stampare il prospetto mensile.</li>
+                    <li><strong>Diritto alla Cancellazione (Diritto all&apos;Oblio):</strong> Cliccando sul pulsante &quot;Disconnetti&quot; nella sezione Cloud o cancellando i dati del browser, l&apos;applicazione elimina istantaneamente tutti i dati memorizzati sul dispositivo.</li>
                   </ul>
                 </div>
               </div>
@@ -228,42 +245,52 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                   ARCHITETTURA DI SINCRONIZZAZIONE MULTI-DEVICE
                 </div>
                 <p className="text-xs text-purple-900/90 dark:text-purple-200/90 leading-relaxed">
-                  Informativa dettagliata sul funzionamento del servizio opzionale Cloudflare Worker Sync.
+                  Informativa dettagliata sul funzionamento del servizio Cloudflare Worker &amp; KV Storage Sync.
                 </p>
               </div>
 
               <div className="space-y-3">
+                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-xl space-y-1.5 text-amber-900 dark:text-amber-200">
+                  <strong className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    Accesso Riservato ed Esclusione di Servizio Pubblico (No SaaS)
+                  </strong>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-[11px]">
+                    Il servizio di sincronizzazione cloud è ad <strong>accesso limitato e riservato esclusivamente agli utenti espressamente autorizzati dall&apos;amministratore, senza registrazione pubblica</strong>. L&apos;applicazione non è un servizio SaaS commerciale aperto al pubblico né offre iscrizioni libere o creazione autonoma di account sul web; la risorsa cloud è un ambiente privato e controllato, istanziato unicamente per le utenze pre-autorizzate.
+                  </p>
+                </div>
+
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Lock className="w-4 h-4 text-purple-500" />
                     Protocollo e Canale di Trasmissione Sicuro
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Quando l&apos;utente attiva la sincronizzazione cloud inserendo il proprio URL Worker, Nome Utente e Password:
+                    Quando l&apos;utente autorizzato attiva la sincronizzazione cloud:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
                     <li>Tutti i trasferimenti tra il dispositivo dell&apos;utente e l&apos;infrastruttura server avvengono mediante canale crittografato <strong>HTTPS / TLS 1.3</strong>.</li>
-                    <li>L&apos;autenticazione è protetta da header di sicurezza HTTP personalizzati (<code>X-User-Key</code>, <code>X-Passcode</code>) per verificare l&apos;identità ed evitare accessi non autorizzati.</li>
+                    <li>L&apos;autenticazione è protetta da header di sicurezza HTTP dedicati (<code>X-User-Key</code>, <code>X-Passcode</code>) per verificare l&apos;identità ed evitare accessi non autorizzati.</li>
                   </ul>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Database className="w-4 h-4 text-blue-500" />
-                    Isolamento dei Dati nel Cloud Storage (KV Storage)
+                    <ShieldCheck className="w-4 h-4 text-blue-500" />
+                    Verifica Anti-Bot Cloudflare Turnstile
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    I dati del calendario e della configurazione vengono salvati nel database <strong>Cloudflare Key-Value (KV) Storage</strong> associato univocamente alla combinazione del vostro Nome Utente. Nessun altro utente o terza parte può accedere al vostro spazio di archiviazione protetto.
+                    L&apos;accesso e la sincronizzazione cloud sono protetti da <strong>Cloudflare Turnstile</strong>, un meccanismo di verifica anti-bot a tutela della privacy che non fa uso di cookie di profilazione o tracciamento biometrico e previene tentativi di accesso automatizzato non autorizzato o brute-force.
                   </p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    Reset & Purga Automatica dei Dati
+                    <Database className="w-4 h-4 text-purple-500" />
+                    Isolamento dei Dati nel Cloud Storage (KV Storage)
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Qualora decidiate di disconnettervi tramite l&apos;apposito pulsante &quot;Disconnetti&quot;, le credenziali di sincronizzazione vengono eliminate dal browser locale e l&apos;applicazione provvede al reset dei dati sul dispositivo per garantire la massima riservatezza.
+                    I dati del calendario, delle spese e delle tariffe vengono memorizzati nello spazio <strong>Cloudflare Key-Value (KV) Storage</strong> del Worker associato univocamente al proprio Username. Nessun altro utente o terza parte può accedere al vostro archivio turni dedicato.
                   </p>
                 </div>
               </div>
@@ -279,7 +306,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                   POLITICA SUI COOKIE E TECNOLOGIE DI ARCHIVIAZIONE
                 </div>
                 <p className="text-xs text-emerald-900/90 dark:text-emerald-200/90 leading-relaxed">
-                  Nessun cookie di tracciamento. Esclusivo utilizzo dell&apos;HTML5 Web Storage locale.
+                  Nessun cookie di tracciamento pubblicitario. Esclusivo utilizzo dell&apos;HTML5 Web Storage locale tecnico.
                 </p>
               </div>
 
@@ -290,26 +317,28 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     Zero Cookie di Profilazione o Terze Parti
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    L&apos;applicazione <strong>non installa</strong> né utilizza cookie pubblicitari, cookie analitici (come Google Analytics, Adobe, Hotjar, Facebook Pixel) o tracker di terze parti. Non viene effettuato alcun tracciamento delle abitudini di navigazione dell&apos;utente.
+                    L&apos;applicazione <strong>non installa</strong> cookie pubblicitari o pixel di monitoraggio commerciale (come Meta Pixel, Google Ads, TikTok Pixel). I dati risiedono unicamente nel vostro dispositivo.
                   </p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Database className="w-4 h-4 text-blue-500" />
-                    Utilizzo di HTML5 LocalStorage (Archiviazione Tecnica Essenziale)
+                    Chiavi Tecniche HTML5 LocalStorage Utilizzate
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    L&apos;applicazione fa uso esclusivamente della memoria interna del browser (<code>window.localStorage</code>) per salvare lo stato necessario al corretto funzionamento dell&apos;app:
+                    L&apos;applicazione fa uso esclusivamente della memoria interna del browser (<code>window.localStorage</code>) per il salvataggio tecnico essenziale:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
-                    <li><code>work_contract_config</code>: Salva le impostazioni contrattuali e tariffe.</li>
-                    <li><code>work_shifts</code>: Memorizza il registro dei turni inseriti.</li>
-                    <li><code>quick_templates</code>: Conserva i modelli rapidi di turno personalizzati.</li>
-                    <li><code>sync_credentials</code>: Mantiene le credenziali per la sincronizzazione cloud (se attivata).</li>
+                    <li><code>bk_config_v2</code>: Configurazione contrattuale, tariffe, maggiorazioni e bonus.</li>
+                    <li><code>bk_storico_v2</code>: Registro completo dei turni lavorativi e ferie.</li>
+                    <li><code>bk_expenses_v2</code>: Registro spese personali e rimborsi del mese.</li>
+                    <li><code>bk_templates_v2</code>: Modelli rapidi preimpostati per inserimento turni veloci.</li>
+                    <li><code>bk_sync_creds</code>: Credenziali di sincronizzazione per il cloud (se attivate).</li>
+                    <li><code>app_theme</code>: Preferenza visiva modalità Notte / Giorno.</li>
                   </ul>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed pt-1">
-                    Trattandosi di archiviazione tecnica indispensabile per l&apos;erogazione del servizio su richiesta dell&apos;utente, ai sensi della Direttiva ePrivacy e del Provvedimento Garante Privacy n. 231/2021, <strong>non è richiesto un banner di consenso preventivo per i cookie</strong>.
+                    Trattandosi di memorizzazione tecnica indispensabile per l&apos;erogazione del servizio su espressa richiesta dell&apos;utente (Direttiva ePrivacy 2002/58/CE e Provvedimento Garante Privacy n. 231/2021), <strong>non è necessario alcun banner cookie invasivo</strong>.
                   </p>
                 </div>
               </div>
@@ -332,11 +361,37 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
               <div className="space-y-3">
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <strong className="font-bold text-slate-900 dark:text-white">
-                    Uso Personale e Self-Hosting
+                    Uso Personale e Sviluppo
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    L&apos;utente ha il diritto di utilizzare liberamente l&apos;applicazione per il proprio uso individuale o di ospitarla (self-hosting) su infrastrutture private (GitHub Pages, Vercel, Netlify, Cloudflare Pages o server privati).
+                    L&apos;utente ha il diritto di utilizzare liberamente l&apos;applicazione per il proprio uso individuale. L&apos;applicazione è ideata e sviluppata da Valerio Cola come ausilio digitale per lavoratori dipendenti.
                   </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                  <strong className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>☕ Supporto al Progetto</span>
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">100% Gratuito & Libero</span>
+                  </strong>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Il servizio è gratuito e indipendente, sviluppato per semplificare la vita lavorativa di chi fa turni. Se trovi utile l&apos;applicazione, puoi supportare lo sviluppo continuo, l&apos;aggiornamento alle nuove leggi fiscali e i costi dei server offrendo un caffè:
+                  </p>
+                  <div className="pt-1">
+                    <a
+                      href="https://ko-fi.com/I1A228L9XZ"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                      title="Supporta lo sviluppo su Ko-fi"
+                    >
+                      <img
+                        height="36"
+                        style={{ border: '0px', height: '36px' }}
+                        src="https://storage.ko-fi.com/cdn/kofi6.png?v=6"
+                        alt="Buy Me a Coffee at ko-fi.com"
+                      />
+                    </a>
+                  </div>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
@@ -344,7 +399,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     Aggiornamenti delle Condizioni
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Le presenti note legali e la privacy policy possono essere aggiornate periodicamente per riflettere modifiche legislative o aggiornamenti delle funzionalità tecniche dell&apos;applicazione. L&apos;utilizzo continuato dell&apos;applicazione costituisce accettazione delle condizioni vigenti.
+                    Le presenti note legali e la privacy policy possono essere aggiornate periodicamente per riflettere novità fiscali (come le Leggi di Bilancio annuali) o aggiornamenti delle funzionalità tecniche dell&apos;applicazione.
                   </p>
                 </div>
               </div>
@@ -357,7 +412,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>Versione Informativa: 2.1 • Ultimo aggiornamento: Agosto 2026</span>
+            <span>Versione Informativa: 2.2 • Ultimo aggiornamento: Ottobre 2026</span>
           </div>
           <button
             onClick={onClose}

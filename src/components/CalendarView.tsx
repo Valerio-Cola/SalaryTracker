@@ -1,6 +1,7 @@
 import React from 'react';
 import { Shift, Expense } from '../types';
-import { Plus, Moon, Sun, Clock, Receipt } from 'lucide-react';
+import { Plus, Moon, Sun, Clock, Receipt, Sparkles } from 'lucide-react';
+import { checkDayTypeInfo } from '../utils/holidays';
 
 interface CalendarViewProps {
   currentMonthKey: string; // YYYY-MM
@@ -85,7 +86,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <div
                 key={w}
                 className={`text-xs font-bold py-1.5 rounded-lg ${
-                  idx >= 5 ? 'text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/40' : 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60'
+                  idx === 6
+                    ? 'text-rose-600 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40'
+                    : idx === 5
+                    ? 'text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/40'
+                    : 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60'
                 }`}
               >
                 {w}
@@ -105,19 +110,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 );
               }
 
+              const dayInfo = cell.dateIso ? checkDayTypeInfo(cell.dateIso) : { isSunday: false, isHoliday: false, holidayName: undefined };
               const isToday = cell.dateIso === todayIso;
+              const isHoliday = dayInfo.isHoliday;
+              const isSunday = dayInfo.isSunday;
               const hasShifts = cell.dayShifts && cell.dayShifts.length > 0;
               const hasExpenses = cell.dayExpenses && cell.dayExpenses.length > 0;
-              const dateObj = new Date(cell.dateIso + 'T00:00:00');
-              const isSunday = dateObj.getDay() === 0;
 
               return (
                 <div
                   key={cell.dateIso}
                   onClick={() => onSelectDate(cell.dateIso!)}
+                  title={isHoliday ? `Festività italiana: ${dayInfo.holidayName}` : undefined}
                   className={`min-h-[68px] sm:min-h-[85px] p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between group overflow-hidden min-w-0 ${
                     isToday
                       ? 'border-blue-500 bg-blue-50/30 dark:bg-blue-950/40 ring-2 ring-blue-400/20'
+                      : isHoliday
+                      ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/30 dark:bg-rose-950/20 hover:border-rose-300 dark:hover:border-rose-700'
                       : (hasShifts || hasExpenses)
                       ? 'border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-blue-950/20 hover:border-blue-300 dark:hover:border-blue-700'
                       : isSunday
@@ -127,17 +136,31 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 >
                   {/* Header Giorno */}
                   <div className="flex items-center justify-between">
-                    <span
-                      className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${
-                        isToday
-                          ? 'bg-blue-600 text-white'
-                          : isSunday
-                          ? 'text-blue-700 dark:text-blue-400 font-black'
-                          : 'text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {cell.dayNumber}
-                    </span>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span
+                        className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full transition-colors ${
+                          isToday && isHoliday
+                            ? 'bg-rose-600 text-white font-black ring-2 ring-rose-400/30 shadow-xs'
+                            : isToday
+                            ? 'bg-blue-600 text-white font-bold'
+                            : isHoliday
+                            ? 'text-rose-600 dark:text-rose-400 font-black bg-rose-100/80 dark:bg-rose-950/80 ring-1 ring-rose-300 dark:ring-rose-800'
+                            : isSunday
+                            ? 'text-rose-600 dark:text-rose-400 font-bold'
+                            : 'text-slate-700 dark:text-slate-300 font-medium'
+                        }`}
+                      >
+                        {cell.dayNumber}
+                      </span>
+                      {isHoliday && dayInfo.holidayName && (
+                        <span
+                          className="text-[9px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-900/60 rounded px-1 py-0.2 truncate max-w-[85px] hidden sm:inline-block"
+                          title={`Festività Italiana: ${dayInfo.holidayName}`}
+                        >
+                          {dayInfo.holidayName}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button

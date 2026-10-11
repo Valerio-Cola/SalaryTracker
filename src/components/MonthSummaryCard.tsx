@@ -1,61 +1,82 @@
 import React, { useState } from 'react';
 import { Shift, ContractConfig, Expense } from '../types';
-import { DollarSign, Clock, Moon, Sun, TrendingUp, Coins, Info, ChevronDown, ChevronUp, Receipt } from 'lucide-react';
+import {
+  DollarSign,
+  Clock,
+  Moon,
+  Sun,
+  TrendingUp,
+  Coins,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Receipt,
+  Palmtree,
+  Sparkles,
+} from 'lucide-react';
+import { calculateMonthlyCompensation, calculateFerieBalance } from '../utils/calculator';
 
 interface MonthSummaryCardProps {
-  shifts: Shift[];
+  shifts: Shift[]; // Turni del mese corrente
+  allShifts?: Shift[]; // Tutti i turni per il calcolo ferie dall'inizio
   expenses?: Expense[];
   config: ContractConfig;
   monthTitle: string;
+  currentMonthKey?: string; // YYYY-MM
 }
 
 export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
   shifts,
+  allShifts = [],
   expenses = [],
   config,
   monthTitle,
+  currentMonthKey = '',
 }) => {
   const [showCalculationDetails, setShowCalculationDetails] = useState(false);
 
+  // Ore mese corrente
   const totalOre = shifts.reduce((acc, curr) => acc + curr.oreTotali, 0);
-  const totalOreLavorate = shifts.filter((s) => s.tipoGiorno !== 'ferie' && !s.isFerie).reduce((acc, curr) => acc + curr.oreTotali, 0);
-  const totalOreFerie = shifts.filter((s) => s.tipoGiorno === 'ferie' || s.isFerie).reduce((acc, curr) => acc + curr.oreTotali, 0);
-  const totalFerieCount = shifts.filter((s) => s.tipoGiorno === 'ferie' || s.isFerie).length;
+  const totalOreLavorate = shifts
+    .filter((s) => s.tipoGiorno !== 'ferie' && !s.isFerie)
+    .reduce((acc, curr) => acc + curr.oreTotali, 0);
+  const totalOreFerie = shifts
+    .filter((s) => s.tipoGiorno === 'ferie' || s.isFerie)
+    .reduce((acc, curr) => acc + curr.oreTotali, 0);
+  const totalFerieCountMese = shifts.filter((s) => s.tipoGiorno === 'ferie' || s.isFerie).length;
 
   const totalNotturne = shifts.reduce((acc, curr) => acc + curr.oreNotturne, 0);
   const totalSupplementari = shifts.reduce((acc, curr) => acc + curr.oreSupplementari, 0);
-  
+
   const totalBase = shifts.reduce((acc, curr) => acc + curr.guadagnoBase, 0);
   const totalNotteExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoNotturno, 0);
   const totalFestivoExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoFestivoDomenicale, 0);
   const totalSuppExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoSupplementare, 0);
-  
-  const totalShiftsLordo = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
-  const totalShiftsNetto = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
 
-  // Calcolo ratei mensili 13esima, 14esima e Bonus Renzi
-  const rateo13 = config.includeTredicesimaMensile ? (config.importoTredicesimaMensile ?? 53.84) : 0;
-  const rateo14 = config.includeQuattordicesimaMensile ? (config.importoQuattordicesimaMensile ?? 53.84) : 0;
-  const rateiLordoMensili = rateo13 + rateo14;
-  const taxRateDecimal = (config.aliquotaNettoStimata || 15) / 100;
-  const rateiNettoMensili = rateiLordoMensili * (1 - taxRateDecimal);
+  // Calcolo completo compensi, ratei e bonus per il mese
+  const monthKey = currentMonthKey || (shifts.length > 0 ? shifts[0].dataGrezza.slice(0, 7) : '2026-09');
+  const comp = calculateMonthlyCompensation(shifts, config, monthKey);
 
-  const bonusRenziNetto = config.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
-
-  const totalLordoCompleto = totalShiftsLordo + rateiLordoMensili;
-  const totalNettoCompleto = totalShiftsNetto + rateiNettoMensili + bonusRenziNetto;
-
-  const hasMonthlyAdditions = config.includeTredicesimaMensile || config.includeQuattordicesimaMensile || config.includeBonusRenzi;
+  // Calcolo saldo ferie globale (partendo dal turno più vecchio al più recente)
+  const shiftsForFerie = allShifts.length > 0 ? allShifts : shifts;
+  const ferie = calculateFerieBalance(shiftsForFerie, config);
 
   // Spese
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.importo, 0);
-  const finalBalance = totalNettoCompleto - totalExpenses;
+  const finalBalance = comp.totalNettoCompleto - totalExpenses;
 
   // Stima monte ore del mese (indicativamente 4.33 settimane * ore contrattuali)
   const targetOreMese = (config.oreSettimanali || 24) * 4.33;
   const progressPercent = Math.min(100, Math.round((totalOre / targetOreMese) * 100));
 
-  const totalShiftsTaxDeduction = totalShiftsLordo * taxRateDecimal;
+  const totalShiftsTaxDeduction = comp.totalShiftsLordo * comp.taxRateDecimal;
+
+  const hasAdditions =
+    config.includeTredicesimaMensile ||
+    config.includeQuattordicesimaMensile ||
+    config.includeBonusRenzi ||
+    config.includeBonusL207 ||
+    comp.activeCustomAllowances.length > 0;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6 space-y-5 transition-colors">
@@ -85,11 +106,13 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             <div>
               <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Busta Paga Lorda</div>
               <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
-                € {totalLordoCompleto.toFixed(2)}
+                € {comp.totalLordoCompleto.toFixed(2)}
               </div>
               <div className="text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
                 <span>Netto in tasca:</span>
-                <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">€ {totalNettoCompleto.toFixed(2)}</span>
+                <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">
+                  € {comp.totalNettoCompleto.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
@@ -114,16 +137,50 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
         </div>
       </div>
 
-      {/* Badges per Ratei Mensili e Bonus Fissi */}
-      {hasMonthlyAdditions && (
-        <div className="p-3 bg-amber-50/60 dark:bg-amber-950/30 rounded-xl border border-amber-200/60 dark:border-amber-900/40 space-y-2 text-xs">
+      {/* Saldo Ferie Widget */}
+      <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+            <Palmtree className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
+              <span>Saldo Ferie Disponibili</span>
+              <span className="text-[10px] text-amber-700 dark:text-amber-400 font-normal">
+                (calcolato sui {ferie.mesiLavorati} mesi di attività)
+              </span>
+            </div>
+            <div className="text-xs text-amber-900/80 dark:text-amber-300/80 mt-0.5">
+              Maturate: <strong>+{ferie.ferieMaturateTotali} gg</strong> ({ferie.ferieMaturateMese} gg/m) • Godute totali: <strong>-{ferie.ferieGoduteTotali} gg</strong>
+              {totalFerieCountMese > 0 && (
+                <span className="ml-1 text-emerald-700 dark:text-emerald-400 font-bold">
+                  (di cui {totalFerieCountMese} gg in questo mese)
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-center">
+          <div className="text-right">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Ferie Residue</div>
+            <div className={`text-xl font-black ${ferie.ferieResidue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+              {ferie.ferieResidue} {Math.abs(ferie.ferieResidue) === 1 ? 'giorno' : 'giorni'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Badges per Ratei Mensili, Bonus L.207/2024 e Bonus Fissi */}
+      {hasAdditions && (
+        <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
-              <Coins className="w-3.5 h-3.5 text-amber-600" /> Ratei e Bonus Inclusi nel Mese:
+            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Coins className="w-4 h-4 text-amber-500" /> Voci e Integrazioni Busta Paga:
             </span>
             <button
               onClick={() => setShowCalculationDetails(!showCalculationDetails)}
-              className="text-amber-800 dark:text-amber-300 hover:text-amber-950 dark:hover:text-white font-semibold flex items-center gap-1 text-[11px] underline cursor-pointer"
+              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1 text-[11px] cursor-pointer"
             >
               <Info className="w-3.5 h-3.5" />
               {showCalculationDetails ? 'Nascondi Dettaglio Calcolo' : 'Come viene calcolato il Netto?'}
@@ -132,68 +189,115 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {config.includeTredicesimaMensile && (
-              <span className="bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold text-[11px]">
-                13ª Mensile: +€{rateo13.toFixed(2)} lordo (+€{ (rateo13 * (1 - taxRateDecimal)).toFixed(2) } netto)
+            {/* SOMMA ART.1 C.4 L.207/24 */}
+            {config.includeBonusL207 && comp.bonusL207Netto > 0 && (
+              <span className="bg-amber-100/80 dark:bg-amber-950/70 text-amber-950 dark:text-amber-200 px-2 py-0.5 rounded-lg border border-amber-300 dark:border-amber-800 font-bold text-[11px] flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-600" />
+                SOMMA ART.1 C.4 L.207/24: +€{comp.bonusL207Netto.toFixed(2)} NETTO (Esente tasse)
               </span>
             )}
-            {config.includeQuattordicesimaMensile && (
-              <span className="bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold text-[11px]">
-                14ª Mensile: +€{rateo14.toFixed(2)} lordo (+€{ (rateo14 * (1 - taxRateDecimal)).toFixed(2) } netto)
-              </span>
-            )}
+
+            {/* Bonus Renzi */}
             {config.includeBonusRenzi && (
-              <span className="bg-white dark:bg-slate-800 text-teal-900 dark:text-teal-200 px-2 py-0.5 rounded-lg border border-teal-200 dark:border-teal-800 font-semibold text-[11px]">
-                Bonus Renzi: +€{bonusRenziNetto.toFixed(2)} NETTO (non imponibile)
+              <span className="bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 px-2 py-0.5 rounded-lg border border-teal-200 dark:border-teal-800 font-semibold text-[11px]">
+                Bonus Renzi: +€{comp.bonusRenziNetto.toFixed(2)} NETTO (non imponibile)
               </span>
             )}
+
+            {/* 13ª */}
+            {config.includeTredicesimaMensile && comp.is13ErogataNelMese && (
+              <span className="bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold text-[11px]">
+                {config.modalitaTredicesima === 'annuale' ? '13ª Annuale (Erogata):' : '13ª Mensile:'} +€{comp.lordo13.toFixed(2)} lordo
+              </span>
+            )}
+            {config.includeTredicesimaMensile && !comp.is13ErogataNelMese && config.modalitaTredicesima === 'annuale' && (
+              <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px]">
+                Accantonamento 13ª (Erogazione a Dicembre)
+              </span>
+            )}
+
+            {/* 14ª */}
+            {config.includeQuattordicesimaMensile && comp.is14ErogataNelMese && (
+              <span className="bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold text-[11px]">
+                {config.modalitaQuattordicesima === 'annuale' ? '14ª Annuale (Erogata):' : '14ª Mensile:'} +€{comp.lordo14.toFixed(2)} lordo
+              </span>
+            )}
+            {config.includeQuattordicesimaMensile && !comp.is14ErogataNelMese && config.modalitaQuattordicesima === 'annuale' && (
+              <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px]">
+                Accantonamento 14ª (Erogazione a Giugno)
+              </span>
+            )}
+
+            {/* Voci personalizzate */}
+            {comp.activeCustomAllowances.map((v) => (
+              <span
+                key={v.id}
+                className="bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800 font-semibold text-[11px]"
+              >
+                {v.nome}: +€{v.importo.toFixed(2)} {v.tassabile ? 'lordo' : 'netto esente'}
+              </span>
+            ))}
           </div>
 
           {/* Dettaglio Spiegazione Calcolo (Espandibile) */}
           {showCalculationDetails && (
-            <div className="mt-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-amber-200 dark:border-amber-800 text-slate-700 dark:text-slate-300 space-y-2 text-xs">
+            <div className="mt-3 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 space-y-2 text-xs">
               <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-slate-800">
                 <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                Spiegazione del Calcolo del Salario (Lordo vs Netto):
+                Spiegazione del Calcolo Busta Paga (Lordo vs Netto):
               </div>
-              
+
               <ul className="space-y-1 font-mono text-[11px]">
                 <li className="flex justify-between">
-                  <span>1. Lordo turni lavorati:</span>
-                  <span className="font-bold text-slate-900 dark:text-white">€ {totalShiftsLordo.toFixed(2)}</span>
+                  <span>1. Lordo turni lavorati ({totalOre.toFixed(1)}h):</span>
+                  <span className="font-bold text-slate-900 dark:text-white">€ {comp.totalShiftsLordo.toFixed(2)}</span>
                 </li>
                 <li className="flex justify-between text-rose-600 dark:text-rose-400">
                   <span>2. Ritenute stimate (~{config.aliquotaNettoStimata || 15}%):</span>
                   <span>- € {totalShiftsTaxDeduction.toFixed(2)}</span>
                 </li>
                 <li className="flex justify-between text-slate-900 dark:text-white font-bold pt-0.5 border-t border-slate-100 dark:border-slate-800">
-                  <span>= Netto turni:</span>
-                  <span>€ {totalShiftsNetto.toFixed(2)}</span>
+                  <span>= Netto base turni:</span>
+                  <span>€ {comp.totalShiftsNetto.toFixed(2)}</span>
                 </li>
 
-                {rateiNettoMensili > 0 && (
+                {comp.rateiNettoMensili > 0 && (
                   <li className="flex justify-between text-amber-700 dark:text-amber-400">
-                    <span>+ Netto Ratei 13ª / 14ª:</span>
-                    <span>+ € {rateiNettoMensili.toFixed(2)}</span>
+                    <span>+ Netto Ratei 13ª / 14ª erogati:</span>
+                    <span>+ € {comp.rateiNettoMensili.toFixed(2)}</span>
                   </li>
                 )}
 
                 {config.includeBonusRenzi && (
                   <li className="flex justify-between text-teal-700 dark:text-teal-400 font-bold">
                     <span>+ Bonus Renzi (Trattamento Integrativo):</span>
-                    <span>+ € {bonusRenziNetto.toFixed(2)} (Netto non imponibile)</span>
+                    <span>+ € {comp.bonusRenziNetto.toFixed(2)} (Netto non imponibile)</span>
                   </li>
                 )}
 
-                <li className="flex justify-between text-emerald-700 dark:text-emerald-400 font-bold text-xs pt-1 border-t border-slate-200 dark:border-slate-700">
-                  <span>= Netto Totale Stimato in Busta:</span>
-                  <span>€ {totalNettoCompleto.toFixed(2)}</span>
+                {config.includeBonusL207 && comp.bonusL207Netto > 0 && (
+                  <li className="flex justify-between text-amber-800 dark:text-amber-300 font-bold">
+                    <span>+ SOMMA ART.1 C.4 L.207/24 (Legge Bilancio 2025):</span>
+                    <span>+ € {comp.bonusL207Netto.toFixed(2)} (Netto esente imposte/contributi)</span>
+                  </li>
+                )}
+
+                {comp.vociNetteExtra > 0 && (
+                  <li className="flex justify-between text-blue-700 dark:text-blue-400 font-bold">
+                    <span>+ Voci e indennità personalizzate:</span>
+                    <span>+ € {comp.vociNetteExtra.toFixed(2)}</span>
+                  </li>
+                )}
+
+                <li className="flex justify-between text-emerald-700 dark:text-emerald-400 font-bold text-xs pt-1.5 border-t border-slate-200 dark:border-slate-700">
+                  <span>= Netto Totale Accreditato in Busta:</span>
+                  <span>€ {comp.totalNettoCompleto.toFixed(2)}</span>
                 </li>
               </ul>
 
-              <div className="p-2 bg-amber-50 dark:bg-amber-950/50 rounded-lg text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed font-sans">
-                💡 <strong>Perché il netto supera il lordo dei turni?</strong><br />
-                Il <strong>Bonus Renzi (€98,63)</strong> è per legge un <em>credito d'imposta netto statale non imponibile</em> (non viene tassato). Quando il guadagno dai turni è contenuto (es. €540 lordi = ~€459 netti), aggiungendo a questa cifra il Bonus Renzi netto (+€98,63) e i ratei netti (+€45/€90), il totale accreditato in busta paga netto sale a <strong>€579+</strong>, superando l'imponibile lordo delle sole ore lavorate.
+              <div className="p-2.5 bg-blue-50/50 dark:bg-blue-950/40 rounded-lg text-[11px] text-blue-950 dark:text-blue-200 leading-relaxed font-sans">
+                💡 <strong>Trasparenza Fiscale:</strong><br />
+                Sia il <strong>Bonus Renzi (€98,63)</strong> sia il nuovo bonus <strong>SOMMA ART.1 C.4 L.207/24 (€{comp.bonusL207Netto.toFixed(2)})</strong> sono integrazioni previste per legge che non subiscono trattenute INPS o IRPEF. Vengono quindi aggiunte per intero al netto finale.
               </div>
             </div>
           )}

@@ -75,9 +75,34 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       setOrarioInizio(shiftToEdit.orarioInizio || '');
       setOrarioFine(shiftToEdit.orarioFine || '');
       setPausaMinuti(shiftToEdit.pausaMinuti || 0);
-      setTipoGiorno(shiftToEdit.tipoGiorno);
-      setNomeFestivita(shiftToEdit.nomeFestivita || '');
-      setNote(shiftToEdit.note || '');
+
+      // Ricalcola autonomamente il tipo giorno basato sulla data reale del turno
+      const dateInfo = checkDayTypeInfo(shiftToEdit.dataGrezza);
+      if (isVacation) {
+        setTipoGiorno('ferie');
+        setNomeFestivita('');
+      } else if (dateInfo.isHoliday) {
+        setTipoGiorno('festivo');
+        setNomeFestivita(dateInfo.holidayName || '');
+      } else if (dateInfo.isSunday) {
+        setTipoGiorno('domenica');
+        setNomeFestivita('');
+      } else if (shiftToEdit.tipoGiorno === 'festivo' && shiftToEdit.nomeFestivita && !shiftToEdit.nomeFestivita.toLowerCase().includes('ferragosto')) {
+        setTipoGiorno('festivo');
+        setNomeFestivita(shiftToEdit.nomeFestivita);
+      } else {
+        setTipoGiorno('feriale');
+        setNomeFestivita('');
+      }
+
+      let noteVal = shiftToEdit.note || '';
+      if (noteVal === 'Turno Ferragosto' && !shiftToEdit.dataGrezza.includes('-08-15')) {
+        noteVal = 'Turno serale';
+      }
+      if (noteVal === 'Chiusura Domenicale' && !dateInfo.isSunday) {
+        noteVal = 'Chiusura serale';
+      }
+      setNote(noteVal);
       setOreFerieCustom(shiftToEdit.oreTotali > 0 ? shiftToEdit.oreTotali : standardDailyHours);
     } else {
       const dateToUse = initialDate || getTodayIso();
