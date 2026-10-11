@@ -625,6 +625,9 @@ export default function App() {
               </a>
             </div>
           </div>
+          <p className="text-[10.5px] text-slate-400 dark:text-slate-500 text-center sm:text-right leading-relaxed">
+            *Il supporto su Ko-fi è un libero contributo facoltativo: non costituisce compravendita di servizi né garantisce o preclude la disponibilità di un account cloud riservato.
+          </p>
         </div>
       </footer>
     </div>
