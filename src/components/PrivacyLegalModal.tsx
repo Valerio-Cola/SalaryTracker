@@ -162,7 +162,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     <strong>Dipendenza dai Dati Inseriti:</strong> L&apos;accuratezza delle stime calcolate dipende esclusivamente dalla precisione, completezza e veridicità dei dati di input forniti autonomamente dall&apos;utente (tariffa oraria base, maggiorazioni per turni diurni/notturni, ore straordinarie, lavoro festivo, riposi compensativi, trattenute e contributi).
                   </li>
                   <li>
-                    <strong>Sincronizzazione Cloud Multi-Device ad Accesso Riservato:</strong> La funzionalità facoltativa di sincronizzazione cloud su Cloudflare Worker/KV Storage è un servizio ad accesso limitato e riservato esclusivamente agli utenti espressamente autorizzati dall&apos;amministratore, senza registrazione pubblica. Non costituisce un servizio SaaS o cloud storage aperto al pubblico. L&apos;utilizzo è circoscritto ad uso privato e amatoriale per le sole utenze abilitate.
+                    <strong>Sincronizzazione Cloud Multi-Device ad Accesso Riservato:</strong> La funzionalità facoltativa di sincronizzazione cloud su Cloudflare Worker/KV Storage è un servizio ad accesso limitato e riservato esclusivamente agli utenti espressamente autorizzati dall&apos;amministratore, senza registrazione pubblica. Non costituisce un servizio SaaS o cloud storage aperto al pubblico. L&apos;eventuale tipping o supporto volontario tramite piattaforme esterne (es. Ko-fi) costituisce una libera elargizione a fondo perduto e non comporta alcun acquisto di servizi commerciali, non dà diritto automatico all&apos;attivazione di un account, né tantomeno l&apos;assenza o la presenza di donazioni preclude la possibilità di ottenere un account autorizzato.
                   </li>
                   <li>
                     <strong>Esenzione da Responsabilità Legale o Contabile:</strong> Lo sviluppatore, il distributore e i fornitori dell&apos;infrastruttura declinano espressamente qualsiasi responsabilità diretta, indiretta, incidentale o consequenziale per eventuali discrepanze tra gli importi stimati e gli importi effettivamente erogati dal datore di lavoro, nonché per eventuali decisioni finanziarie, vertenze di lavoro o contenziosi basati sui dati generati dall&apos;app.
@@ -257,6 +257,9 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                   </strong>
                   <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-[11px]">
                     Il servizio di sincronizzazione cloud è ad <strong>accesso limitato e riservato esclusivamente agli utenti espressamente autorizzati dall&apos;amministratore, senza registrazione pubblica</strong>. L&apos;applicazione non è un servizio SaaS commerciale aperto al pubblico né offre iscrizioni libere o creazione autonoma di account sul web; la risorsa cloud è un ambiente privato e controllato, istanziato unicamente per le utenze pre-autorizzate.
+                  </p>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[10.5px] pt-1 border-t border-amber-200/60 dark:border-amber-800/50">
+                    <strong>Natura del Supporto Volontario:</strong> Qualsiasi donazione o tipping facoltativo effettuato tramite Ko-fi costituisce una mera liberalità a supporto dei costi vivi e dello sviluppo. Il tipping non vincola, non garantisce e non conferisce alcun diritto all&apos;attivazione di un account, così come non aver effettuato donazioni non preclude la possibilità di ricevere un account autorizzato.
                   </p>
                 </div>
 
@@ -368,15 +371,15 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                   </p>
                 </div>
 
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5">
                   <strong className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
-                    <span>☕ Supporto al Progetto</span>
+                    <span>☕ Supporto al Progetto &amp; Liberalità delle Donazioni</span>
                     <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">100% Gratuito & Libero</span>
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Il servizio è gratuito e indipendente, sviluppato per semplificare la vita lavorativa di chi fa turni. Se trovi utile l&apos;applicazione, puoi supportare lo sviluppo continuo, l&apos;aggiornamento alle nuove leggi fiscali e i costi dei server offrendo un caffè:
+                    Il servizio è gratuito e indipendente, sviluppato per semplificare la vita lavorativa di chi fa turni. Se trovi utile l&apos;applicazione, puoi supportare lo sviluppo continuo, l&apos;aggiornamento alle nuove leggi fiscali e i costi dell&apos;infrastruttura offrendo un caffè:
                   </p>
-                  <div className="pt-1">
+                  <div className="pt-0.5">
                     <a
                       href="https://ko-fi.com/I1A228L9XZ"
                       target="_blank"
@@ -391,6 +394,14 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                         alt="Buy Me a Coffee at ko-fi.com"
                       />
                     </a>
+                  </div>
+                  <div className="p-2.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-lg border border-blue-100 dark:border-blue-900/50 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
+                    <strong className="text-blue-900 dark:text-blue-200 block font-semibold">
+                      Chiarimento su Tipping e Account di Sincronizzazione:
+                    </strong>
+                    <p className="leading-relaxed">
+                      Il tipping (mance/donazioni) tramite Ko-fi rappresenta un mero gesto di apprezzamento personale e non costituisce corrispettivo per l&apos;acquisto di beni o servizi. <strong>Il tipping non dà diritto automatico né garantisce l&apos;apertura di un account cloud riservato, così come non aver donato non preclude in alcun modo la possibilità di ottenere un account autorizzato</strong> rilasciato a discrezione dell&apos;amministratore.
+                    </p>
                   </div>
                 </div>
 

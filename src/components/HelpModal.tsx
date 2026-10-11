@@ -330,10 +330,22 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <span>Come collegare il tuo account</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    1. Clicca sull'icona della <strong>Nuvola (Cloud)</strong> in alto a destra.<br />
-                    2. Inserisci il tuo <strong>Nome Utente</strong> e la tua <strong>Password</strong> personale.<br />
-                    3. Supera la rapida verifica di sicurezza e clicca su <strong>"Accedi e Sincronizza"</strong>.<br />
-                    4. Da quel momento, ad ogni modifica (nuovo turno, spesa o cambio tariffe), l'app salverà i tuoi dati in tempo reale sul cloud protetto!
+                    1. Clicca sull&apos;icona della <strong>Nuvola (Cloud)</strong> in alto a destra.<br />
+                    2. Inserisci il tuo <strong>Nome Utente</strong> e la tua <strong>Password</strong> personale rilasciati dall&apos;amministratore.<br />
+                    3. Supera la rapida verifica di sicurezza e clicca su <strong>&quot;Accedi e Sincronizza&quot;</strong>.<br />
+                    4. Da quel momento, ad ogni modifica (nuovo turno, spesa o cambio tariffe), l&apos;app salverà i tuoi dati in tempo reale sul cloud protetto!
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl space-y-1.5 text-[11px] text-amber-950 dark:text-amber-200">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-100">
+                    <span>🔐 Accesso Riservato &amp; Donazioni Ko-fi</span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Il cloud è un servizio ad accesso privato, riservato esclusivamente agli utenti autorizzati (senza registrazione pubblica).
+                  </p>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Il supporto o tipping tramite <strong>Ko-fi</strong> è una donazione del tutto libera e spontanea: non costituisce compravendita di servizi o canone per l&apos;account e <strong>non preclude né condiziona in alcun modo la possibilità di ottenere un account</strong>.
                   </p>
                 </div>
               </div>
