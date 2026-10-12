@@ -370,21 +370,41 @@ export default function App() {
         {/* Banner Benvenuto / Setup rapido se prima volta */}
         {shifts.length === 0 && (
           <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 rounded-2xl p-5 sm:p-6 text-white shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 border border-slate-800">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[11px] font-semibold">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                <span>Benvenuto nel Salary Tracker SK</span>
+            <div className="space-y-3 max-w-2xl">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>👋</span> Benvenuto su Salary Tracker!
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
+                  Monitora i tuoi turni e calcola la tua busta paga in tempo reale.
+                </p>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                Gestione Intelligente dei Turni & Calcolo Busta Paga
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Registra le tue ore lavorative con rilevamento automatico di <strong>fasce notturne (22:00–06:00)</strong>, <strong>maggiorazioni per domeniche e festività nazionali</strong>, e conteggio degli <strong>straordinari settimanali</strong> secondo il tuo contratto. Puoi creare e salvare i tuoi <strong>preset di orari rapidi</strong> nella scheda Tariffe per inserire i turni in un istante!
-              </p>
-              <div className="flex items-center gap-2 pt-1 text-xs text-blue-200/90 font-medium">
+
+              <div className="space-y-2 pt-1 text-xs text-slate-300 leading-relaxed">
+                <p className="flex items-start gap-2">
+                  <span className="shrink-0 text-sm">🌙</span>
+                  <span>
+                    <strong className="text-white">Calcolo automatico maggiorazioni:</strong> Rilevamento immediato di turni notturni, domeniche e festività.
+                  </span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="shrink-0 text-sm">⏱️</span>
+                  <span>
+                    <strong className="text-white">Straordinari su misura:</strong> Conteggio automatico delle ore extra in base al tuo contratto settimanale.
+                  </span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="shrink-0 text-sm">⚡</span>
+                  <span>
+                    <strong className="text-white">Inserimento rapido:</strong> Crea e salva i tuoi turni tipo nella scheda Tariffe per registrarli con un click.
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1.5 text-xs text-blue-200/90 font-medium border-t border-slate-800/80">
                 <Info className="w-4 h-4 text-blue-400 shrink-0" />
                 <span>
-                  Hai dubbi sui calcoli o su come impostare la tua paga? Consulta la sezione <strong>&quot;Aiuto&quot;</strong> per una panoramica completa passo dopo passo.
+                  Hai dubbi su tariffe o impostazioni? Visita la sezione <strong>Aiuto</strong> per una guida completa.
                 </span>
               </div>
             </div>

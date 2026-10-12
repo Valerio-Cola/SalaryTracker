@@ -76,7 +76,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
   const [oreFerieCustom, setOreFerieCustom] = useState<number>(
     shiftToEdit && (shiftToEdit.isFerie || shiftToEdit.tipoGiorno === 'ferie')
       ? shiftToEdit.oreTotali
-      : standardDailyHours
+      : 0
   );
 
   // Aggiorna data/stato all'apertura o modifica
@@ -115,7 +115,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
         noteVal = 'Chiusura serale';
       }
       setNote(noteVal);
-      setOreFerieCustom(shiftToEdit.oreTotali > 0 ? shiftToEdit.oreTotali : standardDailyHours);
+      setOreFerieCustom(shiftToEdit.oreTotali > 0 ? shiftToEdit.oreTotali : 0);
     } else {
       const dateToUse = initialDate || getTodayIso();
       setEntryMode('turno');
@@ -124,7 +124,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       setOrarioFine('');
       setPausaMinuti(0);
       setNote('');
-      setOreFerieCustom(standardDailyHours);
+      setOreFerieCustom(0);
 
       const info = checkDayTypeInfo(dateToUse);
       setTipoGiorno(info.suggestedDayType);
@@ -335,67 +335,44 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
           {entryMode === 'ferie' ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Ore di Ferie / Permesso da accreditare nel giorno
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Inserisci quante ore di Ferie / Permesso accreditare:
                 </label>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0.5"
-                    max="24"
-                    required
-                    value={oreFerieCustom}
-                    onChange={(e) => setOreFerieCustom(parseFloat(e.target.value) || 0)}
-                    className="w-32 p-2.5 text-sm font-bold border border-amber-300 dark:border-amber-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden bg-amber-50/50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 text-center"
-                  />
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Ore</span>
-                </div>
-
-                {/* Quick hour buttons */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setOreFerieCustom(standardDailyHours)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 hover:bg-amber-200 transition-colors cursor-pointer"
-                  >
-                    Contrattuale ({standardDailyHours}h)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOreFerieCustom(4)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
-                  >
-                    4 Ore
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOreFerieCustom(6)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
-                  >
-                    6 Ore
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOreFerieCustom(8)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
-                  >
-                    8 Ore
-                  </button>
+                  <div className="relative w-36">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      max="24"
+                      required
+                      placeholder="es. 4.8 o 8"
+                      value={oreFerieCustom || ''}
+                      onChange={(e) => setOreFerieCustom(parseFloat(e.target.value) || 0)}
+                      className="w-full p-2.5 text-base font-extrabold border border-amber-300 dark:border-amber-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden bg-amber-50/50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 text-center"
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Ore totali</span>
                 </div>
               </div>
 
-              {/* Informazione Regola Ferie */}
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-900 dark:text-amber-200 space-y-1">
-                <div className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
-                  <Info className="w-4 h-4 shrink-0" />
+              {/* Informazione Regola Ferie Riformulata */}
+              <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-850 rounded-xl text-xs text-amber-950 dark:text-amber-200 space-y-2">
+                <div className="font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-300">
+                  <Info className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   Come funzionano le Ferie nel calcolo:
                 </div>
-                <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-200/90">
-                  • Retribuzione base: <strong>€{config.pagaBaseOraria.toFixed(2)}/ora</strong> (+€{(oreFerieCustom * config.pagaBaseOraria).toFixed(2)} lordo).
-                  <br />
-                  • <strong>Monte Ore Settimanale</strong>: Le <strong>{oreFerieCustom}h</strong> di ferie vengono conteggiate nel totale della settimana per completare la soglia contrattuale ({config.oreSettimanali}h). Gli ulteriori turni lavorati nella stessa settimana genereranno straordinari!
-                </p>
+                <div className="text-[11px] leading-relaxed space-y-1.5 text-amber-900/90 dark:text-amber-200/90">
+                  <p>
+                    • <strong>Retribuzione oraria base:</strong> Le ore di ferie inserite vengono retribuite con la tua paga oraria ordinaria{config.pagaBaseOraria > 0 && oreFerieCustom > 0 ? ` (€${config.pagaBaseOraria.toFixed(2)}/h) per un totale di +€${(oreFerieCustom * config.pagaBaseOraria).toFixed(2)} lordo` : config.pagaBaseOraria > 0 ? ` (€${config.pagaBaseOraria.toFixed(2)}/h)` : ''}.
+                  </p>
+                  <p>
+                    • <strong>Raggiungimento monte ore contrattuale:</strong> Le ore di assenza retribuita concorrono al completamento dell&apos;orario contrattuale della settimana. Eventuali ulteriori ore lavorate nella stessa settimana oltre la soglia genereranno automaticamente straordinario.
+                  </p>
+                  <p>
+                    • <strong>Saldo Ferie Disponibili:</strong> Registrando questa giornata verrà scalato 1 giorno (o quota oraria corrispondente) dal contatore delle ferie maturate nel tuo riepilogo.
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
@@ -471,13 +448,13 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                   </div>
                 </div>
 
-                {/* Badge Rilevamento automatico Ore Notturne (22:00-06:00) */}
+                {/* Badge Rilevamento automatico Ore Notturne */}
                 <div className="mt-1.5 text-[11px] rounded-lg p-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between transition-all">
                   {previewShift.oreNotturne > 0 ? (
                     <div className="text-indigo-900 dark:text-indigo-300 flex items-center justify-between w-full">
                       <div className="flex items-center gap-1.5 font-medium">
                         <Moon className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                        <span>Rilevate autonomamente ore notturne (22:00 - 06:00):</span>
+                        <span>Rilevate autonomamente ore notturne:</span>
                       </div>
                       <span className="font-extrabold text-indigo-700 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded text-[10px]">
                         {previewShift.oreNotturne.toFixed(2)} h notturne
@@ -491,7 +468,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                   ) : (
                     <div className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span>Fascia notturna (22:00 - 06:00): 0 ore (turno diurno)</span>
+                      <span>Fascia notturna: 0 ore (turno diurno)</span>
                     </div>
                   )}
                 </div>
@@ -553,7 +530,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
             <div className="grid grid-cols-3 gap-2 text-center pt-1">
               <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700/50">
                 <div className="text-[10px] text-slate-400">
-                  Ore Notte ({config.oraInizioNotte || '22:00'}-{config.oraFineNotte || '06:00'})
+                  Ore Notte{config.oraInizioNotte && config.oraFineNotte ? ` (${config.oraInizioNotte}-${config.oraFineNotte})` : ''}
                 </div>
                 <div className="text-sm font-bold text-indigo-300">
                   {previewShift.oreNotturne.toFixed(2)} h

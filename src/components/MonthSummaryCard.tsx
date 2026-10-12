@@ -65,9 +65,10 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.importo, 0);
   const finalBalance = comp.totalNettoCompleto - totalExpenses;
 
-  // Stima monte ore del mese (indicativamente 4.33 settimane * ore contrattuali)
-  const targetOreMese = (config.oreSettimanali || 24) * 4.33;
-  const progressPercent = Math.min(100, Math.round((totalOre / targetOreMese) * 100));
+  // Stima monte ore del mese (indicativamente 4.33 settimane * ore contrattuali se impostate)
+  const hasContractHours = Boolean(config.oreSettimanali && config.oreSettimanali > 0);
+  const targetOreMese = hasContractHours ? config.oreSettimanali * 4.33 : 0;
+  const progressPercent = targetOreMese > 0 ? Math.min(100, Math.round((totalOre / targetOreMese) * 100)) : 0;
 
   const totalShiftsTaxDeduction = comp.totalShiftsLordo * comp.taxRateDecimal;
 
@@ -321,16 +322,20 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
               </span>
             )}
           </span>
-          <span className="text-slate-500 dark:text-slate-400 font-medium">
-            Obiettivo contrattuale (~{targetOreMese.toFixed(0)}h): {progressPercent}%
-          </span>
+          {hasContractHours && (
+            <span className="text-slate-500 dark:text-slate-400 font-medium">
+              Obiettivo contrattuale (~{targetOreMese.toFixed(0)}h): {progressPercent}%
+            </span>
+          )}
         </div>
-        <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-          <div
-            className="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+        {hasContractHours && (
+          <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
+            <div
+              className="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Grid delle maggiorazioni e dettagli */}

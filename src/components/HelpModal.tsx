@@ -135,7 +135,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     🌙 <span>Turni Notturni Automatici</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    L'app rileva e conteggia automaticamente i minuti notturni esatti applicando la maggiorazione prevista. Nella scheda <strong>Tariffe</strong> puoi personalizzare la fascia oraria notturna (di base <strong>22:00 - 06:00</strong>) inserendo l'orario esatto di inizio e di fine notte stabilito dal tuo CCNL aziendale.
+                    L'app rileva e conteggia automaticamente i minuti notturni esatti applicando la maggiorazione prevista. Nella scheda <strong>Tariffe</strong> puoi personalizzare la fascia oraria notturna inserendo l'orario esatto di inizio e di fine notte stabilito dal tuo CCNL aziendale.
                   </p>
                 </div>
 

@@ -115,10 +115,10 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
   const [newVoceMeseInizio, setNewVoceMeseInizio] = useState('3');
   const [newVoceTassabile, setNewVoceTassabile] = useState(false);
 
-  // Stato per nuovo preset di orari
+  // Stato per nuovo preset di orari (vuoti al primo accesso per un nuovo preset)
   const [newPresetTitolo, setNewPresetTitolo] = useState('');
-  const [newPresetInizio, setNewPresetInizio] = useState('09:00');
-  const [newPresetFine, setNewPresetFine] = useState('17:00');
+  const [newPresetInizio, setNewPresetInizio] = useState('');
+  const [newPresetFine, setNewPresetFine] = useState('');
   const [newPresetPausa, setNewPresetPausa] = useState('0');
   const [newPresetNote, setNewPresetNote] = useState('');
   const [presetFeedback, setPresetFeedback] = useState<string | null>(null);
@@ -208,6 +208,9 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
 
     // Reset modulo preset
     setNewPresetTitolo('');
+    setNewPresetInizio('');
+    setNewPresetFine('');
+    setNewPresetPausa('0');
     setNewPresetNote('');
     setPresetFeedback('Preset aggiunto con successo!');
     setTimeout(() => setPresetFeedback(null), 3000);
@@ -456,9 +459,11 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
                   <label className="block text-xs font-semibold text-indigo-950 dark:text-indigo-200">
                     Bonus NOTTE (€/h)
                   </label>
-                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100/80 dark:bg-indigo-900/60 px-1.5 py-0.5 rounded">
-                    {formData.oraInizioNotte || '22:00'} - {formData.oraFineNotte || '06:00'}
-                  </span>
+                  {(formData.oraInizioNotte || formData.oraFineNotte) && (
+                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100/80 dark:bg-indigo-900/60 px-1.5 py-0.5 rounded">
+                      {formData.oraInizioNotte || '00:00'} - {formData.oraFineNotte || '00:00'}
+                    </span>
+                  )}
                 </div>
 
                 <div className="relative">
@@ -485,7 +490,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
                       </label>
                       <input
                         type="time"
-                        value={formData.oraInizioNotte || '22:00'}
+                        value={formData.oraInizioNotte || ''}
                         onChange={(e) => handleChange('oraInizioNotte', e.target.value)}
                         className="w-full p-1.5 text-xs font-semibold border border-indigo-200 dark:border-indigo-800 rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                       />
@@ -496,7 +501,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
                       </label>
                       <input
                         type="time"
-                        value={formData.oraFineNotte || '06:00'}
+                        value={formData.oraFineNotte || ''}
                         onChange={(e) => handleChange('oraFineNotte', e.target.value)}
                         className="w-full p-1.5 text-xs font-semibold border border-indigo-200 dark:border-indigo-800 rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                       />
