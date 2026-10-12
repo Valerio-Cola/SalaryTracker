@@ -231,7 +231,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               )}
                               {s.oreSupplementari > 0 && (
                                 <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold text-[10px] sm:text-xs">
-                                  +{s.oreSupplementari}h straord.
+                                  {s.oreSupplementari}h straord.
                                 </span>
                               )}
                               {s.oreNotturne > 0 && (
