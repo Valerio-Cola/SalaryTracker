@@ -201,23 +201,23 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         <div className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex-1 overflow-y-auto">
           {/* Banner Stato e Condizioni di Accesso al Servizio */}
           <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-[11px] text-blue-950 dark:text-blue-200 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900 dark:text-blue-100">
+            <div className="flex items-center gap-1.5 text-[14.44px] font-bold text-blue-900 dark:text-blue-100">
               <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               Sincronizzazione Multi-Device Cloud
             </div>
             <div className="p-2 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-lg text-[10px] text-amber-900 dark:text-amber-200 space-y-1">
-              <div className="font-bold flex items-center gap-1 text-[11px] text-amber-800 dark:text-amber-300">
+              <div className="font-bold flex items-center gap-1 text-xs text-amber-800 dark:text-amber-300">
                 <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                 Accesso Limitato e Riservato
               </div>
-              <p className="leading-relaxed">
+              <p className="text-[11px] leading-relaxed">
                 Il servizio di sincronizzazione cloud è ad accesso limitato e riservato esclusivamente agli utenti espressamente autorizzati dall&apos;amministratore, <strong>senza registrazione pubblica</strong>. Non costituisce una piattaforma SaaS aperta al pubblico.
               </p>
-              <div className="pt-1 border-t border-amber-200/60 dark:border-amber-900/40 text-[9.5px] leading-relaxed text-amber-900/90 dark:text-amber-200/90">
+              <div className="pt-1 border-t border-amber-200/60 dark:border-amber-900/40 text-[11.5px] leading-relaxed text-amber-900/90 dark:text-amber-200/90">
                 <strong>Nota su donazioni &amp; account:</strong> Il supporto volontario tramite Ko-fi è una libera donazione e non costituisce acquisto o compravendita di servizi. Effettuare o non effettuare donazioni non preclude la possibilità di avere un account autorizzato, il cui rilascio rimane a discrezione esclusiva dell&apos;amministratore.
               </div>
             </div>
-            <p className="text-[10px] text-blue-800/90 dark:text-blue-300/90">
+            <p className="text-[11px] text-blue-800/90 dark:text-blue-300/90">
               Se disponi delle credenziali rilasciate dall&apos;amministratore, inserisci di seguito l&apos;URL del Worker, il tuo Nome Utente e la Password.
             </p>
           </div>
