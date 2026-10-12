@@ -36,13 +36,13 @@ export const ShiftList: React.FC<ShiftListProps> = ({
         </div>
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white">Nessun turno in {monthTitle}</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-sm mx-auto mt-1">
             Non hai ancora inserito turni per questo mese. Aggiungi il tuo primo turno di lavoro per iniziare il calcolo dello stipendio.
           </p>
         </div>
         <button
           onClick={onOpenAddShift}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm shadow-blue-500/10 transition-all inline-flex items-center gap-1.5 mt-2"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm shadow-blue-500/10 transition-all inline-flex items-center gap-1.5 mt-2 cursor-pointer"
         >
           Aggiungi Turno Ora
         </button>
@@ -56,7 +56,7 @@ export const ShiftList: React.FC<ShiftListProps> = ({
         <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <span>📋 Elenco Turni ({shifts.length})</span>
         </h3>
-        <span className="text-xs text-slate-500 dark:text-slate-400">Clicca su un turno per vedere il dettaglio bonus</span>
+        <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Clicca su un turno per vedere il dettaglio bonus</span>
       </div>
 
       <div className="space-y-2.5">

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Expense } from '../types';
 import { Plus, Trash2, Edit2, Receipt, Calendar as CalendarIcon, Tag, AlignLeft } from 'lucide-react';
-import { ExpenseFormModal } from './ExpenseFormModal';
+
+const ExpenseFormModal = React.lazy(() => import('./ExpenseFormModal').then((m) => ({ default: m.ExpenseFormModal })));
 
 interface ExpensesListProps {
   expenses: Expense[];
@@ -51,8 +52,8 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({
 
       {expenses.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center">
-          <Receipt className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Nessuna spesa registrata in questo mese.</p>
+          <Receipt className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-600 dark:text-slate-300 font-medium">Nessuna spesa registrata in questo mese.</p>
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -60,12 +61,12 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({
             {sortedExpenses.map((exp) => (
               <div key={exp.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0">
                     <Receipt className="w-5 h-5" />
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 dark:text-slate-100">{exp.categoria}</h4>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
+                    <div className="text-xs text-slate-600 dark:text-slate-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
                       <span className="flex items-center gap-1"><CalendarIcon className="w-3.5 h-3.5" /> {exp.data.split('-').reverse().join('/')}</span>
                       {exp.descrizione && (
                         <span className="flex items-center gap-1"><AlignLeft className="w-3.5 h-3.5" /> {exp.descrizione}</span>
@@ -74,20 +75,20 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="font-black text-rose-600 dark:text-rose-400">
+                  <div className="font-black text-rose-700 dark:text-rose-400">
                     - € {exp.importo.toFixed(2)}
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenForm(exp)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      className="p-1.5 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors cursor-pointer"
                       title="Modifica"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onDeleteExpense(exp.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer"
                       title="Elimina"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -104,18 +105,21 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({
         </div>
       )}
 
-      {isFormOpen && (
-        <ExpenseFormModal
-          expense={editingExpense}
-          defaultDate={`${currentMonthKey}-01`}
-          onClose={() => setIsFormOpen(false)}
-          onSave={handleSave}
-          onDelete={(id) => {
-            onDeleteExpense(id);
-            setIsFormOpen(false);
-          }}
-        />
-      )}
+      <React.Suspense fallback={null}>
+        {isFormOpen && (
+          <ExpenseFormModal
+            expense={editingExpense}
+            defaultDate={`${currentMonthKey}-01`}
+            onClose={() => setIsFormOpen(false)}
+            onSave={handleSave}
+            onDelete={(id) => {
+              onDeleteExpense(id);
+              setIsFormOpen(false);
+            }}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 };
+

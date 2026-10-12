@@ -109,7 +109,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
               <DollarSign className="w-6 h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide truncate">
+              <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide truncate">
                 Busta Paga Lorda
               </div>
               <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
@@ -117,8 +117,8 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-between">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Netto in tasca:</span>
+          <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-between">
+            <span className="text-slate-700 dark:text-slate-300 font-semibold">Netto in tasca:</span>
             <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-2 py-0.5 rounded-md">
               € {comp.totalNettoCompleto.toFixed(2)}
             </span>
@@ -132,19 +132,19 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
               <Palmtree className="w-6 h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide truncate">
+              <div className="text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide truncate">
                 Saldo Ferie
               </div>
               <div className={`text-2xl sm:text-3xl font-black leading-tight ${
-                ferie.ferieResidue >= 0 ? 'text-amber-950 dark:text-amber-200' : 'text-rose-600 dark:text-rose-400'
+                ferie.ferieResidue >= 0 ? 'text-amber-950 dark:text-amber-200' : 'text-rose-700 dark:text-rose-400'
               }`}>
-                {ferie.ferieResidue} <span className="text-base font-semibold text-amber-800/80 dark:text-amber-300/80">{Math.abs(ferie.ferieResidue) === 1 ? 'giorno' : 'giorni'}</span>
+                {ferie.ferieResidue} <span className="text-base font-semibold text-amber-900/90 dark:text-amber-300/80">{Math.abs(ferie.ferieResidue) === 1 ? 'giorno' : 'giorni'}</span>
               </div>
             </div>
           </div>
           <div className="mt-2.5 pt-2 border-t border-amber-200/60 dark:border-amber-900/40 text-xs font-bold flex items-center justify-between">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Godute:</span>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+            <span className="text-slate-700 dark:text-slate-300 font-semibold">Godute:</span>
+            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold">
               {ferie.ferieGoduteTotali} {Math.abs(ferie.ferieGoduteTotali) === 1 ? 'giorno' : 'giorni'}
             </span>
           </div>
@@ -157,20 +157,20 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
               <Receipt className="w-6 h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-rose-500 dark:text-rose-400 uppercase tracking-wide truncate">
+              <div className="text-[11px] font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wide truncate">
                 Uscite
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-rose-700 dark:text-rose-400 leading-tight">
+              <div className="text-2xl sm:text-3xl font-black text-rose-800 dark:text-rose-300 leading-tight">
                 - € {totalExpenses.toFixed(2)}
               </div>
             </div>
           </div>
           <div className="mt-2.5 pt-2 border-t border-rose-200/60 dark:border-rose-900/40 text-xs font-bold flex items-center justify-between">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Rimanenza:</span>
-            <span className={`px-2 py-0.5 rounded-md ${
+            <span className="text-slate-700 dark:text-slate-300 font-semibold">Rimanenza:</span>
+            <span className={`px-2 py-0.5 rounded-md font-bold ${
               finalBalance >= 0
-                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
-                : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'
+                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
             }`}>
               € {finalBalance.toFixed(2)}
             </span>
@@ -324,7 +324,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             )}
           </span>
           {hasContractHours && (
-            <span className="text-slate-500 dark:text-slate-400 font-medium">
+            <span className="text-slate-700 dark:text-slate-300 font-medium">
               Obiettivo contrattuale (~{targetOreMese.toFixed(0)}h): {progressPercent}%
             </span>
           )}
@@ -343,56 +343,56 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
         {/* Paga Base (inclusa quota ferie) */}
         <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Paga Base Oraria</div>
+          <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Paga Base Oraria</div>
           <div className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
             € {totalBase.toFixed(2)}
           </div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="text-[10px] text-slate-600 dark:text-slate-400 mt-1 font-medium">
             {totalOre.toFixed(1)}h {totalOreFerie > 0 ? `(incluso ${totalOreFerie.toFixed(1)}h ferie)` : ''} × €{config.pagaBaseOraria.toFixed(2)}/h
           </div>
         </div>
 
         {/* Bonus Notte */}
         <div className="p-3 bg-indigo-50/60 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/60">
-          <div className="text-[11px] font-medium text-indigo-900 dark:text-indigo-300 flex items-center justify-between">
+          <div className="text-[11px] font-bold text-indigo-950 dark:text-indigo-200 flex items-center justify-between">
             <span className="flex items-center gap-1">
-              <Moon className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> Bonus Notturno
+              <Moon className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400" /> Bonus Notturno
             </span>
           </div>
           <div className="text-base font-bold text-indigo-950 dark:text-indigo-100 mt-0.5">
             + € {totalNotteExtra.toFixed(2)}
           </div>
-          <div className="text-[10px] text-indigo-700 dark:text-indigo-400 mt-1">
+          <div className="text-[10px] text-indigo-900 dark:text-indigo-300 mt-1 font-medium">
             {totalNotturne.toFixed(1)}h notturne
           </div>
         </div>
 
         {/* Bonus Festivo & Domenica */}
         <div className="p-3 bg-rose-50/60 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/60">
-          <div className="text-[11px] font-medium text-rose-900 dark:text-rose-300 flex items-center justify-between">
+          <div className="text-[11px] font-bold text-rose-950 dark:text-rose-200 flex items-center justify-between">
             <span className="flex items-center gap-1">
-              <Sun className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" /> Festivo / Domenica
+              <Sun className="w-3.5 h-3.5 text-rose-700 dark:text-rose-400" /> Festivo / Domenica
             </span>
           </div>
           <div className="text-base font-bold text-rose-950 dark:text-rose-100 mt-0.5">
             + € {totalFestivoExtra.toFixed(2)}
           </div>
-          <div className="text-[10px] text-rose-700 dark:text-rose-400 mt-1">
+          <div className="text-[10px] text-rose-900 dark:text-rose-300 mt-1 font-medium">
             Maggiorazione festivi/domenica
           </div>
         </div>
 
         {/* Bonus Straordinario */}
         <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-100 dark:border-emerald-900/60">
-          <div className="text-[11px] font-medium text-emerald-900 dark:text-emerald-300 flex items-center justify-between">
+          <div className="text-[11px] font-bold text-emerald-950 dark:text-emerald-200 flex items-center justify-between">
             <span className="flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Straordinari
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" /> Straordinari
             </span>
           </div>
           <div className="text-base font-bold text-emerald-950 dark:text-emerald-100 mt-0.5">
             + € {totalSuppExtra.toFixed(2)}
           </div>
-          <div className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-1">
+          <div className="text-[10px] text-emerald-900 dark:text-emerald-300 mt-1 font-medium">
             {totalSupplementari.toFixed(1)}h oltre soglia sett.
           </div>
         </div>
@@ -400,15 +400,15 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
         {/* Maggiorazioni Orarie Personalizzate */}
         {totalMaggiorazioniOrarieExtra > 0 && (
           <div className="p-3 bg-amber-50/60 dark:bg-amber-950/40 rounded-xl border border-amber-100 dark:border-amber-900/60">
-            <div className="text-[11px] font-medium text-amber-900 dark:text-amber-300 flex items-center justify-between">
+            <div className="text-[11px] font-bold text-amber-950 dark:text-amber-200 flex items-center justify-between">
               <span className="flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Maggiorazioni Extra
+                <Sparkles className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" /> Maggiorazioni Extra
               </span>
             </div>
             <div className="text-base font-bold text-amber-950 dark:text-amber-100 mt-0.5">
               + € {totalMaggiorazioniOrarieExtra.toFixed(2)}
             </div>
-            <div className="text-[10px] text-amber-700 dark:text-amber-400 mt-1">
+            <div className="text-[10px] text-amber-900 dark:text-amber-300 mt-1 font-medium">
               Indennità orarie personalizzate
             </div>
           </div>

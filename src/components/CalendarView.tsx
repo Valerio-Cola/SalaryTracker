@@ -72,7 +72,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
           <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Calendario Mensile
         </h3>
-        <span className="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline-block">
+        <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline-block font-medium">
           Clicca su un giorno per aggiungere un turno, oppure usa i pulsanti per le spese
         </span>
       </div>
@@ -87,10 +87,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 key={w}
                 className={`text-xs font-bold py-1.5 rounded-lg ${
                   idx === 6
-                    ? 'text-rose-600 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40'
+                    ? 'text-rose-800 dark:text-rose-300 bg-rose-100/70 dark:bg-rose-950/40'
                     : idx === 5
-                    ? 'text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/40'
-                    : 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60'
+                    ? 'text-blue-800 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-950/40'
+                    : 'text-slate-700 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60'
                 }`}
               >
                 {w}
@@ -144,17 +144,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             : isToday
                             ? 'bg-blue-600 text-white font-bold'
                             : isHoliday
-                            ? 'text-rose-600 dark:text-rose-400 font-black bg-rose-100/80 dark:bg-rose-950/80 ring-1 ring-rose-300 dark:ring-rose-800'
+                            ? 'text-rose-900 dark:text-rose-200 font-black bg-rose-200/80 dark:bg-rose-950/80 ring-1 ring-rose-400 dark:ring-rose-800'
                             : isSunday
-                            ? 'text-rose-600 dark:text-rose-400 font-bold'
-                            : 'text-slate-700 dark:text-slate-300 font-medium'
+                            ? 'text-rose-800 dark:text-rose-300 font-black'
+                            : 'text-slate-800 dark:text-slate-200 font-semibold'
                         }`}
                       >
                         {cell.dayNumber}
                       </span>
                       {isHoliday && dayInfo.holidayName && (
                         <span
-                          className="text-[9px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-900/60 rounded px-1 py-0.2 truncate max-w-[85px] hidden sm:inline-block"
+                          className="text-[9px] font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-900/60 rounded px-1 py-0.2 truncate max-w-[85px] hidden sm:inline-block"
                           title={`Festività Italiana: ${dayInfo.holidayName}`}
                         >
                           {dayInfo.holidayName}
@@ -252,10 +252,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         }}
                         className="p-1 sm:p-1.5 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 shadow-xs hover:border-rose-400 transition-colors text-left min-w-0 flex justify-between items-center"
                       >
-                        <div className="text-[10px] sm:text-[11px] font-bold text-rose-800 dark:text-rose-200 truncate">
+                        <div className="text-[10px] sm:text-[11px] font-bold text-rose-900 dark:text-rose-200 truncate">
                           {e.categoria}
                         </div>
-                        <div className="text-rose-600 dark:text-rose-400 font-black text-[10px] sm:text-[11px] whitespace-nowrap pl-1">
+                        <div className="text-rose-800 dark:text-rose-300 font-black text-[10px] sm:text-[11px] whitespace-nowrap pl-1">
                           -€{Math.round(e.importo)}
                         </div>
                       </div>

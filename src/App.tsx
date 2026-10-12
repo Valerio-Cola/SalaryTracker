@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
 import { ContractConfig, Shift, QuickTemplate, Expense } from './types';
 import {
   getStoredConfig,
@@ -21,14 +20,17 @@ import { Header } from './components/Header';
 import { MonthSummaryCard } from './components/MonthSummaryCard';
 import { CalendarView } from './components/CalendarView';
 import { ShiftList } from './components/ShiftList';
-import { ChartsView } from './components/ChartsView';
 import { ExpensesList } from './components/ExpensesList';
-import { ContractSetupModal } from './components/ContractSetupModal';
-import { ShiftFormModal } from './components/ShiftFormModal';
-import { ExpenseFormModal } from './components/ExpenseFormModal';
-import { PrivacyLegalModal } from './components/PrivacyLegalModal';
-import { CloudSyncModal } from './components/CloudSyncModal';
-import { HelpModal } from './components/HelpModal';
+
+// Code-splitting delle componenti pesanti e dei modali per velocizzare il caricamento iniziale (PageSpeed / LCP)
+const ChartsView = React.lazy(() => import('./components/ChartsView').then((m) => ({ default: m.ChartsView })));
+const ContractSetupModal = React.lazy(() => import('./components/ContractSetupModal').then((m) => ({ default: m.ContractSetupModal })));
+const ShiftFormModal = React.lazy(() => import('./components/ShiftFormModal').then((m) => ({ default: m.ShiftFormModal })));
+const ExpenseFormModal = React.lazy(() => import('./components/ExpenseFormModal').then((m) => ({ default: m.ExpenseFormModal })));
+const PrivacyLegalModal = React.lazy(() => import('./components/PrivacyLegalModal').then((m) => ({ default: m.PrivacyLegalModal })));
+const CloudSyncModal = React.lazy(() => import('./components/CloudSyncModal').then((m) => ({ default: m.CloudSyncModal })));
+const HelpModal = React.lazy(() => import('./components/HelpModal').then((m) => ({ default: m.HelpModal })));
+
 
 import {
   Calendar,
@@ -192,16 +194,19 @@ export default function App() {
       updatedShifts = [...shifts, shift];
       showNotification('Nuovo turno aggiunto con successo!');
 
-      // Effetto festeggiamento
-      try {
-        confetti({
-          particleCount: 40,
-          spread: 60,
-          origin: { y: 0.8 },
+      // Effetto festeggiamento on-demand (non blocca il caricamento iniziale)
+      import('canvas-confetti')
+        .then((module) => {
+          const confettiFn = (module.default || module) as (options?: Record<string, unknown>) => void;
+          confettiFn({
+            particleCount: 40,
+            spread: 60,
+            origin: { y: 0.8 },
+          });
+        })
+        .catch(() => {
+          // Fallback sicuro se canvas-confetti non è supportato in iframe
         });
-      } catch (e) {
-        // Fallback sicuro se canvas-confetti non è supportato in iframe
-      }
     }
 
     // Ordiniamo e ricalcoliamo per mantenere coerenza straordinari settimanali
@@ -572,82 +577,103 @@ export default function App() {
         )}
 
         {activeTab === 'charts' && (
-          <ChartsView 
-            shifts={currentMonthShifts} 
-            expenses={currentMonthExpenses}
-            allShifts={shifts}
-            allExpenses={expenses}
-            monthTitle={formattedMonthTitle} 
-            config={config} 
-          />
+          <React.Suspense
+            fallback={
+              <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 my-4 text-slate-500">
+                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+                <span className="text-sm font-medium">Caricamento grafici e statistiche in corso...</span>
+              </div>
+            }
+          >
+            <ChartsView 
+              shifts={currentMonthShifts} 
+              expenses={currentMonthExpenses}
+              allShifts={shifts}
+              allExpenses={expenses}
+              monthTitle={formattedMonthTitle} 
+              config={config} 
+            />
+          </React.Suspense>
         )}
       </main>
 
-      <ContractSetupModal
-        isOpen={isConfigOpen}
-        onClose={() => setIsConfigOpen(false)}
-        config={config}
-        onSave={handleSaveConfig}
-        onResetShiftsOnly={handleResetShiftsOnly}
-        templates={templates}
-        onSaveTemplates={(newTemplates) => {
-          setTemplates(newTemplates);
-          saveStoredTemplates(newTemplates);
-          const creds = getSyncCredentials();
-          if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
-            const currentConfig = getStoredConfig();
-            pushToCloud(creds, { config: currentConfig, shifts, templates: newTemplates, expenses }).catch(() => {});
-          }
-        }}
-      />
+      <React.Suspense fallback={null}>
+        {isConfigOpen && (
+          <ContractSetupModal
+            isOpen={isConfigOpen}
+            onClose={() => setIsConfigOpen(false)}
+            config={config}
+            onSave={handleSaveConfig}
+            onResetShiftsOnly={handleResetShiftsOnly}
+            templates={templates}
+            onSaveTemplates={(newTemplates) => {
+              setTemplates(newTemplates);
+              saveStoredTemplates(newTemplates);
+              const creds = getSyncCredentials();
+              if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
+                const currentConfig = getStoredConfig();
+                pushToCloud(creds, { config: currentConfig, shifts, templates: newTemplates, expenses }).catch(() => {});
+              }
+            }}
+          />
+        )}
 
-      <ShiftFormModal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        shiftToEdit={shiftToEdit}
-        config={config}
-        allShifts={shifts}
-        templates={templates}
-        onSaveShift={handleSaveShift}
-        onDeleteShift={handleDeleteShift}
-        initialDate={initialDateForShift}
-      />
+        {isFormOpen && (
+          <ShiftFormModal
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            shiftToEdit={shiftToEdit}
+            config={config}
+            allShifts={shifts}
+            templates={templates}
+            onSaveShift={handleSaveShift}
+            onDeleteShift={handleDeleteShift}
+            initialDate={initialDateForShift}
+          />
+        )}
 
-      {isExpenseFormOpen && (
-        <ExpenseFormModal
-          expense={expenseToEdit}
-          defaultDate={initialDateForExpense}
-          onClose={() => setIsExpenseFormOpen(false)}
-          onSave={handleSaveExpense}
-          onDelete={(id) => {
-            handleDeleteExpense(id);
-            setIsExpenseFormOpen(false);
-          }}
-        />
-      )}
+        {isExpenseFormOpen && (
+          <ExpenseFormModal
+            expense={expenseToEdit}
+            defaultDate={initialDateForExpense}
+            onClose={() => setIsExpenseFormOpen(false)}
+            onSave={handleSaveExpense}
+            onDelete={(id) => {
+              handleDeleteExpense(id);
+              setIsExpenseFormOpen(false);
+            }}
+          />
+        )}
 
-      <PrivacyLegalModal
-        isOpen={isPrivacyModalOpen}
-        onClose={() => setIsPrivacyModalOpen(false)}
-      />
+        {isPrivacyModalOpen && (
+          <PrivacyLegalModal
+            isOpen={isPrivacyModalOpen}
+            onClose={() => setIsPrivacyModalOpen(false)}
+          />
+        )}
 
-      <CloudSyncModal
-        isOpen={isCloudSyncOpen}
-        onClose={() => setIsCloudSyncOpen(false)}
-        config={config}
-        shifts={shifts}
-        templates={templates}
-        onApplyCloudData={handleApplyCloudData}
-        onShowNotification={showNotification}
-      />
+        {isCloudSyncOpen && (
+          <CloudSyncModal
+            isOpen={isCloudSyncOpen}
+            onClose={() => setIsCloudSyncOpen(false)}
+            config={config}
+            shifts={shifts}
+            templates={templates}
+            onApplyCloudData={handleApplyCloudData}
+            onShowNotification={showNotification}
+          />
+        )}
 
-      <HelpModal
-        isOpen={isHelpModalOpen}
-        onClose={() => setIsHelpModalOpen(false)}
-      />
+        {isHelpModalOpen && (
+          <HelpModal
+            isOpen={isHelpModalOpen}
+            onClose={() => setIsHelpModalOpen(false)}
+          />
+        )}
+      </React.Suspense>
 
       {/* Footer Legal & Privacy */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 text-xs text-slate-500 dark:text-slate-400 mt-auto transition-colors">
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 text-xs text-slate-600 dark:text-slate-400 mt-auto transition-colors">
         <div className="max-w-7xl mx-auto px-4 space-y-3">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
@@ -664,18 +690,18 @@ export default function App() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
             <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
-              <strong className="text-slate-700 dark:text-slate-300 block mb-0.5">⚠️ Disclaimer di Calcolo:</strong>
+              <strong className="text-slate-800 dark:text-slate-200 block mb-0.5">⚠️ Disclaimer di Calcolo:</strong>
               Strumento di calcolo indicativo ad uso personale. Non costituisce documento ufficiale né busta paga aziendale.
             </div>
             <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
-              <strong className="text-slate-700 dark:text-slate-300 block mb-0.5">🔒 Privacy & Storage Flessibile:</strong>
+              <strong className="text-slate-800 dark:text-slate-200 block mb-0.5">🔒 Privacy & Storage Flessibile:</strong>
               Di default i dati risiedono solo nel browser (LocalStorage). Se attivi la sincronizzazione cloud inserendo le tue credenziali, i dati vengono salvati sul tuo Worker Cloudflare KV privato per sincronizzarli tra i tuoi dispositivi.
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[12px] text-slate-500 dark:text-slate-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[12px] text-slate-600 dark:text-slate-300 font-medium">
             <div>
               Sito realizzato da <a href="https://valeriocola.it" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Valerio Cola</a>
             </div>
@@ -688,15 +714,18 @@ export default function App() {
                 title="Offrimi un caffè su Ko-fi"
               >
                 <img
+                  src="/kofi.png"
+                  width="143"
                   height="36"
-                  style={{ border: '0px', height: '36px' }}
-                  src="https://storage.ko-fi.com/cdn/kofi6.png?v=6"
+                  loading="lazy"
+                  decoding="async"
+                  style={{ border: '0px', height: '36px', width: 'auto' }}
                   alt="Buy Me a Coffee at ko-fi.com"
                 />
               </a>
             </div>
           </div>
-          <p className="text-[10.5px] text-slate-400 dark:text-slate-500 text-center sm:text-right leading-relaxed">
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 text-center sm:text-right leading-relaxed font-medium">
             *Il supporto su Ko-fi è un libero contributo facoltativo: non costituisce compravendita di servizi né garantisce o preclude la disponibilità di un account cloud riservato.
           </p>
         </div>
