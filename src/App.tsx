@@ -469,53 +469,53 @@ export default function App() {
         />
 
         {/* Tab Navigation: Calendario / Elenco Turni / Spese / Grafici */}
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl overflow-x-auto w-full sm:w-auto">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+          <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-900 p-1.5 rounded-xl overflow-x-auto w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('calendar')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+              className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'calendar'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               Calendario
             </button>
 
             <button
               onClick={() => setActiveTab('list')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+              className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'list'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <List className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <List className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               Turni ({currentMonthShifts.length})
             </button>
 
             <button
               onClick={() => setActiveTab('expenses')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+              className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'expenses'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Receipt className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+              <Receipt className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
               Spese ({currentMonthExpenses.length})
             </button>
 
             <button
               onClick={() => setActiveTab('charts')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+              className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'charts'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <BarChart2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <BarChart2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               Statistiche
             </button>
           </div>
@@ -524,14 +524,14 @@ export default function App() {
           <div className="hidden sm:flex items-center gap-2">
             <button
               onClick={() => exportDataToJson(config, shifts, expenses)}
-              className="px-2.5 py-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-medium flex items-center gap-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-4 h-4 shrink-0" />
               Backup JSON
             </button>
 
-            <label className="px-2.5 py-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-medium flex items-center gap-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer">
-              <Upload className="w-3.5 h-3.5" />
+            <label className="px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">
+              <Upload className="w-4 h-4 shrink-0" />
               Ripristina
               <input
                 type="file"
@@ -701,9 +701,9 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[12px] text-slate-600 dark:text-slate-300 font-medium">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 font-semibold">
             <div>
-              Sito realizzato da <a href="https://valeriocola.it" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Valerio Cola</a>
+              Sito realizzato da <a href="https://valeriocola.it" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Valerio Cola</a>
             </div>
             <div className="flex items-center">
               <a

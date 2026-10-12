@@ -248,12 +248,12 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
               )}
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold">
+              <h2 className="text-base sm:text-xl font-black">
                 {shiftToEdit
                   ? entryMode === 'ferie' ? 'Modifica Giorno di Ferie' : 'Modifica Turno'
                   : entryMode === 'ferie' ? 'Registra Ferie / Permesso' : 'Aggiungi Nuovo Turno'}
               </h2>
-              <p className="text-[11px] sm:text-xs text-slate-300">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium">
                 {entryMode === 'ferie'
                   ? 'Le ore di ferie contano nel monte ore settimanale contrattuale'
                   : 'Orari, pause e calcolo istantaneo di maggiorazioni'}
@@ -262,10 +262,10 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             title="Chiudi"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
@@ -275,10 +275,10 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
             <button
               type="button"
               onClick={() => handleModeChange('turno')}
-              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 entryMode === 'turno'
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Briefcase className="w-4 h-4" />
@@ -288,10 +288,10 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
             <button
               type="button"
               onClick={() => handleModeChange('ferie')}
-              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 entryMode === 'ferie'
                   ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Palmtree className="w-4 h-4" />
@@ -308,32 +308,32 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
         >
           {/* Data */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Data Turno
+            <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1">
+              <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Data Turno
             </label>
             <input
               type="date"
               required
               value={dataGrezza}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="w-full p-2.5 text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              className="w-full p-2.5 sm:p-3 text-sm sm:text-base font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             />
             {/* Badge Rilevamento automatico Tipo Giorno per Turno */}
             {entryMode === 'turno' && (
-              <div className="mt-1.5 text-[11px] rounded-lg p-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-1.5 transition-all">
+              <div className="mt-1.5 text-xs sm:text-sm rounded-xl p-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-1.5 transition-all">
                 {tipoGiorno === 'festivo' ? (
-                  <div className="text-rose-800 dark:text-rose-300 flex items-center gap-1.5 font-medium">
-                    <Info className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <div className="text-rose-900 dark:text-rose-200 flex items-center gap-1.5 font-bold">
+                    <Info className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                     <span>Rilevata autonomamente: <strong>Festività Rossa ({nomeFestivita || 'Festivo'})</strong> (+Bonus Festivo)</span>
                   </div>
                 ) : tipoGiorno === 'domenica' ? (
-                  <div className="text-blue-900 dark:text-blue-300 flex items-center gap-1.5 font-medium">
-                    <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <div className="text-blue-900 dark:text-blue-200 flex items-center gap-1.5 font-bold">
+                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                     <span>Rilevata autonomamente: <strong>Domenica</strong> (+Bonus Domenicale)</span>
                   </div>
                 ) : (
-                  <div className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <div className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
+                    <Info className="w-4 h-4 text-slate-500 shrink-0" />
                     <span>Rilevato autonomamente: <strong>Giorno Feriale</strong> (Lun - Sab)</span>
                   </div>
                 )}

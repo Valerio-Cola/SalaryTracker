@@ -103,71 +103,71 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
       {/* 3 Main KPI Boxes: Busta Paga Lorda | Saldo Ferie | Uscite */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Box 1: Busta Paga Lorda */}
-        <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 h-full">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
-              <DollarSign className="w-6 h-6" />
+        <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-800/80 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-700 h-full">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs shadow-blue-500/20">
+              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide truncate">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide truncate">
                 Busta Paga Lorda
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
                 € {comp.totalLordoCompleto.toFixed(2)}
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-between">
-            <span className="text-slate-700 dark:text-slate-300 font-semibold">Netto in tasca:</span>
-            <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-2 py-0.5 rounded-md">
+          <div className="mt-2 pt-2 border-t border-slate-200/80 dark:border-slate-700/80 text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-between">
+            <span className="text-slate-800 dark:text-slate-200 font-semibold">Netto in tasca:</span>
+            <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-2 py-0.5 rounded-md text-xs font-black">
               € {comp.totalNettoCompleto.toFixed(2)}
             </span>
           </div>
         </div>
 
-        {/* Box 2: Saldo Ferie (semplificato e posizionato in mezzo) */}
-        <div className="flex flex-col justify-between bg-amber-50/80 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-200/90 dark:border-amber-900/50 h-full">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/20">
-              <Palmtree className="w-6 h-6" />
+        {/* Box 2: Saldo Ferie */}
+        <div className="flex flex-col justify-between bg-amber-50/80 dark:bg-amber-950/30 p-3.5 sm:p-4 rounded-xl border border-amber-200/90 dark:border-amber-900/50 h-full">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs shadow-amber-500/20">
+              <Palmtree className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide truncate">
+              <div className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide truncate">
                 Saldo Ferie
               </div>
-              <div className={`text-2xl sm:text-3xl font-black leading-tight ${
+              <div className={`text-xl sm:text-2xl font-black leading-tight ${
                 ferie.ferieResidue >= 0 ? 'text-amber-950 dark:text-amber-200' : 'text-rose-700 dark:text-rose-400'
               }`}>
-                {ferie.ferieResidue} <span className="text-base font-semibold text-amber-900/90 dark:text-amber-300/80">{Math.abs(ferie.ferieResidue) === 1 ? 'giorno' : 'giorni'}</span>
+                {ferie.ferieResidue} <span className="text-sm font-semibold text-amber-900/90 dark:text-amber-300/80">{Math.abs(ferie.ferieResidue) === 1 ? 'giorno' : 'giorni'}</span>
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-amber-200/60 dark:border-amber-900/40 text-xs font-bold flex items-center justify-between">
-            <span className="text-slate-700 dark:text-slate-300 font-semibold">Godute:</span>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold">
+          <div className="mt-2 pt-2 border-t border-amber-200/80 dark:border-amber-900/40 text-xs font-bold flex items-center justify-between">
+            <span className="text-slate-800 dark:text-slate-200 font-semibold">Godute:</span>
+            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
               {ferie.ferieGoduteTotali} {Math.abs(ferie.ferieGoduteTotali) === 1 ? 'giorno' : 'giorni'}
             </span>
           </div>
         </div>
 
         {/* Box 3: Uscite */}
-        <div className="flex flex-col justify-between bg-rose-50/80 dark:bg-rose-950/30 p-4 rounded-2xl border border-rose-200 dark:border-rose-900/50 h-full">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-rose-500/20">
-              <Receipt className="w-6 h-6" />
+        <div className="flex flex-col justify-between bg-rose-50/80 dark:bg-rose-950/30 p-3.5 sm:p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 h-full">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs shadow-rose-500/20">
+              <Receipt className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wide truncate">
+              <div className="text-xs font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wide truncate">
                 Uscite
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-rose-800 dark:text-rose-300 leading-tight">
+              <div className="text-xl sm:text-2xl font-black text-rose-800 dark:text-rose-300 leading-tight">
                 - € {totalExpenses.toFixed(2)}
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-rose-200/60 dark:border-rose-900/40 text-xs font-bold flex items-center justify-between">
-            <span className="text-slate-700 dark:text-slate-300 font-semibold">Rimanenza:</span>
-            <span className={`px-2 py-0.5 rounded-md font-bold ${
+          <div className="mt-2 pt-2 border-t border-rose-200/80 dark:border-rose-900/40 text-xs font-bold flex items-center justify-between">
+            <span className="text-slate-800 dark:text-slate-200 font-semibold">Rimanenza:</span>
+            <span className={`px-2 py-0.5 rounded-md font-bold text-xs ${
               finalBalance >= 0
                 ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
                 : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
@@ -313,18 +313,18 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
 
       {/* Progress Bar target ore */}
       <div className="space-y-1.5">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-1">
-          <span className="text-slate-600 dark:text-slate-300 font-semibold flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            Ore Totali: <strong className="text-slate-900 dark:text-white">{totalOre.toFixed(2)} h</strong>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs sm:text-sm gap-1">
+          <span className="text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            Ore Totali: <strong className="text-slate-900 dark:text-white font-black">{totalOre.toFixed(2)} h</strong>
             {totalOreFerie > 0 && (
-              <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
-                ({totalOreLavorate.toFixed(1)}h lavoro + <strong className="text-amber-600 dark:text-amber-400">{totalOreFerie.toFixed(1)}h ferie</strong>)
+              <span className="text-xs font-normal text-slate-600 dark:text-slate-400">
+                ({totalOreLavorate.toFixed(1)}h lavoro + <strong className="text-amber-700 dark:text-amber-300 font-bold">{totalOreFerie.toFixed(1)}h ferie</strong>)
               </span>
             )}
           </span>
           {hasContractHours && (
-            <span className="text-slate-700 dark:text-slate-300 font-medium">
+            <span className="text-slate-800 dark:text-slate-200 font-semibold">
               Obiettivo contrattuale (~{targetOreMese.toFixed(0)}h): {progressPercent}%
             </span>
           )}
@@ -342,74 +342,74 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
       {/* Grid delle maggiorazioni e dettagli */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
         {/* Paga Base (inclusa quota ferie) */}
-        <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Paga Base Oraria</div>
-          <div className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+        <div className="p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">Paga Base Oraria</div>
+          <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
             € {totalBase.toFixed(2)}
           </div>
-          <div className="text-[10px] text-slate-600 dark:text-slate-400 mt-1 font-medium">
+          <div className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-semibold">
             {totalOre.toFixed(1)}h {totalOreFerie > 0 ? `(incluso ${totalOreFerie.toFixed(1)}h ferie)` : ''} × €{config.pagaBaseOraria.toFixed(2)}/h
           </div>
         </div>
 
         {/* Bonus Notte */}
-        <div className="p-3 bg-indigo-50/60 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/60">
-          <div className="text-[11px] font-bold text-indigo-950 dark:text-indigo-200 flex items-center justify-between">
-            <span className="flex items-center gap-1">
-              <Moon className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400" /> Bonus Notturno
+        <div className="p-3 sm:p-3.5 bg-indigo-50/60 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/60">
+          <div className="text-xs sm:text-sm font-bold text-indigo-950 dark:text-indigo-200 flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Moon className="w-4 h-4 text-indigo-700 dark:text-indigo-400 shrink-0" /> Bonus Notturno
             </span>
           </div>
-          <div className="text-base font-bold text-indigo-950 dark:text-indigo-100 mt-0.5">
+          <div className="text-lg sm:text-xl font-black text-indigo-950 dark:text-indigo-100 mt-0.5">
             + € {totalNotteExtra.toFixed(2)}
           </div>
-          <div className="text-[10px] text-indigo-900 dark:text-indigo-300 mt-1 font-medium">
+          <div className="text-xs text-indigo-900 dark:text-indigo-300 mt-1 font-semibold">
             {totalNotturne.toFixed(1)}h notturne
           </div>
         </div>
 
         {/* Bonus Festivo & Domenica */}
-        <div className="p-3 bg-rose-50/60 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/60">
-          <div className="text-[11px] font-bold text-rose-950 dark:text-rose-200 flex items-center justify-between">
-            <span className="flex items-center gap-1">
-              <Sun className="w-3.5 h-3.5 text-rose-700 dark:text-rose-400" /> Festivo / Domenica
+        <div className="p-3 sm:p-3.5 bg-rose-50/60 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/60">
+          <div className="text-xs sm:text-sm font-bold text-rose-950 dark:text-rose-200 flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Sun className="w-4 h-4 text-rose-700 dark:text-rose-400 shrink-0" /> Festivo / Domenica
             </span>
           </div>
-          <div className="text-base font-bold text-rose-950 dark:text-rose-100 mt-0.5">
+          <div className="text-lg sm:text-xl font-black text-rose-950 dark:text-rose-100 mt-0.5">
             + € {totalFestivoExtra.toFixed(2)}
           </div>
-          <div className="text-[10px] text-rose-900 dark:text-rose-300 mt-1 font-medium">
-            Maggiorazione festivi/domenica
+          <div className="text-xs text-rose-900 dark:text-rose-300 mt-1 font-semibold">
+            Festivi e domeniche
           </div>
         </div>
 
         {/* Bonus Straordinario */}
-        <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-100 dark:border-emerald-900/60">
-          <div className="text-[11px] font-bold text-emerald-950 dark:text-emerald-200 flex items-center justify-between">
-            <span className="flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" /> Straordinari
+        <div className="p-3 sm:p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-100 dark:border-emerald-900/60">
+          <div className="text-xs sm:text-sm font-bold text-emerald-950 dark:text-emerald-200 flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" /> Straordinari
             </span>
           </div>
-          <div className="text-base font-bold text-emerald-950 dark:text-emerald-100 mt-0.5">
+          <div className="text-lg sm:text-xl font-black text-emerald-950 dark:text-emerald-100 mt-0.5">
             + € {totalSuppExtra.toFixed(2)}
           </div>
-          <div className="text-[10px] text-emerald-900 dark:text-emerald-300 mt-1 font-medium">
+          <div className="text-xs text-emerald-900 dark:text-emerald-300 mt-1 font-semibold">
             {totalSupplementari.toFixed(1)}h oltre soglia sett.
           </div>
         </div>
 
         {/* Maggiorazioni Orarie Personalizzate */}
         {totalMaggiorazioniOrarieExtra > 0 && (
-          <div className="p-3 bg-amber-50/60 dark:bg-amber-950/40 rounded-xl border border-amber-100 dark:border-amber-900/60">
-            <div className="text-[11px] font-bold text-amber-950 dark:text-amber-200 flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" /> Maggiorazioni Extra
+          <div className="p-3 sm:p-3.5 bg-amber-50/60 dark:bg-amber-950/40 rounded-xl border border-amber-100 dark:border-amber-900/60">
+            <div className="text-xs sm:text-sm font-bold text-amber-950 dark:text-amber-200 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" /> Maggiorazioni Extra
               </span>
             </div>
-            <div className="text-base font-bold text-amber-950 dark:text-amber-100 mt-0.5">
+            <div className="text-lg sm:text-xl font-black text-amber-950 dark:text-amber-100 mt-0.5">
               + € {totalMaggiorazioniOrarieExtra.toFixed(2)}
             </div>
-            <div className="text-[10px] text-amber-900 dark:text-amber-300 mt-1 font-medium">
-              Indennità orarie personalizzate
+            <div className="text-xs text-amber-900 dark:text-amber-300 mt-1 font-semibold">
+              Indennità orarie extra
             </div>
           </div>
         )}

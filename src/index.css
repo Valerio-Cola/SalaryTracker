@@ -2,6 +2,18 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  font-size: 16.5px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }
