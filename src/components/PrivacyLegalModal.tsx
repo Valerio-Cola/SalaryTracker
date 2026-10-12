@@ -388,8 +388,11 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                       title="Supporta lo sviluppo su Ko-fi"
                     >
                       <img
+                        width="143"
                         height="36"
-                        style={{ border: '0px', height: '36px' }}
+                        loading="lazy"
+                        decoding="async"
+                        style={{ border: '0px', width: '143px', height: '36px', aspectRatio: '143 / 36' }}
                         src="https://storage.ko-fi.com/cdn/kofi6.png?v=6"
                         alt="Buy Me a Coffee at ko-fi.com"
                       />
