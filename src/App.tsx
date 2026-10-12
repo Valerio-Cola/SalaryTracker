@@ -39,6 +39,10 @@ import {
   Info,
   CheckCircle2,
   Receipt,
+  HelpCircle,
+  Sparkles,
+  Plus,
+  Sliders,
 } from 'lucide-react';
 
 export default function App() {
@@ -365,27 +369,56 @@ export default function App() {
 
         {/* Banner Benvenuto / Setup rapido se prima volta */}
         {shifts.length === 0 && (
-          <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800">
-            <div className="space-y-1 text-center sm:text-left">
-              <h2 className="text-lg font-extrabold flex items-center justify-center sm:justify-start gap-2">
-                Benvenuto nel Salary Tracker SK!
+          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 rounded-2xl p-5 sm:p-6 text-white shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 border border-slate-800">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[11px] font-semibold">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <span>Benvenuto nel Salary Tracker SK</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Gestione Intelligente dei Turni & Calcolo Busta Paga
               </h2>
-              <p className="text-xs text-slate-300 max-w-xl">
-                Questa applicazione calcola in automatico le ore notturne (22:00-06:00), le festività rosse italiane, le domeniche e gli straordinari settimanali basandosi sulle tariffe del contratto.
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Registra le tue ore lavorative con rilevamento automatico di <strong>fasce notturne (22:00–06:00)</strong>, <strong>maggiorazioni per domeniche e festività nazionali</strong>, e conteggio degli <strong>straordinari settimanali</strong> secondo il tuo contratto. Puoi creare e salvare i tuoi <strong>preset di orari rapidi</strong> nella scheda Tariffe per inserire i turni in un istante!
               </p>
+              <div className="flex items-center gap-2 pt-1 text-xs text-blue-200/90 font-medium">
+                <Info className="w-4 h-4 text-blue-400 shrink-0" />
+                <span>
+                  Hai dubbi sui calcoli o su come impostare la tua paga? Consulta la sezione <strong>&quot;Aiuto&quot;</strong> per una panoramica completa passo dopo passo.
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={handleGenerateSampleData}
-                className="px-4 py-2 bg-slate-800 text-slate-200 hover:bg-slate-700 rounded-xl text-xs font-bold border border-slate-700 transition-colors"
-              >
-                Carica Dati di Prova
-              </button>
+
+            <div className="flex flex-wrap sm:flex-nowrap lg:flex-col gap-2.5 w-full lg:w-auto shrink-0">
               <button
                 onClick={() => handleOpenAddShift()}
-                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-xs font-bold shadow-sm shadow-blue-500/10 transition-colors"
+                className="flex-1 lg:flex-initial px-4 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
+                <Plus className="w-4 h-4" />
                 Aggiungi Primo Turno
+              </button>
+              
+              <button
+                onClick={() => setIsConfigOpen(true)}
+                className="flex-1 lg:flex-initial px-4 py-2.5 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Sliders className="w-4 h-4 text-blue-400" />
+                Tariffe & Preset Orari
+              </button>
+
+              <button
+                onClick={() => setIsHelpModalOpen(true)}
+                className="flex-1 lg:flex-initial px-4 py-2.5 bg-indigo-600/30 text-indigo-200 hover:bg-indigo-600/50 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/30 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4 text-indigo-400" />
+                Guida & Aiuto
+              </button>
+
+              <button
+                onClick={handleGenerateSampleData}
+                className="flex-1 lg:flex-initial px-3.5 py-2 text-slate-400 hover:text-slate-200 rounded-xl text-[11px] font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                Carica Dati Demo
               </button>
             </div>
           </div>
@@ -521,13 +554,21 @@ export default function App() {
         )}
       </main>
 
-      {/* Modals */}
       <ContractSetupModal
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
         config={config}
         onSave={handleSaveConfig}
         onResetShiftsOnly={handleResetShiftsOnly}
+        templates={templates}
+        onSaveTemplates={(newTemplates) => {
+          setTemplates(newTemplates);
+          saveStoredTemplates(newTemplates);
+          const creds = getSyncCredentials();
+          if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
+            pushToCloud(creds, { config, shifts, templates: newTemplates, expenses }).catch(() => {});
+          }
+        }}
       />
 
       <ShiftFormModal

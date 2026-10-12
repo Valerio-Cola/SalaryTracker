@@ -96,77 +96,82 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             </p>
           )}
         </div>
+      </div>
 
-        {/* Big Earnings Box */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+      {/* 3 Main KPI Boxes: Busta Paga Lorda | Saldo Ferie | Uscite */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Box 1: Busta Paga Lorda */}
+        <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 h-full">
+          <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
               <DollarSign className="w-6 h-6" />
             </div>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Busta Paga Lorda</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide truncate">
+                Busta Paga Lorda
+              </div>
               <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
                 € {comp.totalLordoCompleto.toFixed(2)}
               </div>
-              <div className="text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
-                <span>Netto in tasca:</span>
-                <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">
-                  € {comp.totalNettoCompleto.toFixed(2)}
-                </span>
+            </div>
+          </div>
+          <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Netto in tasca:</span>
+            <span className="bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-2 py-0.5 rounded-md">
+              € {comp.totalNettoCompleto.toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        {/* Box 2: Saldo Ferie (semplificato e posizionato in mezzo) */}
+        <div className="flex flex-col justify-between bg-amber-50/80 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-200/90 dark:border-amber-900/50 h-full">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/20">
+              <Palmtree className="w-6 h-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide truncate">
+                Saldo Ferie
+              </div>
+              <div className={`text-2xl sm:text-3xl font-black leading-tight ${
+                ferie.ferieResidue >= 0 ? 'text-amber-950 dark:text-amber-200' : 'text-rose-600 dark:text-rose-400'
+              }`}>
+                {ferie.ferieResidue} <span className="text-base font-semibold text-amber-800/80 dark:text-amber-300/80">{Math.abs(ferie.ferieResidue) === 1 ? 'giorno' : 'giorni'}</span>
               </div>
             </div>
           </div>
+          <div className="mt-2.5 pt-2 border-t border-amber-200/60 dark:border-amber-900/40 text-xs font-bold flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Godute:</span>
+            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+              {ferie.ferieGoduteTotali} {Math.abs(ferie.ferieGoduteTotali) === 1 ? 'giorno' : 'giorni'}
+            </span>
+          </div>
+        </div>
 
-          <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/30 p-3.5 rounded-2xl border border-rose-200 dark:border-rose-900/50">
+        {/* Box 3: Uscite */}
+        <div className="flex flex-col justify-between bg-rose-50/80 dark:bg-rose-950/30 p-4 rounded-2xl border border-rose-200 dark:border-rose-900/50 h-full">
+          <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-rose-500/20">
               <Receipt className="w-6 h-6" />
             </div>
-            <div>
-              <div className="text-[11px] font-semibold text-rose-500 dark:text-rose-400 uppercase">Totale Uscite</div>
-              <div className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-400 leading-tight">
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold text-rose-500 dark:text-rose-400 uppercase tracking-wide truncate">
+                Uscite
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-rose-700 dark:text-rose-400 leading-tight">
                 - € {totalExpenses.toFixed(2)}
               </div>
-              <div className={`text-xs font-bold flex items-center gap-1 mt-0.5 ${finalBalance >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
-                <span>Rimanenza:</span>
-                <span className={`px-1.5 py-0.2 rounded-md ${finalBalance >= 0 ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'}`}>
-                  € {finalBalance.toFixed(2)}
-                </span>
-              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Saldo Ferie Widget */}
-      <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
-            <Palmtree className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
-              <span>Saldo Ferie Disponibili</span>
-              <span className="text-[10px] text-amber-700 dark:text-amber-400 font-normal">
-                (calcolato sui {ferie.mesiLavorati} mesi di attività)
-              </span>
-            </div>
-            <div className="text-xs text-amber-900/80 dark:text-amber-300/80 mt-0.5">
-              Maturate: <strong>+{ferie.ferieMaturateTotali} gg</strong> ({ferie.ferieMaturateMese} gg/m) • Godute totali: <strong>-{ferie.ferieGoduteTotali} gg</strong>
-              {totalFerieCountMese > 0 && (
-                <span className="ml-1 text-emerald-700 dark:text-emerald-400 font-bold">
-                  (di cui {totalFerieCountMese} gg in questo mese)
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-center">
-          <div className="text-right">
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Ferie Residue</div>
-            <div className={`text-xl font-black ${ferie.ferieResidue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-              {ferie.ferieResidue} {Math.abs(ferie.ferieResidue) === 1 ? 'giorno' : 'giorni'}
-            </div>
+          <div className="mt-2.5 pt-2 border-t border-rose-200/60 dark:border-rose-900/40 text-xs font-bold flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Rimanenza:</span>
+            <span className={`px-2 py-0.5 rounded-md ${
+              finalBalance >= 0
+                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
+                : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'
+            }`}>
+              € {finalBalance.toFixed(2)}
+            </span>
           </div>
         </div>
       </div>

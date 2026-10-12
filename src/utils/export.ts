@@ -174,7 +174,7 @@ export function printMonthlyReport(
     <body>
       <div class="header">
         <div>
-          <h1>🍔 Tracker Turni ${config.nomeAzienda || 'Burger King'}</h1>
+          <h1>Tracker Turni${config.nomeAzienda ? ` • ${config.nomeAzienda}` : ''}</h1>
           <div class="subtitle">Prospetto ore e stima retribuzione: <strong>${monthName}</strong> ${config.nomeLavoratore ? `• Dipendente: ${config.nomeLavoratore}` : ''}</div>
         </div>
         <div style="text-align: right; font-size: 12px; color: #6b7280;">

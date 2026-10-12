@@ -2,7 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Shift, ContractConfig, DayType, QuickTemplate } from '../types';
 import { checkDayTypeInfo } from '../utils/holidays';
 import { computeShiftData, checkShiftOverlap } from '../utils/calculator';
-import { X, Calendar, Clock, AlertTriangle, Check, Info, Moon, Sun, Trash2, Palmtree, Briefcase } from 'lucide-react';
+import {
+  X,
+  Calendar,
+  Clock,
+  AlertTriangle,
+  Check,
+  Info,
+  Moon,
+  Sun,
+  Trash2,
+  Palmtree,
+  Briefcase,
+  Sparkles,
+} from 'lucide-react';
 
 interface ShiftFormModalProps {
   isOpen: boolean;
@@ -76,7 +89,6 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       setOrarioFine(shiftToEdit.orarioFine || '');
       setPausaMinuti(shiftToEdit.pausaMinuti || 0);
 
-      // Ricalcola autonomamente il tipo giorno basato sulla data reale del turno
       const dateInfo = checkDayTypeInfo(shiftToEdit.dataGrezza);
       if (isVacation) {
         setTipoGiorno('ferie');
@@ -120,7 +132,6 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
     }
   }, [shiftToEdit, initialDate, isOpen, config.oreSettimanali]);
 
-  // Gestione cambio data -> Auto rilevazione festività e domenica
   const handleDateChange = (newDate: string) => {
     setDataGrezza(newDate);
     if (entryMode === 'turno') {
@@ -130,43 +141,54 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
     }
   };
 
-  // Cambio modalità tra Turno e Ferie
   const handleModeChange = (mode: 'turno' | 'ferie') => {
     setEntryMode(mode);
     if (mode === 'ferie') {
       setTipoGiorno('ferie');
-      if (!note) setNote('Ferie / Permesso retribuito');
+      setNomeFestivita('');
+      setOrarioInizio('09:00');
+      setOrarioFine('17:00');
+      setPausaMinuti(0);
+      if (!note) setNote('Giorno di Ferie / Permesso');
     } else {
       const info = checkDayTypeInfo(dataGrezza);
       setTipoGiorno(info.suggestedDayType);
       setNomeFestivita(info.holidayName || '');
-      if (note === 'Ferie / Permesso retribuito') setNote('');
+      if (note === 'Giorno di Ferie / Permesso') setNote('');
+      if (!shiftToEdit) {
+        setOrarioInizio('');
+        setOrarioFine('');
+        setPausaMinuti(0);
+      }
     }
   };
 
-  // Applicazione rapida di un template
   const applyTemplate = (tpl: QuickTemplate) => {
-    setEntryMode('turno');
     setOrarioInizio(tpl.orarioInizio);
     setOrarioFine(tpl.orarioFine);
     setPausaMinuti(tpl.pausaMinuti);
-    if (tpl.note && !note) setNote(tpl.note);
+    if (tpl.note && (!note || note === 'Turno ordinario')) {
+      setNote(tpl.note);
+    }
   };
 
   if (!isOpen) return null;
 
-  // Calcolo in tempo reale per l'anteprima
-  const isOverlap = entryMode === 'turno' && checkShiftOverlap(
-    allShifts,
-    dataGrezza,
-    orarioInizio,
-    orarioFine,
-    shiftToEdit?.id
-  );
+  const isOverlap =
+    entryMode === 'turno' &&
+    orarioInizio &&
+    orarioFine &&
+    checkShiftOverlap(
+      allShifts,
+      dataGrezza,
+      orarioInizio,
+      orarioFine,
+      shiftToEdit?.id
+    );
 
-  const previewShift = computeShiftData(
+  const previewShift: Shift = computeShiftData(
     {
-      id: shiftToEdit?.id,
+      id: shiftToEdit ? shiftToEdit.id : `shift_${Date.now()}`,
       dataGrezza,
       orarioInizio: entryMode === 'ferie' ? '09:00' : orarioInizio,
       orarioFine: entryMode === 'ferie' ? '17:00' : orarioFine,
@@ -183,6 +205,9 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (entryMode === 'turno' && (!orarioInizio || !orarioFine)) {
+      return;
+    }
     if (entryMode === 'turno' && isOverlap) {
       if (
         !confirm(
@@ -198,43 +223,49 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8 transition-colors">
-        {/* Header Modal */}
-        <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6 flex flex-col max-h-[90vh] transition-colors">
+        
+        {/* Header Modal - Sticky */}
+        <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            {entryMode === 'ferie' ? (
-              <Palmtree className="w-5 h-5 text-amber-400" />
-            ) : (
-              <Clock className="w-5 h-5 text-blue-400" />
-            )}
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              entryMode === 'ferie' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+            }`}>
+              {entryMode === 'ferie' ? (
+                <Palmtree className="w-5 h-5 text-amber-400" />
+              ) : (
+                <Clock className="w-5 h-5 text-blue-400" />
+              )}
+            </div>
             <div>
-              <h2 className="text-lg font-bold">
+              <h2 className="text-base sm:text-lg font-bold">
                 {shiftToEdit
                   ? entryMode === 'ferie' ? 'Modifica Giorno di Ferie' : 'Modifica Turno'
-                  : entryMode === 'ferie' ? 'Registra Ferie / ROL' : 'Aggiungi Nuovo Turno'}
+                  : entryMode === 'ferie' ? 'Registra Ferie / Permesso' : 'Aggiungi Nuovo Turno'}
               </h2>
-              <p className="text-xs text-slate-300">
+              <p className="text-[11px] sm:text-xs text-slate-300">
                 {entryMode === 'ferie'
-                  ? 'Le ferie contano per il monte ore settimanale contrattuale'
-                  : 'Inserisci gli orari per calcolare in automatico la paga'}
+                  ? 'Le ore di ferie contano nel monte ore settimanale contrattuale'
+                  : 'Orari, pause e calcolo istantaneo di maggiorazioni'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            title="Chiudi"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab Selezione Modalità: Turno vs Ferie */}
-        <div className="p-3 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800">
+        {/* Tab Selezione Modalità: Turno vs Ferie - Sticky */}
+        <div className="p-3 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="grid grid-cols-2 gap-2 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
             <button
               type="button"
               onClick={() => handleModeChange('turno')}
-              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 entryMode === 'turno'
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -247,7 +278,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
             <button
               type="button"
               onClick={() => handleModeChange('ferie')}
-              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 entryMode === 'ferie'
                   ? 'bg-amber-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -259,12 +290,16 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
           </div>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto bg-white dark:bg-slate-900 transition-colors">
+        {/* Form Body - Scrollable */}
+        <form
+          id="shift-form"
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-white dark:bg-slate-900 transition-colors"
+        >
           {/* Data */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Data
+              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Data Turno
             </label>
             <input
               type="date"
@@ -322,28 +357,28 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setOreFerieCustom(standardDailyHours)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 hover:bg-amber-200 transition-colors"
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 hover:bg-amber-200 transition-colors cursor-pointer"
                   >
                     Contrattuale ({standardDailyHours}h)
                   </button>
                   <button
                     type="button"
                     onClick={() => setOreFerieCustom(4)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors"
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                   >
                     4 Ore
                   </button>
                   <button
                     type="button"
                     onClick={() => setOreFerieCustom(6)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors"
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                   >
                     6 Ore
                   </button>
                   <button
                     type="button"
                     onClick={() => setOreFerieCustom(8)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors"
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                   >
                     8 Ore
                   </button>
@@ -366,6 +401,47 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
           ) : (
             /* Sezione per TURNO DI LAVORO */
             <div className="space-y-4">
+              
+              {/* Preset Rapidi (Disponibili sia per nuovo turno che per modifica) */}
+              {templates.length > 0 && (
+                <div className="p-3 bg-indigo-50/60 dark:bg-indigo-950/40 rounded-xl border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      Applica Preset Rapido:
+                    </label>
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400">
+                      Personalizzabili in Tariffe
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {templates.map((tpl) => {
+                      const isSelected = orarioInizio === tpl.orarioInizio && orarioFine === tpl.orarioFine && pausaMinuti === tpl.pausaMinuti;
+                      return (
+                        <button
+                          key={tpl.id}
+                          type="button"
+                          onClick={() => applyTemplate(tpl)}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white border-indigo-700 shadow-2xs scale-[1.02]'
+                              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/50'
+                          }`}
+                        >
+                          <span>{tpl.titolo}</span>
+                          <span className={`text-[10px] font-mono px-1 py-0.2 rounded ${
+                            isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                          }`}>
+                            {tpl.orarioInizio}-{tpl.orarioFine}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Orario Inizio e Fine */}
               <div>
                 <div className="grid grid-cols-2 gap-3">
@@ -421,27 +497,6 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                 </div>
               </div>
 
-              {/* Template Rapidi se presenti */}
-              {templates.length > 0 && !shiftToEdit && (
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                    Oppure scegli un template rapido:
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {templates.map((tpl) => (
-                      <button
-                        key={tpl.id}
-                        type="button"
-                        onClick={() => applyTemplate(tpl)}
-                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 transition-colors"
-                      >
-                        {tpl.titolo} ({tpl.orarioInizio}-{tpl.orarioFine})
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Pausa Non Retribuita */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -449,54 +504,46 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                 </label>
                 <select
                   value={pausaMinuti}
-                  onChange={(e) => setPausaMinuti(Number(e.target.value))}
-                  className="w-full p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  onChange={(e) => setPausaMinuti(parseInt(e.target.value, 10))}
+                  className="w-full p-2.5 text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
                   <option value={0}>Nessuna pausa (0 min)</option>
-                  <option value={15}>15 minuti</option>
-                  <option value={30}>30 minuti (Standard)</option>
-                  <option value={45}>45 minuti</option>
-                  <option value={60}>1 ora (60 min)</option>
+                  <option value={15}>15 minuti di pausa</option>
+                  <option value={30}>30 minuti di pausa</option>
+                  <option value={45}>45 minuti di pausa</option>
+                  <option value={60}>60 minuti (1 ora)</option>
                 </select>
               </div>
-
-              {/* Avviso Festività automatica */}
-              {nomeFestivita && (
-                <div className="p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-xs text-rose-800 dark:text-rose-300 flex items-center gap-2">
-                  <Info className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                  <span>
-                    Rilevata festività: <strong>{nomeFestivita}</strong> (+Bonus Festivo attivo).
-                  </span>
-                </div>
-              )}
-
-              {/* Avviso Sovrapposizione Orari */}
-              {isOverlap && (
-                <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl text-xs text-amber-900 dark:text-amber-300 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>Attenzione: Un altro turno è già registrato a questa ora nello stesso giorno.</span>
-                </div>
-              )}
             </div>
           )}
 
-          {/* Note opzionali */}
+          {/* Note Opzionali */}
           <div>
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Note (Opzionale)
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Note o Mansione (Opzionale)
             </label>
             <input
               type="text"
-              placeholder={entryMode === 'ferie' ? 'es. Ferie estive, Permesso ROL' : 'es. Cassa, Chiusura, Cucina, ecc.'}
+              placeholder="es. Chiusura cassa, Magazzino, Servizio serale..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full p-2 text-xs border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              className="w-full p-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             />
           </div>
 
-          {/* Box Anteprima Calcolo in Tempo Reale */}
-          <div className="bg-slate-900 text-white p-4 rounded-xl space-y-2 border border-slate-800 shadow-inner">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-medium pb-2 border-b border-slate-800">
+          {/* Alert Sovrapposizione */}
+          {isOverlap && (
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-xl flex items-center gap-2 text-rose-800 dark:text-rose-200 text-xs">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <span>
+                Attenzione: Questo orario si sovrappone a un altro turno già salvato nella stessa data!
+              </span>
+            </div>
+          )}
+
+          {/* Anteprima Live Guadagno Turno */}
+          <div className="p-3.5 bg-slate-900 text-white rounded-xl space-y-2 border border-slate-800">
+            <div className="flex items-center justify-between text-xs font-semibold">
               <span>{entryMode === 'ferie' ? 'Riepilogo Ferie' : 'Riepilogo Calcolo Turno'}</span>
               <span className={entryMode === 'ferie' ? 'text-amber-400 font-bold' : 'text-blue-400 font-bold'}>
                 {previewShift.oreTotali.toFixed(2)} {entryMode === 'ferie' ? 'ore ferie' : 'ore lavorate'}
@@ -505,7 +552,9 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
 
             <div className="grid grid-cols-3 gap-2 text-center pt-1">
               <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700/50">
-                <div className="text-[10px] text-slate-400">Ore Notte (22-06)</div>
+                <div className="text-[10px] text-slate-400">
+                  Ore Notte ({config.oraInizioNotte || '22:00'}-{config.oraFineNotte || '06:00'})
+                </div>
                 <div className="text-sm font-bold text-indigo-300">
                   {previewShift.oreNotturne.toFixed(2)} h
                 </div>
@@ -541,53 +590,53 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Footer Actions */}
-          <div className="pt-2 flex items-center justify-between gap-2">
-            {shiftToEdit && onDeleteShift ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm('Sei sicuro di voler eliminare questa registrazione?')) {
-                    onDeleteShift(shiftToEdit.id);
-                    onClose();
-                  }
-                }}
-                className="px-3 py-2 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Elimina
-              </button>
-            ) : <div />}
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                Annulla
-              </button>
-              <button
-                type="submit"
-                className={`px-5 py-2 text-white rounded-xl text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5 ${
-                  entryMode === 'ferie'
-                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/10'
-                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10'
-                }`}
-              >
-                <Check className="w-4 h-4" />
-                {shiftToEdit
-                  ? 'Salva Modifiche'
-                  : entryMode === 'ferie'
-                  ? 'Registra Ferie'
-                  : 'Aggiungi Turno'}
-              </button>
-            </div>
-          </div>
         </form>
+
+        {/* Footer Actions - Sticky & Responsive */}
+        <div className="shrink-0 p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between gap-2.5">
+          {shiftToEdit && onDeleteShift ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm('Sei sicuro di voler eliminare questa registrazione?')) {
+                  onDeleteShift(shiftToEdit.id);
+                  onClose();
+                }
+              }}
+              className="px-3.5 py-2.5 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Elimina
+            </button>
+          ) : <div />}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              Annulla
+            </button>
+            <button
+              type="submit"
+              form="shift-form"
+              className={`px-5 py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                entryMode === 'ferie'
+                  ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/10'
+                  : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10'
+              }`}
+            >
+              <Check className="w-4 h-4" />
+              {shiftToEdit
+                ? 'Salva Modifiche'
+                : entryMode === 'ferie'
+                ? 'Registra Ferie'
+                : 'Aggiungi Turno'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-

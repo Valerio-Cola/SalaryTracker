@@ -7,13 +7,15 @@ const TEMPLATES_KEY = 'bk_templates_v2';
 const EXPENSES_KEY = 'bk_expenses_v2';
 
 export const DEFAULT_CONFIG: ContractConfig = {
-  oreSettimanali: 24,
+  oreSettimanali: 0,
   pagaBaseOraria: 0,
   bonusSupplementare: 0,
   bonusNotturno: 0,
+  oraInizioNotte: '22:00',
+  oraFineNotte: '06:00',
   bonusDomenicale: 0,
   bonusFestivo: 0,
-  aliquotaNettoStimata: 15,
+  aliquotaNettoStimata: 0,
   nomeLavoratore: '',
   nomeAzienda: '',
   includeTredicesimaMensile: false,
@@ -33,7 +35,7 @@ export const DEFAULT_CONFIG: ContractConfig = {
   importoBonusL207Fisso: 45.22,
   scaglioneBonusL207: '15000',
   percentualeBonusL207: 5.3,
-  ferieAccumuloMensile: 2.16,
+  ferieAccumuloMensile: 0,
   ferieResiduoIniziale: 0,
   vociPersonalizzate: [],
 };
@@ -41,14 +43,6 @@ export const DEFAULT_CONFIG: ContractConfig = {
 export const DEFAULT_TEMPLATES: QuickTemplate[] = [
   {
     id: 't1',
-    titolo: 'Chiusura Notte',
-    orarioInizio: '18:30',
-    orarioFine: '01:30',
-    pausaMinuti: 30,
-    note: 'Chiusura locale',
-  },
-  {
-    id: 't2',
     titolo: 'Turno Pranzo',
     orarioInizio: '11:30',
     orarioFine: '15:30',
@@ -56,20 +50,12 @@ export const DEFAULT_TEMPLATES: QuickTemplate[] = [
     note: 'Servizio pranzo',
   },
   {
-    id: 't3',
-    titolo: 'Pomeriggio - Sera',
-    orarioInizio: '16:00',
-    orarioFine: '21:30',
-    pausaMinuti: 15,
-    note: 'Cassa / Sala',
-  },
-  {
-    id: 't4',
-    titolo: 'Turno Spezzato',
-    orarioInizio: '12:00',
-    orarioFine: '16:00',
-    pausaMinuti: 0,
-    note: 'Fascia di punta',
+    id: 't2',
+    titolo: 'Chiusura Notte',
+    orarioInizio: '18:30',
+    orarioFine: '01:30',
+    pausaMinuti: 30,
+    note: 'Chiusura locale',
   },
 ];
 

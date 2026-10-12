@@ -1,8 +1,8 @@
 import { ContractConfig, Shift, DayType } from '../types';
 import { checkDayTypeInfo } from './holidays';
 
-export function timeToMinutes(timeStr: string): number {
-  if (!timeStr) return 0;
+export function timeToMinutes(timeStr: unknown): number {
+  if (!timeStr || typeof timeStr !== 'string') return 0;
   const [h, m] = timeStr.split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
 }
@@ -44,12 +44,14 @@ export function getSundayIso(mondayOrDateStr: string): string {
 }
 
 /**
- * Calcola le ore notturne comprese nella fascia 22:00 - 06:00
+ * Calcola le ore notturne comprese nella fascia oraria configurata (default 22:00 - 06:00)
  */
 export function calculateNightHours(
   startMin: number,
   rawEndMin: number,
-  pauseMin: number = 0
+  pauseMin: number = 0,
+  nightStartStr: string = '22:00',
+  nightEndStr: string = '06:00'
 ): number {
   let endMin = rawEndMin;
   if (endMin <= startMin) {
@@ -59,20 +61,31 @@ export function calculateNightHours(
   const shiftDurationMin = endMin - startMin;
   if (shiftDurationMin <= 0) return 0;
 
-  // Fasce notturne in minuti assoluti dall'inizio del primo giorno:
-  // Fascia A: 22:00 - 24:00 (1320 - 1440 min)
-  // Fascia B: 00:00 - 06:00 del giorno dopo (1440 - 1800 min)
-  // Fascia C: 00:00 - 06:00 del primo giorno se il turno inizia prima delle 06:00 (0 - 360 min)
-  // Fascia D: 22:00 - 24:00 del giorno dopo se turno lunghissimo (2760 - 2880 min)
+  const nStart = timeToMinutes(nightStartStr || '22:00');
+  const nEnd = timeToMinutes(nightEndStr || '06:00');
+
+  // Intervalli notturni in minuti assoluti dal giorno 1 (0:00) fino ai giorni successivi:
+  // Se nStart >= nEnd (es. 22:00 -> 06:00, classico notturno che attraversa mezzanotte):
+  // Giorno 1 mattina: [0, nEnd]
+  // Giorno 1 sera -> Giorno 2 mattina: [nStart, 24*60 + nEnd]
+  // Giorno 2 sera -> Giorno 3 mattina: [24*60 + nStart, 48*60 + nEnd]
+  // Se nStart < nEnd (es. 00:00 -> 05:00):
+  // Giorno 1: [nStart, nEnd]
+  // Giorno 2: [24*60 + nStart, 24*60 + nEnd]
+  // Giorno 3: [48*60 + nStart, 48*60 + nEnd]
+  const nightIntervals: { start: number; end: number }[] = [];
+
+  if (nStart >= nEnd) {
+    nightIntervals.push({ start: 0, end: nEnd });
+    nightIntervals.push({ start: nStart, end: 24 * 60 + nEnd });
+    nightIntervals.push({ start: 24 * 60 + nStart, end: 48 * 60 + nEnd });
+  } else {
+    nightIntervals.push({ start: nStart, end: nEnd });
+    nightIntervals.push({ start: 24 * 60 + nStart, end: 24 * 60 + nEnd });
+    nightIntervals.push({ start: 48 * 60 + nStart, end: 48 * 60 + nEnd });
+  }
 
   let totalNightMins = 0;
-
-  const nightIntervals = [
-    { start: 0, end: 6 * 60 },             // 00:00 - 06:00 giorno 1
-    { start: 22 * 60, end: 30 * 60 },      // 22:00 - 06:00 (24h+6h = 30h = 1800 min)
-    { start: 46 * 60, end: 54 * 60 },      // 22:00 - 06:00 giorno 3
-  ];
-
   for (const interval of nightIntervals) {
     const overlapStart = Math.max(startMin, interval.start);
     const overlapEnd = Math.min(endMin, interval.end);
@@ -214,8 +227,14 @@ export function computeShiftData(
       const minutiLavoratiNetto = Math.max(0, endMin - startMin - pausaMinuti);
       oreTotali = Number((minutiLavoratiNetto / 60).toFixed(2));
 
-      // Ore notturne (22:00 - 06:00)
-      oreNotturne = calculateNightHours(startMin, endMin, pausaMinuti);
+      // Ore notturne (con orari di inizio e fine personalizzati)
+      oreNotturne = calculateNightHours(
+        startMin,
+        endMin,
+        pausaMinuti,
+        config.oraInizioNotte || '22:00',
+        config.oraFineNotte || '06:00'
+      );
     }
   }
 

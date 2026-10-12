@@ -15,12 +15,14 @@ export interface ContractConfig {
   oreSettimanali: number; // es. 24
   pagaBaseOraria: number; // es. 6.22
   bonusSupplementare: number; // es. 0.72 per ora oltre il limite settimanale
-  bonusNotturno: number; // es. 1.55 per ore tra le 22:00 e le 06:00
+  bonusNotturno: number; // es. 1.55 per ore notturne
+  oraInizioNotte?: string; // orario inizio fascia notte, default "22:00"
+  oraFineNotte?: string; // orario fine fascia notte, default "06:00"
   bonusDomenicale: number; // es. 0.93 per ore in domenica
   bonusFestivo: number; // es. 1.55 per ore in festività nazionale
   aliquotaNettoStimata: number; // percentuale stima trattenute (es. 15%)
-  nomeLavoratore?: string; // opzionale, es. "Chiara"
-  nomeAzienda?: string; // opzionale, es. "Burger King"
+  nomeLavoratore?: string; // opzionale
+  nomeAzienda?: string; // opzionale
   
   // Ratei 13ª e 14ª
   includeTredicesimaMensile?: boolean;

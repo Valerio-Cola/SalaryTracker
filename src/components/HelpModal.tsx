@@ -135,7 +135,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     🌙 <span>Turni Notturni Automatici</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Se il tuo turno supera le ore <strong>22:00</strong> o finisce dopo la mezzanotte (fino alle <strong>06:00</strong>), l'app calcola automaticamente i minuti notturni esatti e vi applica la maggiorazione notturna prevista dal tuo contratto.
+                    L'app rileva e conteggia automaticamente i minuti notturni esatti applicando la maggiorazione prevista. Nella scheda <strong>Tariffe</strong> puoi personalizzare la fascia oraria notturna (di base <strong>22:00 - 06:00</strong>) inserendo l'orario esatto di inizio e di fine notte stabilito dal tuo CCNL aziendale.
                   </p>
                 </div>
 
@@ -158,13 +158,24 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </p>
               </div>
 
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
-                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                  ⭐ <span>Template Rapidi</span>
+              <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl space-y-2">
+                <div className="font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span>⏰ Preset di Orari Rapidi & Personalizzabili</span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                  Fai spesso lo stesso orario (es. Chiusura 18:30-01:30 o Pranzo 11:30-15:30)? Nella finestra del turno puoi cliccare direttamente sui pulsanti dei template per compilare tutto in un secondo.
+                <p className="text-[11px] text-indigo-900 dark:text-indigo-300 leading-relaxed">
+                  Fai spesso gli stessi orari (es. <em>Apertura</em>, <em>Turno Pranzo</em>, <em>Chiusura Notte</em>)?
+                  Nella finestra del turno puoi cliccare direttamente sui tuoi <strong>preset rapidi</strong> per compilare all&apos;istante orario di entrata, orario di uscita, pausa e note, senza doverli digitare ogni volta.
                 </p>
+                <div className="p-2.5 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-indigo-200 dark:border-indigo-800 text-[11px] space-y-1 text-slate-700 dark:text-slate-300">
+                  <strong className="block text-indigo-950 dark:text-indigo-200 font-semibold">Come creare i tuoi preset su misura:</strong>
+                  <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
+                    <li>Apri il menu <strong>&quot;Tariffe&quot;</strong> nella barra superiore e clicca su <strong>&quot;Preset Orari&quot;</strong> nell&apos;indice.</li>
+                    <li>Digita il nome del modello (es. <em>&quot;Apertura Bar&quot;</em>, <em>&quot;Turno Spezzato&quot;</em>), seleziona gli orari e la pausa.</li>
+                    <li>Clicca su <strong>&quot;Salva Preset&quot;</strong>: il tuo nuovo orario comparirà subito fra i pulsanti di scelta rapida!</li>
+                    <li>Puoi gestire, eliminare o ripristinare i modelli predefiniti in qualsiasi momento.</li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}
@@ -288,6 +299,24 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
               <div className="space-y-3">
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>📑 Indice Cliccabile Rapido</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    In cima alla schermata delle Tariffe trovi un comodo <strong>indice cliccabile</strong> (Paga Base, Maggiorazioni, 13ª/14ª, Ferie, Voci Extra, Preset Orari e Reset) che ti consente di saltare istantaneamente alla sezione che ti interessa con un tocco, senza dover scorrere tutta la schermata.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>⏰ Gestione dei Preset di Orario</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Nella sezione <strong>&quot;Preset Orari&quot;</strong> delle Tariffe puoi visualizzare i modelli già attivi, eliminare quelli obsoleti e aggiungerne di nuovi impostando orario di inizio, orario di fine, minuti di pausa e mansione/note. L&apos;anteprima calcola subito la durata effettiva e le ore notturne comprese.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-white">
                     Tredicesima e Quattordicesima: Come le ricevi?
                   </div>
@@ -295,7 +324,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     Molti lavoratori prendono la 13ª e la 14ª a <strong>rate mensili</strong> (1/12 ogni mese in busta paga), mentre altri le ricevono in <strong>unica soluzione annuale</strong> (a Dicembre per la 13ª e a Giugno/Luglio per la 14ª).
                   </p>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Nelle Tariffe puoi scegliere l'opzione che corrisponde al tuo contratto: se scegli l'unica soluzione, l'importo non gonfierà il netto dei mesi ordinari ma verrà conteggiato esattamente nel mese di accredito!
+                    Nelle Tariffe puoi scegliere l&apos;opzione che corrisponde al tuo contratto: se scegli l&apos;unica soluzione, l'importo non gonfierà il netto dei mesi ordinari ma verrà conteggiato esattamente nel mese di accredito!
                   </p>
                 </div>
 
