@@ -114,7 +114,8 @@ export function printMonthlyReport(
   const rateo13 = config.includeTredicesimaMensile ? (config.importoTredicesimaMensile ?? 53.84) : 0;
   const rateo14 = config.includeQuattordicesimaMensile ? (config.importoQuattordicesimaMensile ?? 53.84) : 0;
   const rateiLordoMensili = rateo13 + rateo14;
-  const rateiNettoMensili = rateiLordoMensili * (1 - (config.aliquotaNettoStimata || 15) / 100);
+  const taxRate = typeof config.aliquotaNettoStimata === 'number' ? config.aliquotaNettoStimata : 15;
+  const rateiNettoMensili = rateiLordoMensili * (1 - taxRate / 100);
 
   const bonusRenziNetto = config.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
   const bonusL207Netto = config.includeBonusL207
@@ -207,7 +208,7 @@ export function printMonthlyReport(
             <th>Data</th>
             <th>Orario Turno</th>
             <th>Ore Totali</th>
-            <th>Ore Notte (22-06)</th>
+            <th>Ore Notte</th>
             <th>Straordinario</th>
             <th>Tipo Giorno</th>
             <th>Stima Lordo</th>

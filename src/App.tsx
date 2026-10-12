@@ -157,10 +157,16 @@ export default function App() {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Salva configurazione e ricalcola i turni
-  const handleSaveConfig = (newConfig: ContractConfig) => {
+  // Salva configurazione e ricalcola i turni (con eventuale aggiornamento sincronizzato dei template)
+  const handleSaveConfig = (newConfig: ContractConfig, newTemplates?: QuickTemplate[]) => {
     setConfig(newConfig);
     saveStoredConfig(newConfig);
+
+    const activeTemplates = newTemplates || templates;
+    if (newTemplates) {
+      setTemplates(newTemplates);
+      saveStoredTemplates(newTemplates);
+    }
 
     // Ricalcola immediatamente tutti i turni con le nuove tariffe
     const updatedShifts = recalculateAllShifts(shifts, newConfig);
@@ -168,7 +174,10 @@ export default function App() {
     saveStoredShifts(updatedShifts);
     showNotification('Tariffe aggiornate! Tutti i turni sono stati ricalcolati.');
 
-    checkAndAutoSync(newConfig, updatedShifts, expenses);
+    const creds = getSyncCredentials();
+    if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
+      pushToCloud(creds, { config: newConfig, shifts: updatedShifts, templates: activeTemplates, expenses }).catch(() => {});
+    }
   };
 
   // Salva (Aggiungi o Modifica) Turno
@@ -586,7 +595,8 @@ export default function App() {
           saveStoredTemplates(newTemplates);
           const creds = getSyncCredentials();
           if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
-            pushToCloud(creds, { config, shifts, templates: newTemplates, expenses }).catch(() => {});
+            const currentConfig = getStoredConfig();
+            pushToCloud(creds, { config: currentConfig, shifts, templates: newTemplates, expenses }).catch(() => {});
           }
         }}
       />

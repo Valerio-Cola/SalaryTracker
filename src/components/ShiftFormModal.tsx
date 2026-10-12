@@ -78,6 +78,9 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       ? shiftToEdit.oreTotali
       : 0
   );
+  const [maggiorazioniAttive, setMaggiorazioniAttive] = useState<string[]>(
+    shiftToEdit?.maggiorazioniOrarieAttive || []
+  );
 
   // Aggiorna data/stato all'apertura o modifica
   useEffect(() => {
@@ -88,6 +91,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       setOrarioInizio(shiftToEdit.orarioInizio || '');
       setOrarioFine(shiftToEdit.orarioFine || '');
       setPausaMinuti(shiftToEdit.pausaMinuti || 0);
+      setMaggiorazioniAttive(shiftToEdit.maggiorazioniOrarieAttive || []);
 
       const dateInfo = checkDayTypeInfo(shiftToEdit.dataGrezza);
       if (isVacation) {
@@ -125,12 +129,17 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       setPausaMinuti(0);
       setNote('');
       setOreFerieCustom(0);
+      setMaggiorazioniAttive(
+        (config.maggiorazioniOrariePersonalizzate || [])
+          .filter((m) => m.applicaDefault)
+          .map((m) => m.id)
+      );
 
       const info = checkDayTypeInfo(dateToUse);
       setTipoGiorno(info.suggestedDayType);
       setNomeFestivita(info.holidayName || '');
     }
-  }, [shiftToEdit, initialDate, isOpen, config.oreSettimanali]);
+  }, [shiftToEdit, initialDate, isOpen, config.oreSettimanali, config.maggiorazioniOrariePersonalizzate]);
 
   const handleDateChange = (newDate: string) => {
     setDataGrezza(newDate);
@@ -198,6 +207,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       note,
       isFerie: entryMode === 'ferie',
       oreTotaliCustom: entryMode === 'ferie' ? oreFerieCustom : undefined,
+      maggiorazioniOrarieAttive: entryMode === 'ferie' ? [] : maggiorazioniAttive,
     },
     config,
     allShifts
@@ -491,6 +501,57 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                   <option value={60}>60 minuti (1 ora)</option>
                 </select>
               </div>
+
+              {/* Maggiorazioni Orarie Personalizzate per questo turno */}
+              {config.maggiorazioniOrariePersonalizzate && config.maggiorazioniOrariePersonalizzate.length > 0 && (
+                <div className="p-3 bg-amber-50/60 dark:bg-amber-950/30 rounded-xl border border-amber-200/70 dark:border-amber-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Maggiorazioni Orarie Applicabili
+                    </label>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-300 font-medium">
+                      Tariffa oraria extra
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {config.maggiorazioniOrariePersonalizzate.map((m) => {
+                      const isDefault = !!m.applicaDefault;
+                      const isChecked = isDefault || maggiorazioniAttive.includes(m.id);
+                      return (
+                        <label
+                          key={m.id}
+                          className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-colors ${
+                            isChecked
+                              ? 'bg-amber-100/80 dark:bg-amber-900/60 border-amber-300 dark:border-amber-700 text-amber-950 dark:text-amber-100 font-semibold'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              disabled={isDefault}
+                              onChange={(e) => {
+                                if (isDefault) return;
+                                if (e.target.checked) {
+                                  setMaggiorazioniAttive((prev) => [...prev, m.id]);
+                                } else {
+                                  setMaggiorazioniAttive((prev) => prev.filter((id) => id !== m.id));
+                                }
+                              }}
+                              className="w-3.5 h-3.5 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
+                            />
+                            <span>{m.nome}</span>
+                          </div>
+                          <span className="font-mono text-[11px] text-amber-700 dark:text-amber-300 font-bold">
+                            +{m.importoOrario.toFixed(2)} €/h
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

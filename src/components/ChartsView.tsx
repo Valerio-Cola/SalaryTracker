@@ -67,7 +67,7 @@ export const ChartsView: React.FC<ChartsViewProps> = ({
   const rateo13 = config?.includeTredicesimaMensile ? (config.importoTredicesimaMensile ?? 53.84) : 0;
   const rateo14 = config?.includeQuattordicesimaMensile ? (config.importoQuattordicesimaMensile ?? 53.84) : 0;
   const rateiLordoMensili = rateo13 + rateo14;
-  const taxRateDecimal = (config?.aliquotaNettoStimata || 15) / 100;
+  const taxRateDecimal = (typeof config?.aliquotaNettoStimata === 'number' ? config.aliquotaNettoStimata : 15) / 100;
   const rateiNettoMensili = rateiLordoMensili * (1 - taxRateDecimal);
   const bonusRenziNetto = config?.includeBonusRenzi ? (config.importoBonusRenzi ?? 98.63) : 0;
 

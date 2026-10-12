@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shift } from '../types';
-import { Edit2, Trash2, Calendar, Moon, Sun, Clock, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { Edit2, Trash2, Calendar, Moon, Sun, Clock, ChevronDown, ChevronUp, AlertCircle, Sparkles } from 'lucide-react';
 
 interface ShiftListProps {
   shifts: Shift[];
@@ -209,7 +209,7 @@ export const ShiftList: React.FC<ShiftListProps> = ({
 
                       <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="text-indigo-700 dark:text-indigo-300 text-[10px] flex items-center gap-1">
-                          <Moon className="w-3 h-3 text-indigo-500 dark:text-indigo-400" /> Ore Notte (22-06)
+                          <Moon className="w-3 h-3 text-indigo-500 dark:text-indigo-400" /> Ore Notte
                         </span>
                         <div className="font-bold text-indigo-950 dark:text-indigo-100">
                           {s.oreNotturne.toFixed(2)} h (+€{s.guadagnoNotturno.toFixed(2)})
@@ -233,6 +233,17 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                           {s.oreSupplementari.toFixed(2)} h (+€{s.guadagnoSupplementare.toFixed(2)})
                         </div>
                       </div>
+
+                      {(s.guadagnoMaggiorazioniOrarie || 0) > 0 && (
+                        <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                          <span className="text-amber-700 dark:text-amber-300 text-[10px] flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-amber-500" /> Maggiorazioni
+                          </span>
+                          <div className="font-bold text-amber-950 dark:text-amber-100">
+                            + € {s.guadagnoMaggiorazioniOrarie?.toFixed(2)}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

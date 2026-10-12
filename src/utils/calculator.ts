@@ -136,6 +136,33 @@ export function checkShiftOverlap(
 /**
  * Calcola tutti i valori di un turno o giorno di ferie e ritorna l'oggetto Shift completo
  */
+export function calculateCustomHourlySurchargesTotal(
+  oreTotali: number,
+  isFerie: boolean,
+  activeIds: string[] | undefined,
+  config: ContractConfig
+): { activeIds: string[]; totalLordo: number } {
+  if (
+    isFerie ||
+    oreTotali <= 0 ||
+    !config.maggiorazioniOrariePersonalizzate ||
+    config.maggiorazioniOrariePersonalizzate.length === 0
+  ) {
+    return { activeIds: [], totalLordo: 0 };
+  }
+
+  const active = config.maggiorazioniOrariePersonalizzate.filter(
+    (m) => m.applicaDefault || (activeIds && activeIds.includes(m.id))
+  );
+
+  const rate = active.reduce((sum, curr) => sum + (curr.importoOrario || 0), 0);
+  const totalLordo = Number((oreTotali * rate).toFixed(2));
+  return {
+    activeIds: active.map((m) => m.id),
+    totalLordo,
+  };
+}
+
 export function computeShiftData(
   params: {
     id?: string;
@@ -148,6 +175,7 @@ export function computeShiftData(
     note?: string;
     isFerie?: boolean;
     oreTotaliCustom?: number;
+    maggiorazioniOrarieAttive?: string[];
   },
   config: ContractConfig,
   existingShifts: Shift[] = []
@@ -292,6 +320,14 @@ export function computeShiftData(
     }
   }
 
+  const customSurchargesResult = calculateCustomHourlySurchargesTotal(
+    oreTotali,
+    isFerie,
+    params.maggiorazioniOrarieAttive,
+    config
+  );
+  const guadagnoMaggiorazioniOrarie = customSurchargesResult.totalLordo;
+
   const guadagnoSupplementare = Number(
     (oreSupplementari * config.bonusSupplementare).toFixed(2)
   );
@@ -301,11 +337,12 @@ export function computeShiftData(
       guadagnoBase +
       guadagnoNotturno +
       guadagnoFestivoDomenicale +
-      guadagnoSupplementare
+      guadagnoSupplementare +
+      guadagnoMaggiorazioniOrarie
     ).toFixed(2)
   );
 
-  const aliquotaNetto = config.aliquotaNettoStimata || 15;
+  const aliquotaNetto = typeof config.aliquotaNettoStimata === 'number' ? config.aliquotaNettoStimata : 15;
   const guadagnoTotaleNettoStimato = Number(
     (guadagnoTotaleLordo * (1 - aliquotaNetto / 100)).toFixed(2)
   );
@@ -320,6 +357,8 @@ export function computeShiftData(
     nomeFestivita,
     note: isFerie && !sanitizedNote ? 'Ferie / Permesso retribuito' : sanitizedNote,
     isFerie,
+    maggiorazioniOrarieAttive: customSurchargesResult.activeIds,
+    guadagnoMaggiorazioniOrarie,
     oreTotali,
     oreNotturne,
     oreSupplementari,
@@ -358,7 +397,7 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
   }
 
   const sogliaSettimanale = config.oreSettimanali || 24;
-  const aliquotaNetto = config.aliquotaNettoStimata || 15;
+  const aliquotaNetto = typeof config.aliquotaNettoStimata === 'number' ? config.aliquotaNettoStimata : 15;
   const finalShifts: Shift[] = [];
 
   // Elaboriamo settimana per settimana
@@ -430,6 +469,14 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
         }
       }
 
+      const customSurchargesResult = calculateCustomHourlySurchargesTotal(
+        oreTotali,
+        isFerie,
+        s.maggiorazioniOrarieAttive,
+        config
+      );
+      const guadagnoMaggiorazioniOrarie = customSurchargesResult.totalLordo;
+
       return {
         ...s,
         note: cleanNote,
@@ -438,13 +485,15 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
         nomeFestivita,
         oreTotali,
         oreNotturne,
+        maggiorazioniOrarieAttive: customSurchargesResult.activeIds,
+        guadagnoMaggiorazioniOrarie,
         oreSupplementari: 0,
         guadagnoBase,
         guadagnoNotturno,
         guadagnoFestivoDomenicale,
         guadagnoSupplementare: 0,
-        guadagnoTotaleLordo: guadagnoBase + guadagnoNotturno + guadagnoFestivoDomenicale,
-        guadagnoTotaleNettoStimato: Number(((guadagnoBase + guadagnoNotturno + guadagnoFestivoDomenicale) * (1 - aliquotaNetto / 100)).toFixed(2)),
+        guadagnoTotaleLordo: Number((guadagnoBase + guadagnoNotturno + guadagnoFestivoDomenicale + guadagnoMaggiorazioniOrarie).toFixed(2)),
+        guadagnoTotaleNettoStimato: Number(((guadagnoBase + guadagnoNotturno + guadagnoFestivoDomenicale + guadagnoMaggiorazioniOrarie) * (1 - aliquotaNetto / 100)).toFixed(2)),
       };
     });
 
@@ -474,7 +523,7 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
 
         s.oreSupplementari = shiftOvertime;
         s.guadagnoSupplementare = Number((shiftOvertime * config.bonusSupplementare).toFixed(2));
-        s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + s.guadagnoSupplementare).toFixed(2));
+        s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + s.guadagnoSupplementare + (s.guadagnoMaggiorazioniOrarie || 0)).toFixed(2));
         s.guadagnoTotaleNettoStimato = Number((s.guadagnoTotaleLordo * (1 - aliquotaNetto / 100)).toFixed(2));
         finalShifts.push(s);
       }
@@ -489,7 +538,7 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
       for (const s of month1Shifts) {
         s.oreSupplementari = 0;
         s.guadagnoSupplementare = 0;
-        s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale).toFixed(2));
+        s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + (s.guadagnoMaggiorazioniOrarie || 0)).toFixed(2));
         s.guadagnoTotaleNettoStimato = Number((s.guadagnoTotaleLordo * (1 - aliquotaNetto / 100)).toFixed(2));
         finalShifts.push(s);
       }
@@ -520,7 +569,7 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
 
           s.oreSupplementari = shiftOvertime;
           s.guadagnoSupplementare = Number((shiftOvertime * config.bonusSupplementare).toFixed(2));
-          s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + s.guadagnoSupplementare).toFixed(2));
+          s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + s.guadagnoSupplementare + (s.guadagnoMaggiorazioniOrarie || 0)).toFixed(2));
           s.guadagnoTotaleNettoStimato = Number((s.guadagnoTotaleLordo * (1 - aliquotaNetto / 100)).toFixed(2));
           finalShifts.push(s);
         }
@@ -540,7 +589,7 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
           accumulatedHours += s.oreTotali;
           s.oreSupplementari = shiftOvertime;
           s.guadagnoSupplementare = Number((shiftOvertime * config.bonusSupplementare).toFixed(2));
-          s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + s.guadagnoSupplementare).toFixed(2));
+          s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + s.guadagnoSupplementare + (s.guadagnoMaggiorazioniOrarie || 0)).toFixed(2));
           s.guadagnoTotaleNettoStimato = Number((s.guadagnoTotaleLordo * (1 - aliquotaNetto / 100)).toFixed(2));
         }
       }
@@ -637,7 +686,7 @@ export function calculateMonthlyCompensation(
 
   const totalShiftsLordo = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
   const totalShiftsNetto = shifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
-  const taxRateDecimal = (config.aliquotaNettoStimata || 15) / 100;
+  const taxRateDecimal = (typeof config.aliquotaNettoStimata === 'number' ? config.aliquotaNettoStimata : 15) / 100;
 
   // 13ª mensile o annuale
   let lordo13 = 0;
@@ -725,9 +774,12 @@ export function calculateMonthlyCompensation(
     (totalShiftsNetto + rateiNettoMensili + bonusRenziNetto + bonusL207Netto + vociNetteExtra).toFixed(2)
   );
 
+  const totalMaggiorazioniOrarieExtra = Number(shifts.reduce((acc, curr) => acc + (curr.guadagnoMaggiorazioniOrarie || 0), 0).toFixed(2));
+
   return {
     totalShiftsLordo,
     totalShiftsNetto,
+    totalMaggiorazioniOrarieExtra,
     lordo13,
     is13ErogataNelMese,
     lordo14,

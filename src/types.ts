@@ -52,8 +52,19 @@ export interface ContractConfig {
   ferieAccumuloMensile?: number; // Giorni di ferie accumulati al mese (es. 2.16 o 2.08)
   ferieResiduoIniziale?: number; // Saldo ferie arretrate/iniziali in giorni (default 0)
 
-  // Ratei o Bonus personalizzati in busta paga
+  // Ratei o Bonus personalizzati in busta paga (mensili o periodici)
   vociPersonalizzate?: CustomAllowance[];
+
+  // Maggiorazioni orarie personalizzate (€/h)
+  maggiorazioniOrariePersonalizzate?: CustomHourlySurcharge[];
+}
+
+export interface CustomHourlySurcharge {
+  id: string;
+  nome: string; // es. "Indennità Spezzato", "Bonus Cassa", "Disagio / 6° Giorno"
+  importoOrario: number; // Valore in €/ora (es. 1.50)
+  applicaDefault?: boolean; // Se true, applicata in automatico a tutti i turni lavorati
+  descrizione?: string;
 }
 
 export interface Shift {
@@ -67,6 +78,10 @@ export interface Shift {
   note?: string; // es. "Chiusura cassa"
   isFerie?: boolean; // true se giorno di ferie/permesso
   
+  // Maggiorazioni orarie personalizzate attive per questo specifico turno (array di id)
+  maggiorazioniOrarieAttive?: string[];
+  guadagnoMaggiorazioniOrarie?: number; // Totale lordo extra generato dalle maggiorazioni orarie personalizzate
+
   // Campi calcolati
   oreTotali: number;
   oreNotturne: number;

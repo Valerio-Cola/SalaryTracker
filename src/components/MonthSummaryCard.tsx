@@ -52,6 +52,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
   const totalNotteExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoNotturno, 0);
   const totalFestivoExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoFestivoDomenicale, 0);
   const totalSuppExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoSupplementare, 0);
+  const totalMaggiorazioniOrarieExtra = shifts.reduce((acc, curr) => acc + (curr.guadagnoMaggiorazioniOrarie || 0), 0);
 
   // Calcolo completo compensi, ratei e bonus per il mese
   const monthKey = currentMonthKey || (shifts.length > 0 ? shifts[0].dataGrezza.slice(0, 7) : '2026-09');
@@ -259,7 +260,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
                   <span className="font-bold text-slate-900 dark:text-white">€ {comp.totalShiftsLordo.toFixed(2)}</span>
                 </li>
                 <li className="flex justify-between text-rose-600 dark:text-rose-400">
-                  <span>2. Ritenute stimate (~{config.aliquotaNettoStimata || 15}%):</span>
+                  <span>2. Ritenute stimate (~{config.aliquotaNettoStimata ?? 15}%):</span>
                   <span>- € {totalShiftsTaxDeduction.toFixed(2)}</span>
                 </li>
                 <li className="flex justify-between text-slate-900 dark:text-white font-bold pt-0.5 border-t border-slate-100 dark:border-slate-800">
@@ -362,7 +363,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             + € {totalNotteExtra.toFixed(2)}
           </div>
           <div className="text-[10px] text-indigo-700 dark:text-indigo-400 mt-1">
-            {totalNotturne.toFixed(1)}h notturne (22-06)
+            {totalNotturne.toFixed(1)}h notturne
           </div>
         </div>
 
@@ -395,6 +396,23 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             {totalSupplementari.toFixed(1)}h oltre soglia sett.
           </div>
         </div>
+
+        {/* Maggiorazioni Orarie Personalizzate */}
+        {totalMaggiorazioniOrarieExtra > 0 && (
+          <div className="p-3 bg-amber-50/60 dark:bg-amber-950/40 rounded-xl border border-amber-100 dark:border-amber-900/60">
+            <div className="text-[11px] font-medium text-amber-900 dark:text-amber-300 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Maggiorazioni Extra
+              </span>
+            </div>
+            <div className="text-base font-bold text-amber-950 dark:text-amber-100 mt-0.5">
+              + € {totalMaggiorazioniOrarieExtra.toFixed(2)}
+            </div>
+            <div className="text-[10px] text-amber-700 dark:text-amber-400 mt-1">
+              Indennità orarie personalizzate
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
