@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Shift, Expense } from '../types';
 import { Plus, Moon, Sun, Clock, Receipt, Sparkles } from 'lucide-react';
 import { checkDayTypeInfo } from '../utils/holidays';
@@ -11,6 +11,15 @@ interface CalendarViewProps {
   onAddExpense: (dateIso: string) => void;
   onEditShift: (shift: Shift) => void;
   onEditExpense: (expense: Expense) => void;
+}
+
+interface CalendarGridCell {
+  type: 'empty' | 'day';
+  id?: string;
+  dayNumber?: number;
+  dateIso?: string;
+  dayShifts?: Shift[];
+  dayExpenses?: Expense[];
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -26,141 +35,266 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthStr, 10) - 1;
 
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
+  const staticHeaderRowRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const stickyBarRef = useRef<HTMLDivElement>(null);
+  const isSyncingRef = useRef(false);
+
+  const [isSticky, setIsSticky] = useState(false);
+  const [headerBottom, setHeaderBottom] = useState(60);
+
+  // Monitora lo scroll verticale con requestAnimationFrame evitando re-render inutili
+  useEffect(() => {
+    let ticking = false;
+
+    const updateSticky = () => {
+      ticking = false;
+      const headerEl = document.querySelector('header');
+      const hBottom = headerEl ? headerEl.getBoundingClientRect().bottom : 60;
+      setHeaderBottom(hBottom);
+
+      if (staticHeaderRowRef.current && calendarContainerRef.current) {
+        const staticRect = staticHeaderRowRef.current.getBoundingClientRect();
+        const calendarRect = calendarContainerRef.current.getBoundingClientRect();
+
+        // La barra sticky appare SOLO quando la riga dei giorni statica è completamente scomparsa sotto l'header
+        // Questo impedisce qualsiasi duplicazione tra header statico e barra fluttuante
+        const shouldBeSticky = staticRect.bottom <= hBottom && calendarRect.bottom > hBottom + 90;
+        setIsSticky((prev) => (prev !== shouldBeSticky ? shouldBeSticky : prev));
+      }
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateSticky);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    updateSticky();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
+
+  // Sincronizza la posizione orizzontale all'attivazione della barra sticky
+  useEffect(() => {
+    if (isSticky && stickyBarRef.current && scrollRef.current) {
+      stickyBarRef.current.scrollLeft = scrollRef.current.scrollLeft;
+    }
+  }, [isSticky]);
+
+  // Sincronizzazione scroll orizzontale immediata e leggera
+  const handleGridScroll = () => {
+    if (!isSticky || isSyncingRef.current || !scrollRef.current || !stickyBarRef.current) return;
+    isSyncingRef.current = true;
+    stickyBarRef.current.scrollLeft = scrollRef.current.scrollLeft;
+    isSyncingRef.current = false;
+  };
+
+  const handleStickyScroll = () => {
+    if (!isSticky || isSyncingRef.current || !scrollRef.current || !stickyBarRef.current) return;
+    isSyncingRef.current = true;
+    scrollRef.current.scrollLeft = stickyBarRef.current.scrollLeft;
+    isSyncingRef.current = false;
+  };
+
   // Giorni del mese
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7; // 0 = Lunedì, 6 = Domenica
 
   // Mappa dei turni e delle spese per giorno (chiave: YYYY-MM-DD)
-  const shiftMap: Record<string, Shift[]> = {};
-  shifts.forEach((s) => {
-    if (!shiftMap[s.dataGrezza]) shiftMap[s.dataGrezza] = [];
-    shiftMap[s.dataGrezza].push(s);
-  });
-
-  const expenseMap: Record<string, Expense[]> = {};
-  expenses.forEach((e) => {
-    if (!expenseMap[e.data]) expenseMap[e.data] = [];
-    expenseMap[e.data].push(e);
-  });
-
-  const weekDayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-
-  const calendarGrid = [];
-  // Celle vuote per i giorni del mese precedente
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    calendarGrid.push({ type: 'empty', id: `empty-${i}` });
-  }
-
-  // Giorni del mese
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dayPadded = String(d).padStart(2, '0');
-    const dateIso = `${yearStr}-${monthStr}-${dayPadded}`;
-    calendarGrid.push({
-      type: 'day',
-      dayNumber: d,
-      dateIso,
-      dayShifts: shiftMap[dateIso] || [],
-      dayExpenses: expenseMap[dateIso] || [],
+  const shiftMap = useMemo(() => {
+    const map: Record<string, Shift[]> = {};
+    shifts.forEach((s) => {
+      if (!map[s.dataGrezza]) map[s.dataGrezza] = [];
+      map[s.dataGrezza].push(s);
     });
-  }
+    return map;
+  }, [shifts]);
+
+  const expenseMap = useMemo(() => {
+    const map: Record<string, Expense[]> = {};
+    expenses.forEach((e) => {
+      if (!map[e.data]) map[e.data] = [];
+      map[e.data].push(e);
+    });
+    return map;
+  }, [expenses]);
+
+  const weekDayNames = useMemo(() => ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'], []);
+
+  const calendarGrid = useMemo(() => {
+    const grid: CalendarGridCell[] = [];
+    // Celle vuote per i giorni del mese precedente
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      grid.push({ type: 'empty', id: `empty-${i}` });
+    }
+
+    // Giorni del mese
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayPadded = String(d).padStart(2, '0');
+      const dateIso = `${yearStr}-${monthStr}-${dayPadded}`;
+      grid.push({
+        type: 'day',
+        dayNumber: d,
+        dateIso,
+        dayShifts: shiftMap[dateIso] || [],
+        dayExpenses: expenseMap[dateIso] || [],
+      });
+    }
+    return grid;
+  }, [daysInMonth, firstDayOfWeek, yearStr, monthStr, shiftMap, expenseMap]);
 
   const todayIso = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 transition-colors">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" /> Calendario Mensile
-        </h3>
-        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
-          Clicca su un giorno per aggiungere un turno
-        </span>
+    <>
+      {/* Barra Sticky Fluttuante dei Giorni della Settimana: compare fluidamente SENZA sovrapporsi all'header statico */}
+      <div
+        style={{ top: `${headerBottom}px` }}
+        className={`fixed left-0 right-0 z-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-md py-1.5 px-4 sm:px-6 lg:px-8 transition-all duration-200 ease-out ${
+          isSticky
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 -translate-y-2 pointer-events-none'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="px-4 sm:px-6">
+            <div
+              ref={stickyBarRef}
+              onScroll={handleStickyScroll}
+              className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 no-scrollbar"
+            >
+              <div className="min-w-[700px] sm:min-w-0">
+                <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
+                  {weekDayNames.map((w, idx) => (
+                    <div
+                      key={`sticky-${w}`}
+                      className={`text-xs sm:text-sm font-bold py-1.5 rounded-xl ${
+                        idx === 6
+                          ? 'text-rose-800 dark:text-rose-300 bg-rose-100/90 dark:bg-rose-950/70 border border-rose-200/60 dark:border-rose-900/40'
+                          : idx === 5
+                          ? 'text-blue-800 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/40'
+                          : 'text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60'
+                      }`}
+                    >
+                      {w}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Scorrimento orizzontale su schermi molto stretti */}
-      <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-2 scrollbar-thin">
-        <div className="min-w-[580px] sm:min-w-0">
-          {/* Intestazione Giorni della Settimana (Lun-Dom) */}
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
-            {weekDayNames.map((w, idx) => (
-              <div
-                key={w}
-                className={`text-xs sm:text-sm font-bold py-2 rounded-xl ${
-                  idx === 6
-                    ? 'text-rose-800 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-950/50'
-                    : idx === 5
-                    ? 'text-blue-800 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/50'
-                    : 'text-slate-700 dark:text-slate-200 bg-slate-100/80 dark:bg-slate-800/70'
-                }`}
-              >
-                {w}
-              </div>
-            ))}
-          </div>
+      <div
+        ref={calendarContainerRef}
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 transition-colors"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" /> Calendario Mensile
+          </h3>
+          <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
+            Clicca su un giorno per aggiungere un turno
+          </span>
+        </div>
 
-          {/* Griglia Calendario - items-stretch permette l'allungamento verticale dinamico */}
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 items-stretch">
-            {calendarGrid.map((cell) => {
-              if (cell.type === 'empty') {
-                return (
-                  <div
-                    key={cell.id}
-                    className="min-h-[85px] sm:min-h-[105px] h-auto bg-slate-50/40 dark:bg-slate-950/40 rounded-xl border border-dashed border-slate-200/60 dark:border-slate-800/60"
-                  />
-                );
-              }
-
-              const dayInfo = cell.dateIso ? checkDayTypeInfo(cell.dateIso) : { isSunday: false, isHoliday: false, holidayName: undefined };
-              const isToday = cell.dateIso === todayIso;
-              const isHoliday = dayInfo.isHoliday;
-              const isSunday = dayInfo.isSunday;
-              const hasShifts = cell.dayShifts && cell.dayShifts.length > 0;
-              const hasExpenses = cell.dayExpenses && cell.dayExpenses.length > 0;
-
-              return (
+        {/* Scorrimento orizzontale nativo pulito e fluido senza lag o scia */}
+        <div
+          ref={scrollRef}
+          onScroll={handleGridScroll}
+          className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-2 no-scrollbar"
+        >
+          <div className="min-w-[700px] sm:min-w-0">
+            {/* Intestazione Giorni della Settimana (Lun-Dom) statica con ref di controllo visibilità */}
+            <div ref={staticHeaderRowRef} className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
+              {weekDayNames.map((w, idx) => (
                 <div
-                  key={cell.dateIso}
-                  onClick={() => onSelectDate(cell.dateIso!)}
-                  title={isHoliday ? `Festività italiana: ${dayInfo.holidayName}` : undefined}
-                  className={`min-h-[85px] sm:min-h-[105px] h-auto p-1.5 sm:p-2.5 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between group min-w-0 ${
-                    isToday
-                      ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-950/50 ring-2 ring-blue-400/30'
-                      : isHoliday
-                      ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 hover:border-rose-300 dark:hover:border-rose-700'
-                      : (hasShifts || hasExpenses)
-                      ? 'border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700'
-                      : isSunday
-                      ? 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
-                      : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60'
+                  key={w}
+                  className={`text-xs sm:text-sm font-bold py-2 rounded-xl ${
+                    idx === 6
+                      ? 'text-rose-800 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-950/50'
+                      : idx === 5
+                      ? 'text-blue-800 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/50'
+                      : 'text-slate-700 dark:text-slate-200 bg-slate-100/80 dark:bg-slate-800/70'
                   }`}
                 >
-                  {/* Header Giorno con numeri grandi ed evidenti */}
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                      <span
-                        className={`w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm font-black flex items-center justify-center rounded-lg transition-colors shrink-0 ${
-                          isToday && isHoliday
-                            ? 'bg-rose-600 text-white font-black ring-2 ring-rose-400/30 shadow-xs'
-                            : isToday
-                            ? 'bg-blue-600 text-white font-bold shadow-xs'
-                            : isHoliday
-                            ? 'text-rose-900 dark:text-rose-100 font-black bg-rose-200 dark:bg-rose-950/90 ring-1 ring-rose-400 dark:ring-rose-800'
-                            : isSunday
-                            ? 'text-rose-800 dark:text-rose-300 font-black bg-rose-50 dark:bg-rose-950/40'
-                            : 'text-slate-800 dark:text-slate-100 font-bold bg-slate-100/60 dark:bg-slate-800/60'
-                        }`}
-                      >
-                        {cell.dayNumber}
-                      </span>
-                      {isHoliday && dayInfo.holidayName && (
+                  {w}
+                </div>
+              ))}
+            </div>
+
+            {/* Griglia Calendario - items-stretch permette l'allungamento verticale dinamico */}
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 items-stretch">
+              {calendarGrid.map((cell) => {
+                if (cell.type === 'empty') {
+                  return (
+                    <div
+                      key={cell.id}
+                      className="min-h-[85px] sm:min-h-[105px] h-auto bg-slate-50/40 dark:bg-slate-950/40 rounded-xl border border-dashed border-slate-200/60 dark:border-slate-800/60"
+                    />
+                  );
+                }
+
+                const dayInfo = cell.dateIso ? checkDayTypeInfo(cell.dateIso) : { isSunday: false, isHoliday: false, holidayName: undefined };
+                const isToday = cell.dateIso === todayIso;
+                const isHoliday = dayInfo.isHoliday;
+                const isSunday = dayInfo.isSunday;
+                const hasShifts = cell.dayShifts && cell.dayShifts.length > 0;
+                const hasExpenses = cell.dayExpenses && cell.dayExpenses.length > 0;
+
+                return (
+                  <div
+                    key={cell.dateIso}
+                    onClick={() => onSelectDate(cell.dateIso!)}
+                    title={isHoliday ? `Festività italiana: ${dayInfo.holidayName}` : undefined}
+                    className={`min-h-[85px] sm:min-h-[105px] h-auto p-1.5 sm:p-2.5 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between group min-w-0 ${
+                      isToday
+                        ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-950/50 ring-2 ring-blue-400/30'
+                        : isHoliday
+                        ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 hover:border-rose-300 dark:hover:border-rose-700'
+                        : (hasShifts || hasExpenses)
+                        ? 'border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700'
+                        : isSunday
+                        ? 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
+                        : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    {/* Header Giorno con numeri grandi ed evidenti e nome giorno abbreviato */}
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <div className="flex items-center gap-1.5 shrink-0 min-w-0">
                         <span
-                          className="text-[10px] sm:text-xs font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-900/60 rounded-md px-1.5 py-0.5 truncate max-w-[90px] hidden sm:inline-block"
-                          title={`Festività Italiana: ${dayInfo.holidayName}`}
+                          className={`w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm font-black flex items-center justify-center rounded-lg transition-colors shrink-0 ${
+                            isToday && isHoliday
+                              ? 'bg-rose-600 text-white font-black ring-2 ring-rose-400/30 shadow-xs'
+                              : isToday
+                              ? 'bg-blue-600 text-white font-bold shadow-xs'
+                              : isHoliday
+                              ? 'text-rose-900 dark:text-rose-100 font-black bg-rose-200 dark:bg-rose-950/90 ring-1 ring-rose-400 dark:ring-rose-800'
+                              : isSunday
+                              ? 'text-rose-800 dark:text-rose-300 font-black bg-rose-50 dark:bg-rose-950/40'
+                              : 'text-slate-800 dark:text-slate-100 font-bold bg-slate-100/60 dark:bg-slate-800/60'
+                          }`}
                         >
-                          {dayInfo.holidayName}
+                          {cell.dayNumber}
                         </span>
-                      )}
-                    </div>
+                        {isHoliday && dayInfo.holidayName && (
+                          <span
+                            className="text-[10px] sm:text-xs font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-900/60 rounded-md px-1.5 py-0.5 truncate max-w-[80px] hidden sm:inline-block"
+                            title={`Festività Italiana: ${dayInfo.holidayName}`}
+                          >
+                            {dayInfo.holidayName}
+                          </span>
+                        )}
+                      </div>
 
                     <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                       <button
@@ -281,5 +415,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       </div>
     </div>
-  );
+  </>
+);
 };
