@@ -5,6 +5,7 @@ import { checkDayTypeInfo } from '../utils/holidays';
 
 interface CalendarViewProps {
   currentMonthKey: string; // YYYY-MM
+  monthChangeTrigger?: number;
   shifts: Shift[];
   expenses?: Expense[];
   onSelectDate: (dateIso: string) => void;
@@ -56,6 +57,7 @@ function formatIsoForDisplay(dateIso: string, includeYear = false): string {
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
   currentMonthKey,
+  monthChangeTrigger,
   shifts,
   expenses = [],
   onSelectDate,
@@ -84,7 +86,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   // Ref per evitare che il cambio di mese provocato dalla navigazione settimanale resetti la settimana
   const isInternalNav = useRef(false);
 
-  // Sincronizzazione quando l'utente seleziona un nuovo mese direttamente dall'header
+  // Sincronizzazione quando l'utente seleziona un nuovo mese direttamente dall'header o il bottone Oggi
   useEffect(() => {
     if (isInternalNav.current) {
       isInternalNav.current = false;
@@ -96,7 +98,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     } else {
       setWeekMondayIso(getMondayIso(`${currentMonthKey}-01`));
     }
-  }, [currentMonthKey]);
+  }, [currentMonthKey, monthChangeTrigger]);
 
   // Giorni del mese per la vista mensile
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -282,10 +284,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <span>Mese</span>
             </button>
             <button
-              onClick={() => {
-                setViewMode('week');
-                handleCurrentWeek();
-              }}
+              onClick={() => setViewMode('week')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'week'
                   ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
@@ -305,48 +304,27 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           {/* Navigazione Settimane e Totali Settimanali */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/60 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800">
             {/* Pulsanti navigazione settimana */}
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-              {/* Riga con Prec - Data Range - Succ */}
-              <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 w-full sm:w-auto">
-                <button
-                  onClick={handlePrevWeek}
-                  className="p-1.5 sm:p-2 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer shadow-2xs"
-                  title="Settimana precedente"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Prec</span>
-                </button>
-
-                <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 px-1 text-center whitespace-nowrap">
-                  {weekStartStr} - {weekEndStr}
-                </span>
-
-                <button
-                  onClick={handleNextWeek}
-                  className="p-1.5 sm:p-2 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer shadow-2xs"
-                  title="Settimana successiva"
-                >
-                  <span className="hidden sm:inline">Succ</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-
-                {/* Su Desktop: Bottone "Questa Settimana" a destra di Succ */}
-                <button
-                  onClick={handleCurrentWeek}
-                  className="hidden sm:flex px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-xl transition-colors shrink-0 cursor-pointer items-center justify-center"
-                  title="Vai alla settimana di oggi"
-                >
-                  Questa Settimana
-                </button>
-              </div>
-
-              {/* Su Mobile: Bottone "Questa Settimana" sotto lo span/frecce */}
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 w-full md:w-auto">
               <button
-                onClick={handleCurrentWeek}
-                className="sm:hidden w-full py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-xl transition-colors shrink-0 cursor-pointer flex items-center justify-center"
-                title="Vai alla settimana di oggi"
+                onClick={handlePrevWeek}
+                className="p-1.5 sm:p-2 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer shadow-2xs"
+                title="Settimana precedente"
               >
-                Questa Settimana
+                <ChevronLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Prec</span>
+              </button>
+
+              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 px-1 text-center whitespace-nowrap">
+                {weekStartStr} - {weekEndStr}
+              </span>
+
+              <button
+                onClick={handleNextWeek}
+                className="p-1.5 sm:p-2 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer shadow-2xs"
+                title="Settimana successiva"
+              >
+                <span className="hidden sm:inline">Succ</span>
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
@@ -484,24 +462,39 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 <span>{s.orarioInizio}-{s.orarioFine}</span>
                               )}
                             </div>
-                            <div className="flex items-center justify-between mt-1 text-[11px]">
-                              <span className="text-emerald-700 dark:text-emerald-300 font-extrabold">
+                            <div className="mt-1 flex flex-col gap-1 text-xs">
+                              <span className="text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm">
                                 +€{Math.round(s.guadagnoTotaleLordo)}
                               </span>
-                              <span className="text-slate-500 dark:text-slate-400 font-medium">
-                                {s.oreTotali}h
-                              </span>
+
+                              <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                {!isFerie && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 font-semibold text-[10px] sm:text-xs">
+                                    {s.oreTotali}h
+                                  </span>
+                                )}
+                                {s.oreSupplementari > 0 && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold text-[10px] sm:text-xs">
+                                    {s.oreSupplementari}h straord.
+                                  </span>
+                                )}
+                                {s.oreNotturne > 0 && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/90 text-indigo-900 dark:text-indigo-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
+                                    <Moon className="w-2.5 h-2.5" /> {s.oreNotturne}h notte
+                                  </span>
+                                )}
+                                {(s.tipoGiorno === 'domenica' || (isSunday && !isFerie)) && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/90 text-blue-950 dark:text-blue-200 font-bold text-[10px] sm:text-xs">
+                                    Dom
+                                  </span>
+                                )}
+                                {(s.tipoGiorno === 'festivo' || (isHoliday && !isFerie)) && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/90 text-rose-950 dark:text-rose-200 font-bold text-[10px] sm:text-xs">
+                                    Festivo
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            {s.oreSupplementari > 0 && (
-                              <div className="mt-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 rounded text-[10px] font-bold truncate">
-                                +{s.oreSupplementari}h straord.
-                              </div>
-                            )}
-                            {s.oreNotturne > 0 && (
-                              <div className="mt-1 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-900 dark:text-indigo-200 rounded text-[10px] font-bold flex items-center gap-1 truncate">
-                                <Moon className="w-2.5 h-2.5 shrink-0" /> {s.oreNotturne}h notte
-                              </div>
-                            )}
                           </div>
                         );
                       })}
