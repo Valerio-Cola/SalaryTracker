@@ -88,6 +88,13 @@ export default function App() {
   };
 
   const [currentMonthKey, setCurrentMonthKey] = useState<string>(getInitialMonthKey());
+  const [monthChangeTrigger, setMonthChangeTrigger] = useState<number>(0);
+
+  const handleMonthChange = (key: string) => {
+    setCurrentMonthKey(key);
+    setMonthChangeTrigger((prev) => prev + 1);
+  };
+
   const [activeTab, setActiveTab] = useState<'calendar' | 'list' | 'expenses' | 'charts'>('calendar');
 
   // Modali
@@ -354,7 +361,7 @@ export default function App() {
       {/* Navigation Header */}
       <Header
         currentMonthKey={currentMonthKey}
-        onMonthChange={setCurrentMonthKey}
+        onMonthChange={handleMonthChange}
         onOpenAddShift={() => handleOpenAddShift()}
         onOpenConfig={() => setIsConfigOpen(true)}
         onOpenCloudSync={() => setIsCloudSyncOpen(true)}
@@ -541,13 +548,14 @@ export default function App() {
         {activeTab === 'calendar' && (
           <CalendarView
             currentMonthKey={currentMonthKey}
+            monthChangeTrigger={monthChangeTrigger}
             shifts={shifts}
             expenses={expenses}
             onSelectDate={(dateIso) => handleOpenAddShift(dateIso)}
             onAddExpense={(dateIso) => handleOpenAddExpense(dateIso)}
             onEditShift={handleOpenEditShift}
             onEditExpense={handleOpenEditExpense}
-            onMonthChange={setCurrentMonthKey}
+            onMonthChange={handleMonthChange}
           />
         )}
 
