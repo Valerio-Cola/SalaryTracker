@@ -8,6 +8,8 @@ export interface SyncCredentials {
   lastSyncedAt?: number;
 }
 
+export const DEFAULT_WORKER_URL = 'https://salary-tracker-worker-fire-c543hg5h343gfd91f.companyclstudio.workers.dev';
+
 const SYNC_CREDS_KEY = 'cf_sync_credentials';
 
 export function getSyncCredentials(): SyncCredentials {
@@ -16,7 +18,7 @@ export function getSyncCredentials(): SyncCredentials {
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
-        workerUrl: parsed.workerUrl || '',
+        workerUrl: (parsed.workerUrl && parsed.workerUrl.trim()) ? parsed.workerUrl.trim() : DEFAULT_WORKER_URL,
         userKey: parsed.userKey || '',
         passcode: parsed.passcode || '',
         autoSync: parsed.autoSync !== undefined ? !!parsed.autoSync : true,
@@ -27,7 +29,7 @@ export function getSyncCredentials(): SyncCredentials {
     console.error('Error reading sync credentials', e);
   }
   return {
-    workerUrl: '',
+    workerUrl: DEFAULT_WORKER_URL,
     userKey: '',
     passcode: '',
     autoSync: true,
@@ -36,7 +38,11 @@ export function getSyncCredentials(): SyncCredentials {
 
 export function saveSyncCredentials(creds: SyncCredentials): void {
   try {
-    localStorage.setItem(SYNC_CREDS_KEY, JSON.stringify(creds));
+    const toSave: SyncCredentials = {
+      ...creds,
+      workerUrl: (creds.workerUrl && creds.workerUrl.trim()) ? creds.workerUrl.trim() : DEFAULT_WORKER_URL,
+    };
+    localStorage.setItem(SYNC_CREDS_KEY, JSON.stringify(toSave));
   } catch (e) {
     console.error('Error saving sync credentials', e);
   }
@@ -58,11 +64,11 @@ export async function loginToCloud(
   turnstileToken?: string,
   authMode: 'login' | 'register' = 'login'
 ): Promise<{ success: boolean; message: string; data?: CloudPayload }> {
-  if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
-    return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
-  }
+  const cleanUrl = (creds.workerUrl || DEFAULT_WORKER_URL).trim();
 
-  const cleanUrl = creds.workerUrl.trim();
+  if (!cleanUrl || !creds.userKey || !creds.passcode) {
+    return { success: false, message: 'Credenziali mancanti (Nome Utente e Password obbligatori).' };
+  }
 
   try {
     const res = await fetch(cleanUrl, {
@@ -159,11 +165,12 @@ export async function pushToCloud(
   data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[]; expenses?: Expense[] },
   turnstileToken?: string
 ): Promise<{ success: boolean; message: string; updatedAt?: number }> {
-  if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
-    return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
+  const cleanUrl = (creds.workerUrl || DEFAULT_WORKER_URL).trim();
+
+  if (!cleanUrl || !creds.userKey || !creds.passcode) {
+    return { success: false, message: 'Credenziali di sincronizzazione mancanti.' };
   }
 
-  const cleanUrl = creds.workerUrl.trim();
   const payload: CloudPayload = {
     ...data,
     expenses: data.expenses || [],
@@ -200,6 +207,7 @@ export async function pushToCloud(
       // Aggiorna data ultima sincronizzazione
       saveSyncCredentials({
         ...creds,
+        workerUrl: cleanUrl,
         lastSyncedAt: payload.updatedAt,
       });
       return {
@@ -225,11 +233,11 @@ export async function pullFromCloud(
   creds: SyncCredentials,
   turnstileToken?: string
 ): Promise<{ success: boolean; message: string; data?: CloudPayload }> {
-  if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
-    return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
-  }
+  const cleanUrl = (creds.workerUrl || DEFAULT_WORKER_URL).trim();
 
-  const cleanUrl = creds.workerUrl.trim();
+  if (!cleanUrl || !creds.userKey || !creds.passcode) {
+    return { success: false, message: 'Credenziali di sincronizzazione mancanti.' };
+  }
 
   try {
     const res = await fetch(cleanUrl, {
@@ -259,6 +267,7 @@ export async function pullFromCloud(
     if (json.success && json.data) {
       saveSyncCredentials({
         ...creds,
+        workerUrl: cleanUrl,
         lastSyncedAt: json.data.updatedAt || Date.now(),
       });
       return {
@@ -285,11 +294,11 @@ export async function deleteAccountFromCloud(
   passcodeConfirmation?: string
 ): Promise<{ success: boolean; message: string }> {
   const passcodeToSend = passcodeConfirmation !== undefined ? passcodeConfirmation : creds.passcode;
-  if (!creds.workerUrl || !creds.userKey || !passcodeToSend) {
+  const cleanUrl = (creds.workerUrl || DEFAULT_WORKER_URL).trim();
+
+  if (!cleanUrl || !creds.userKey || !passcodeToSend) {
     return { success: false, message: 'Credenziali o password mancanti.' };
   }
-
-  const cleanUrl = creds.workerUrl.trim();
 
   try {
     const res = await fetch(cleanUrl, {
