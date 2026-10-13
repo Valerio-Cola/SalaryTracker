@@ -249,14 +249,14 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenCloudSync && (
               <button
                 onClick={onOpenCloudSync}
-                className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-colors relative shrink-0 cursor-pointer rounded-xl ${
+                className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 transition-colors relative shrink-0 cursor-pointer rounded-xl ${
                   isCloudConnected
-                    ? "border-2 border-blue-500 bg-blue-500/10 dark:bg-blue-500/20 text-slate-900 dark:text-white shadow-xs shadow-blue-500/20"
-                    : "border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    ? "text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 shadow-2xs font-bold"
+                    : "border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium"
                 }`}
                 title="Sincronizzazione Cloud (Cloudflare Worker)"
               >
-                <Cloud className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isCloudConnected ? "text-blue-500 dark:text-blue-400" : "text-slate-600 dark:text-slate-400"}`} />
+                <Cloud className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isCloudConnected ? "text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-400"}`} />
                 <span>Cloud</span>
                 {isCloudConnected && (
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -top-1 -right-1 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
