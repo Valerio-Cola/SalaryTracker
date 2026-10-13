@@ -55,7 +55,8 @@ export interface CloudPayload {
  */
 export async function loginToCloud(
   creds: SyncCredentials,
-  turnstileToken?: string
+  turnstileToken?: string,
+  authMode: 'login' | 'register' = 'login'
 ): Promise<{ success: boolean; message: string; data?: CloudPayload }> {
   if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
     return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
@@ -70,7 +71,8 @@ export async function loginToCloud(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        action: 'login',
+        action: authMode === 'register' ? 'register' : 'login',
+        authMode,
         userKey: creds.userKey,
         passcode: creds.passcode,
         turnstileToken,
@@ -79,9 +81,29 @@ export async function loginToCloud(
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
+      let parsedError = '';
+      try {
+        const parsed = JSON.parse(errText);
+        if (parsed && typeof parsed === 'object') {
+          if (typeof parsed.error === 'string' && parsed.error.trim()) {
+            parsedError = parsed.error.trim();
+          } else if (typeof parsed.message === 'string' && parsed.message.trim()) {
+            parsedError = parsed.message.trim();
+          }
+        }
+      } catch (_) {}
+
+      // Se il testo d'errore inizia con JSON non parsato (es. {"success":false,...}), ripuliscilo
+      if (!parsedError && errText) {
+        const match = errText.match(/"error"\s*:\s*"([^"]+)"/);
+        if (match && match[1]) {
+          parsedError = match[1];
+        }
+      }
+
       return {
         success: false,
-        message: `Errore server (${res.status}): ${errText || 'Verifica credenziali o URL Worker.'}`,
+        message: parsedError || (errText && !errText.startsWith('{') ? errText : `Errore di autorizzazione o server (${res.status}).`),
       };
     }
 
@@ -89,7 +111,7 @@ export async function loginToCloud(
     if (json.success) {
       return {
         success: true,
-        message: 'Login effettuato con successo!',
+        message: json.message || (authMode === 'register' ? 'Primo accesso completato!' : 'Login effettuato con successo!'),
         data: json.data || undefined,
       };
     } else {
@@ -101,6 +123,32 @@ export async function loginToCloud(
       message: `Impossibile collegarsi al Worker: ${e?.message || 'Verifica la connessione o l\'URL del Worker.'}`,
     };
   }
+}
+
+function extractErrorMessage(errText: string, status: number, fallback: string): string {
+  if (!errText) return `${fallback} (${status}).`;
+  try {
+    const parsed = JSON.parse(errText);
+    if (parsed && typeof parsed === 'object') {
+      if (typeof parsed.error === 'string' && parsed.error.trim()) {
+        return parsed.error.trim();
+      }
+      if (typeof parsed.message === 'string' && parsed.message.trim()) {
+        return parsed.message.trim();
+      }
+    }
+  } catch (_) {}
+
+  const match = errText.match(/"error"\s*:\s*"([^"]+)"/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
+  if (!errText.startsWith('{') && !errText.startsWith('<')) {
+    return errText.trim();
+  }
+
+  return `${fallback} (${status}).`;
 }
 
 /**
@@ -143,7 +191,7 @@ export async function pushToCloud(
       const errText = await res.text().catch(() => '');
       return {
         success: false,
-        message: `Errore server (${res.status}): ${errText || 'Verifica credenziali o URL Worker.'}`,
+        message: extractErrorMessage(errText, res.status, 'Errore durante il salvataggio dei dati'),
       };
     }
 
@@ -203,7 +251,7 @@ export async function pullFromCloud(
       const errText = await res.text().catch(() => '');
       return {
         success: false,
-        message: `Errore server (${res.status}): ${errText || 'Verifica credenziali o URL Worker.'}`,
+        message: extractErrorMessage(errText, res.status, 'Errore durante il download dei dati'),
       };
     }
 
@@ -262,7 +310,7 @@ export async function deleteAccountFromCloud(
       const errText = await res.text().catch(() => '');
       return {
         success: false,
-        message: `Errore server (${res.status}): ${errText || 'Impossibile eliminare l\'account.'}`,
+        message: extractErrorMessage(errText, res.status, 'Impossibile eliminare l\'account'),
       };
     }
 
