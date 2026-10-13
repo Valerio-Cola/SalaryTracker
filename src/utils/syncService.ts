@@ -233,10 +233,12 @@ export async function pullFromCloud(
  * Eliminazione definitiva dell'account e di tutti i dati dal Cloudflare KV Storage (GDPR Art. 17)
  */
 export async function deleteAccountFromCloud(
-  creds: SyncCredentials
+  creds: SyncCredentials,
+  passcodeConfirmation?: string
 ): Promise<{ success: boolean; message: string }> {
-  if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
-    return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
+  const passcodeToSend = passcodeConfirmation !== undefined ? passcodeConfirmation : creds.passcode;
+  if (!creds.workerUrl || !creds.userKey || !passcodeToSend) {
+    return { success: false, message: 'Credenziali o password mancanti.' };
   }
 
   const cleanUrl = creds.workerUrl.trim();
@@ -247,12 +249,12 @@ export async function deleteAccountFromCloud(
       headers: {
         'Content-Type': 'application/json',
         'X-User-Key': creds.userKey,
-        'X-Passcode': creds.passcode,
+        'X-Passcode': passcodeToSend,
       },
       body: JSON.stringify({
         action: 'delete_account',
         userKey: creds.userKey,
-        passcode: creds.passcode,
+        passcode: passcodeToSend,
       }),
     });
 

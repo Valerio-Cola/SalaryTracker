@@ -69,6 +69,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   // Stato per cancellazione account (GDPR Art. 17)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [deleteConfirmationInput, setDeleteConfirmationInput] = useState<string>('');
+  const [deletePasswordInput, setDeletePasswordInput] = useState<string>('');
+  const [deletePasswordError, setDeletePasswordError] = useState<boolean>(false);
   const [deleteLocalAlso, setDeleteLocalAlso] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -84,6 +86,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setIsShaking(false);
       setShowDeleteConfirm(false);
       setDeleteConfirmationInput('');
+      setDeletePasswordInput('');
+      setDeletePasswordError(false);
       setDeleteLocalAlso(true);
       setIsDeleting(false);
     }
@@ -240,10 +244,19 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       return;
     }
 
+    if (!deletePasswordInput.trim()) {
+      setDeletePasswordError(true);
+      setStatusMessage({
+        type: 'error',
+        text: 'Inserisci la password dell\'account per confermare la cancellazione definitiva.',
+      });
+      return;
+    }
+
     setIsDeleting(true);
     setStatusMessage(null);
 
-    const res = await deleteAccountFromCloud(creds);
+    const res = await deleteAccountFromCloud(creds, deletePasswordInput.trim());
 
     if (res.success) {
       const cleared = {
@@ -256,6 +269,9 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setCreds(cleared);
       setIsLoggedIn(false);
       setShowDeleteConfirm(false);
+      setDeleteConfirmationInput('');
+      setDeletePasswordInput('');
+      setDeletePasswordError(false);
 
       if (deleteLocalAlso) {
         onApplyCloudData({
@@ -267,9 +283,9 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
       setStatusMessage({
         type: 'success',
-        text: 'Account e dati cloud eliminati definitivamente (GDPR Art. 17 - Diritto all\'Oblio).',
+        text: 'Account, autorizzazione e dati cloud rimossi definitivamente (GDPR Art. 17).',
       });
-      onShowNotification('Account e dati cloud eliminati con successo.');
+      onShowNotification('Account e autorizzazione rimossi dal cloud con successo.');
     } else {
       setStatusMessage({
         type: 'error',
@@ -401,6 +417,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       onClick={() => {
                         setShowDeleteConfirm(true);
                         setDeleteConfirmationInput('');
+                        setDeletePasswordInput('');
+                        setDeletePasswordError(false);
                         setDeleteLocalAlso(true);
                       }}
                       disabled={loading || isDeleting}
@@ -421,7 +439,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                           Conferma Eliminazione Definitiva Account
                         </h4>
                         <p className="text-[11px] text-rose-800/90 dark:text-rose-300/90 leading-relaxed mt-0.5">
-                          Questa operazione è <strong>irreversibile</strong>. Tutti i tuoi dati salvati su Cloudflare KV (turni, tariffe, spese e credenziali) verranno distrutti immediatamente.
+                          Questa operazione è <strong>irreversibile</strong>. Tutti i tuoi dati salvati su Cloudflare KV (turni, tariffe, spese) verranno distrutti immediatamente e il tuo account verrà rimosso dagli utenti autorizzati del server.
                         </p>
                       </div>
                     </div>
@@ -438,6 +456,33 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                         Rimuovi anche tutti i dati e i turni memorizzati localmente su questo dispositivo (reset completo).
                       </span>
                     </label>
+
+                    {/* Campo di conferma Password dell'account */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <KeyRound className="w-3.5 h-3.5 text-rose-500" />
+                        Inserisci la tua password di accesso:
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Password attuale"
+                        value={deletePasswordInput}
+                        onChange={(e) => {
+                          setDeletePasswordInput(e.target.value);
+                          if (deletePasswordError) setDeletePasswordError(false);
+                        }}
+                        className={`w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden transition-all ${
+                          deletePasswordError
+                            ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50/40'
+                            : 'border-rose-300 dark:border-rose-800 focus:ring-2 focus:ring-rose-500'
+                        }`}
+                      />
+                      {deletePasswordError && (
+                        <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" /> Inserisci la password per autorizzare l&apos;eliminazione
+                        </p>
+                      )}
+                    </div>
 
                     {/* Campo di conferma ELIMINA */}
                     <div className="space-y-1">
@@ -457,7 +502,12 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     <div className="flex items-center justify-end gap-2 pt-1">
                       <button
                         type="button"
-                        onClick={() => setShowDeleteConfirm(false)}
+                        onClick={() => {
+                          setShowDeleteConfirm(false);
+                          setDeletePasswordInput('');
+                          setDeleteConfirmationInput('');
+                          setDeletePasswordError(false);
+                        }}
                         disabled={isDeleting}
                         className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                       >
@@ -466,7 +516,11 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       <button
                         type="button"
                         onClick={handleDeleteAccount}
-                        disabled={deleteConfirmationInput.trim().toUpperCase() !== 'ELIMINA' || isDeleting}
+                        disabled={
+                          deleteConfirmationInput.trim().toUpperCase() !== 'ELIMINA' ||
+                          !deletePasswordInput.trim() ||
+                          isDeleting
+                        }
                         className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
                         {isDeleting ? (
