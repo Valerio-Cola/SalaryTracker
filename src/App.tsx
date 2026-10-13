@@ -541,12 +541,13 @@ export default function App() {
         {activeTab === 'calendar' && (
           <CalendarView
             currentMonthKey={currentMonthKey}
-            shifts={currentMonthShifts}
-            expenses={currentMonthExpenses}
+            shifts={shifts}
+            expenses={expenses}
             onSelectDate={(dateIso) => handleOpenAddShift(dateIso)}
             onAddExpense={(dateIso) => handleOpenAddExpense(dateIso)}
             onEditShift={handleOpenEditShift}
             onEditExpense={handleOpenEditExpense}
+            onMonthChange={setCurrentMonthKey}
           />
         )}
 
