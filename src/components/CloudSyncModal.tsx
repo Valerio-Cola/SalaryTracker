@@ -305,11 +305,10 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     setLoading(true);
     setStatusMessage(null);
 
-    const updatedCreds = { ...creds, autoSync: true };
-    saveSyncCredentials(updatedCreds);
+    const credsToTest: SyncCredentials = { ...creds, autoSync: true };
 
     // Effettua login/auth passando authMode ('login' o 'register')
-    const res = await loginToCloud(updatedCreds, turnstileToken, authMode);
+    const res = await loginToCloud(credsToTest, turnstileToken, authMode);
     
     if (res.success) {
       if (res.data) {
@@ -319,6 +318,9 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
           shifts: res.data.shifts,
           templates: res.data.templates,
         });
+        const finalCreds = { ...credsToTest, lastSyncedAt: res.data?.updatedAt };
+        saveSyncCredentials(finalCreds);
+        setCreds(finalCreds);
         setIsLoggedIn(true);
         setStatusMessage({
           type: 'success',
@@ -331,11 +333,13 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
             ? 'Primo accesso completato!'
             : 'Login effettuato e dati sincronizzati!'
         );
-        setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: res.data?.updatedAt }));
       } else {
         // Se l'utente non ha ancora dati salvati nel cloud, carica quelli locali attuali
-        const pushRes = await pushToCloud(updatedCreds, { config, shifts, templates });
+        const pushRes = await pushToCloud(credsToTest, { config, shifts, templates });
         if (pushRes.success) {
+          const finalCreds = { ...credsToTest, lastSyncedAt: pushRes.updatedAt };
+          saveSyncCredentials(finalCreds);
+          setCreds(finalCreds);
           setIsLoggedIn(true);
           setStatusMessage({
             type: 'success',
@@ -348,7 +352,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               ? 'Primo accesso completato e dati salvati!'
               : 'Account collegato e dati salvati sul cloud!'
           );
-          setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: pushRes.updatedAt }));
         } else {
           setStatusMessage({ type: 'error', text: pushRes.message });
           scrollToErrorBanner();
