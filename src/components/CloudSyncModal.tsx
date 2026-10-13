@@ -11,6 +11,7 @@ import {
   RefreshCw,
   LogIn,
   LogOut,
+  UserPlus,
   ShieldCheck,
   ShieldAlert,
   Trash2,
@@ -166,6 +167,9 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     const initialStored = getSyncCredentials();
     return Boolean(initialStored.workerUrl && initialStored.userKey && initialStored.passcode);
   });
+  // Tab di autenticazione: 'login' (Accedi) o 'register' (Primo Accesso)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
   const [loading, setLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>('');
@@ -230,6 +234,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setDeleteLocalAlso(true);
       setIsDeleting(false);
       setShowPassword(false);
+      setAuthMode('login');
     }
   }, [isOpen]);
 
@@ -265,7 +270,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       const missing: string[] = [];
       if (errors.workerUrl) missing.push('URL Cloudflare Worker');
       if (errors.userKey) missing.push('Nome Utente');
-      if (errors.passcode) missing.push('Password/PIN');
+      if (errors.passcode) missing.push(authMode === 'register' ? 'Crea Nuova Password' : 'Password/PIN');
       if (errors.terms) missing.push('Accettazione Avviso Legale');
 
       setStatusMessage({
@@ -276,8 +281,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       return;
     }
 
-    // Verifica robustezza minima password
-    if (!passwordStrength.isValid) {
+    // Verifica robustezza minima password SOLO per la scheda "Primo Accesso"
+    if (authMode === 'register' && !passwordStrength.isValid) {
       setValidationErrors((prev) => ({ ...prev, passcode: true }));
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
@@ -285,11 +290,12 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       const tips: string[] = [];
       if (!passwordStrength.criteria.minLength) tips.push('almeno 8 caratteri');
       if (!passwordStrength.criteria.hasLetter || !passwordStrength.criteria.hasNumber) tips.push('lettere e numeri');
+      if (!passwordStrength.criteria.hasUpper) tips.push('una maiuscola');
       if (!passwordStrength.criteria.hasSpecial) tips.push('un simbolo speciale');
 
       setStatusMessage({
         type: 'error',
-        text: `Password debole: per proteggere i tuoi dati usa ${tips.join(', ')}.`,
+        text: `Password debole: per completare il primo accesso crea una password con ${tips.join(', ')}.`,
       });
       scrollToErrorBanner();
       return;
@@ -302,8 +308,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     const updatedCreds = { ...creds, autoSync: true };
     saveSyncCredentials(updatedCreds);
 
-    // Effettua login/auth con il token Turnstile
-    const res = await loginToCloud(updatedCreds, turnstileToken);
+    // Effettua login/auth passando authMode ('login' o 'register')
+    const res = await loginToCloud(updatedCreds, turnstileToken, authMode);
     
     if (res.success) {
       if (res.data) {
@@ -314,23 +320,45 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
           templates: res.data.templates,
         });
         setIsLoggedIn(true);
-        setStatusMessage({ type: 'success', text: 'Login effettuato! Dati scaricati dal cloud e sincronizzazione automatica attiva.' });
-        onShowNotification('Login effettuato e dati sincronizzati!');
+        setStatusMessage({
+          type: 'success',
+          text: authMode === 'register'
+            ? 'Primo accesso completato! Password impostata e dati sincronizzati con successo.'
+            : 'Login effettuato! Dati scaricati dal cloud e sincronizzazione automatica attiva.',
+        });
+        onShowNotification(
+          authMode === 'register'
+            ? 'Primo accesso completato!'
+            : 'Login effettuato e dati sincronizzati!'
+        );
         setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: res.data?.updatedAt }));
       } else {
         // Se l'utente non ha ancora dati salvati nel cloud, carica quelli locali attuali
         const pushRes = await pushToCloud(updatedCreds, { config, shifts, templates });
         if (pushRes.success) {
           setIsLoggedIn(true);
-          setStatusMessage({ type: 'success', text: 'Login effettuato! Account creato e dati locali sincronizzati sul cloud.' });
-          onShowNotification('Account collegato e dati salvati sul cloud!');
+          setStatusMessage({
+            type: 'success',
+            text: authMode === 'register'
+              ? 'Primo accesso completato! Password impostata e dati salvati sul cloud.'
+              : 'Login effettuato! Account creato e dati locali sincronizzati sul cloud.',
+          });
+          onShowNotification(
+            authMode === 'register'
+              ? 'Primo accesso completato e dati salvati!'
+              : 'Account collegato e dati salvati sul cloud!'
+          );
           setCreds((prev) => ({ ...prev, autoSync: true, lastSyncedAt: pushRes.updatedAt }));
         } else {
           setStatusMessage({ type: 'error', text: pushRes.message });
+          scrollToErrorBanner();
         }
       }
     } else {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
       setStatusMessage({ type: 'error', text: res.message });
+      scrollToErrorBanner();
     }
 
     setLoading(false);
@@ -701,8 +729,54 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               </div>
             </div>
           ) : (
-            /* VISTA NON LOGGATO (FORM ACCESSO CON TURNSTILE) */
+            /* VISTA NON LOGGATO (FORM ACCESSO O PRIMO ACCESSO) */
             <div className="space-y-4">
+              {/* Tab Switch: Accedi vs Primo Accesso (Stile Turno / Ferie) */}
+              <div className="bg-slate-100 dark:bg-slate-800/80 p-2 rounded-2xl border border-slate-200 dark:border-slate-700/80">
+                <div className="grid grid-cols-2 gap-2 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('login');
+                      setStatusMessage(null);
+                      setValidationErrors({});
+                    }}
+                    className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      authMode === 'login'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Accedi</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('register');
+                      setStatusMessage(null);
+                      setValidationErrors({});
+                    }}
+                    className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      authMode === 'register'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Primo Accesso</span>
+                  </button>
+                </div>
+                <div className="mt-1.5 text-center px-1">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                    {authMode === 'login'
+                      ? 'Hai già configurato la password? Inserisci le tue credenziali per entrare.'
+                      : 'Primo accesso con il tuo account autorizzato? Crea la tua password sicura.'}
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-4">
                 {/* URL Worker */}
                 <div>
@@ -759,14 +833,14 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     )}
                   </div>
 
-                  {/* Password / PIN con Analisi di Robustezza in Tempo Reale */}
+                  {/* Password / PIN */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <KeyRound className="w-3.5 h-3.5 text-blue-500" />
-                        Password o PIN
+                        {authMode === 'register' ? 'Crea Nuova Password' : 'Password o PIN'}
                       </label>
-                      {creds.passcode.length > 0 && (
+                      {authMode === 'register' && creds.passcode.length > 0 && (
                         <span className={`text-[11px] sm:text-xs font-bold ${passwordStrength.textColor}`}>
                           {passwordStrength.label}
                         </span>
@@ -776,7 +850,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     <div className="relative">
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Password di sincronizzazione"
+                        placeholder={authMode === 'register' ? 'Crea una password sicura' : 'Inserisci la tua password'}
                         value={creds.passcode}
                         onChange={(e) => {
                           setCreds({ ...creds, passcode: e.target.value });
@@ -803,12 +877,14 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                         <AlertCircle className="w-3 h-3 shrink-0" />
                         {!creds.passcode
                           ? 'Inserisci la password'
-                          : 'Password troppo debole: usa almeno 8 caratteri con lettere e numeri'}
+                          : authMode === 'register'
+                          ? 'Password troppo debole: rispetta tutti i requisiti di sicurezza'
+                          : 'Inserisci la tua password'}
                       </p>
                     )}
 
-                    {/* Barra di robustezza dinamica a 4 livelli */}
-                    {creds.passcode.length > 0 && (
+                    {/* Barra di robustezza dinamica e Checklist a 4 indicatori: SOLO in Primo Accesso */}
+                    {authMode === 'register' && creds.passcode.length > 0 && (
                       <div className="space-y-1.5 pt-0.5">
                         <div className="grid grid-cols-4 gap-1 h-1.5">
                           {[1, 2, 3, 4].map((step) => (
@@ -867,7 +943,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                   </div>
                 </div>
 
-                {/* Checkbox Presa Visione & Accettazione Avviso Legale Cloud (INGRANDITA e posizionata SOPRA Cloudflare) */}
+                {/* Checkbox Presa Visione & Accettazione Avviso Legale Cloud */}
                 <div
                   className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
                     validationErrors.terms
@@ -919,7 +995,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                 </div>
               </div>
 
-              {/* Pulsante Login con Animazione Shake e Rosso in caso di errore */}
+              {/* Pulsante Login / Primo Accesso */}
               <div className="pt-1">
                 <button
                   onClick={handleLogin}
@@ -933,12 +1009,17 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Connessione in corso...
+                      {authMode === 'register' ? 'Configurazione in corso...' : 'Connessione in corso...'}
                     </>
                   ) : isShaking ? (
                     <>
                       <AlertCircle className="w-4 h-4" />
                       Dati Mancanti o Non Accettati!
+                    </>
+                  ) : authMode === 'register' ? (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      Crea Password e Accedi
                     </>
                   ) : (
                     <>
