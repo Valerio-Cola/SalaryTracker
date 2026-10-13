@@ -28,7 +28,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[70] bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6 transition-colors flex flex-col max-h-[90vh]">
         
         {/* Header Modal */}
@@ -186,14 +186,40 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
               </div>
 
               <div className="space-y-3">
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
-                  <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+                  <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs">
                     <UserCheck className="w-4 h-4 text-blue-500" />
-                    1. Titolare del Trattamento & Controllo dei Dati
+                    1. Definizione del Ruolo GDPR (Titolare vs Gestore dell&apos;Infrastruttura)
                   </strong>
-                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
                     L&apos;applicazione opera secondo un paradigma <strong>Privacy-by-Design</strong> e <strong>Privacy-by-Default</strong>. L&apos;utente è il Titolare ed unico gestore esclusivo dei propri dati personali inseriti nell&apos;applicazione.
                   </p>
+                  
+                  <div className="space-y-2 pt-1 text-[11.5px] text-slate-600 dark:text-slate-400">
+                    <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 space-y-1">
+                      <strong className="text-slate-800 dark:text-slate-200 block font-semibold">
+                        💻 In locale (LocalStorage):
+                      </strong>
+                      <p className="leading-relaxed">
+                        I dati risiedono unicamente nel browser dell&apos;utente, che li gestisce in prima persona per fini esclusivamente personali o domestici (ipotesi di esclusione ex Art. 2, par. 2, lett. c del GDPR).
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 space-y-1">
+                      <strong className="text-slate-800 dark:text-slate-200 block font-semibold">
+                        ☁️ Con Sincronizzazione Cloud (Cloudflare Worker / KV):
+                      </strong>
+                      <p className="leading-relaxed">
+                        Quando i dati (anche se associati a uno pseudonimo o a una chiave utente) risiedono sul database KV, la gestione tecnica dei dati transita sui server cloud.
+                      </p>
+                      <p className="leading-relaxed pt-1 font-medium text-slate-700 dark:text-slate-300">
+                        <strong>Contatto Gestore Infrastruttura / Amministratore:</strong> Valerio Cola — Email per adempimenti privacy e gestione infrastruttura: <a href="mailto:valeriocola2003@gmail.com" className="text-blue-600 dark:text-blue-400 underline font-semibold">valeriocola2003@gmail.com</a>.
+                      </p>
+                      <p className="leading-relaxed text-[11px] text-slate-500 dark:text-slate-400">
+                        Si precisa che per il servizio cloud opzionale i dati transitano su canale cifrato HTTPS/TLS e risiedono protetti su istanze dedicate Cloudflare per la sola ed esclusiva finalità di backup e sincronizzazione multi-dispositivo dell&apos;utente autorizzato.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
@@ -227,9 +253,14 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                     L&apos;utente possiede il controllo totale dei propri dati in qualsiasi momento:
                   </p>
-                  <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
+                  <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
                     <li><strong>Diritto di Accesso, Esportazione e Portabilità:</strong> Può scaricare o consultare immediatamente tutti i propri turni in formato CSV per Excel o stampare il prospetto mensile.</li>
-                    <li><strong>Diritto alla Cancellazione (Diritto all&apos;Oblio):</strong> Cliccando sul pulsante &quot;Disconnetti&quot; nella sezione Cloud o cancellando i dati del browser, l&apos;applicazione elimina istantaneamente tutti i dati memorizzati sul dispositivo.</li>
+                    <li><strong>Diritto alla Cancellazione &amp; Oblio (Art. 17 GDPR):</strong>
+                      <ul className="list-circle pl-5 mt-1 space-y-1 text-[11px]">
+                        <li><strong>In Locale:</strong> Cliccando su &quot;Disconnetti&quot; o cancellando la cronologia del browser, l&apos;applicazione elimina istantaneamente tutti i dati memorizzati sul dispositivo.</li>
+                        <li><strong>Nel Cloud:</strong> Tramite la funzione autonoma &quot;Elimina Account&quot; disponibile nel pannello Cloud, l&apos;utente può distruggere per sempre e in tempo reale tutti i propri dati (turni, tariffe, spese) e le credenziali di autenticazione archiviati nel database Cloudflare KV, senza bisogno di inviare richieste manuali.</li>
+                      </ul>
+                    </li>
                   </ul>
                 </div>
               </div>

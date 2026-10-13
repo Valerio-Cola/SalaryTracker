@@ -228,3 +228,59 @@ export async function pullFromCloud(
     };
   }
 }
+
+/**
+ * Eliminazione definitiva dell'account e di tutti i dati dal Cloudflare KV Storage (GDPR Art. 17)
+ */
+export async function deleteAccountFromCloud(
+  creds: SyncCredentials
+): Promise<{ success: boolean; message: string }> {
+  if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
+    return { success: false, message: 'Credenziali o URL Cloudflare Worker mancanti.' };
+  }
+
+  const cleanUrl = creds.workerUrl.trim();
+
+  try {
+    const res = await fetch(cleanUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Key': creds.userKey,
+        'X-Passcode': creds.passcode,
+      },
+      body: JSON.stringify({
+        action: 'delete_account',
+        userKey: creds.userKey,
+        passcode: creds.passcode,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      return {
+        success: false,
+        message: `Errore server (${res.status}): ${errText || 'Impossibile eliminare l\'account.'}`,
+      };
+    }
+
+    const json = await res.json();
+    if (json.success) {
+      return {
+        success: true,
+        message: json.message || 'Account e dati cloud eliminati definitivamente.',
+      };
+    } else {
+      return {
+        success: false,
+        message: json.error || 'Errore durante la cancellazione dell\'account.',
+      };
+    }
+  } catch (e: any) {
+    return {
+      success: false,
+      message: `Errore di connessione al Cloudflare Worker: ${e?.message || 'Impossibile raggiungere il server.'}`,
+    };
+  }
+}
+

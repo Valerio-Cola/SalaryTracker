@@ -13,6 +13,7 @@ import {
   LogOut,
   ShieldCheck,
   ShieldAlert,
+  Trash2,
 } from 'lucide-react';
 import {
   SyncCredentials,
@@ -21,6 +22,7 @@ import {
   loginToCloud,
   pushToCloud,
   pullFromCloud,
+  deleteAccountFromCloud,
 } from '../utils/syncService';
 import { DEFAULT_CONFIG, DEFAULT_TEMPLATES } from '../utils/storage';
 import { ContractConfig, Shift, QuickTemplate } from '../types';
@@ -34,6 +36,7 @@ interface CloudSyncModalProps {
   templates: QuickTemplate[];
   onApplyCloudData: (data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[] }) => void;
   onShowNotification: (msg: string) => void;
+  onOpenPrivacyModal?: () => void;
 }
 
 export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
@@ -44,6 +47,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   templates,
   onApplyCloudData,
   onShowNotification,
+  onOpenPrivacyModal,
 }) => {
   const [creds, setCreds] = useState<SyncCredentials>(getSyncCredentials());
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
@@ -53,6 +57,20 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    workerUrl?: boolean;
+    userKey?: boolean;
+    passcode?: boolean;
+    terms?: boolean;
+  }>({});
+  const [isShaking, setIsShaking] = useState<boolean>(false);
+
+  // Stato per cancellazione account (GDPR Art. 17)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [deleteConfirmationInput, setDeleteConfirmationInput] = useState<string>('');
+  const [deleteLocalAlso, setDeleteLocalAlso] = useState<boolean>(true);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -61,20 +79,59 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setIsLoggedIn(Boolean(stored.workerUrl && stored.userKey && stored.passcode));
       setStatusMessage(null);
       setTurnstileToken('');
+      setAcceptedTerms(false);
+      setValidationErrors({});
+      setIsShaking(false);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmationInput('');
+      setDeleteLocalAlso(true);
+      setIsDeleting(false);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleLogin = async () => {
-    if (!creds.workerUrl || !creds.userKey || !creds.passcode) {
+    // Verifica campi obbligatori
+    const errors: {
+      workerUrl?: boolean;
+      userKey?: boolean;
+      passcode?: boolean;
+      terms?: boolean;
+    } = {};
+
+    if (!creds.workerUrl || !creds.workerUrl.trim()) {
+      errors.workerUrl = true;
+    }
+    if (!creds.userKey || !creds.userKey.trim()) {
+      errors.userKey = true;
+    }
+    if (!creds.passcode || !creds.passcode.trim()) {
+      errors.passcode = true;
+    }
+    if (!acceptedTerms) {
+      errors.terms = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+
+      const missing: string[] = [];
+      if (errors.workerUrl) missing.push('URL Cloudflare Worker');
+      if (errors.userKey) missing.push('Nome Utente');
+      if (errors.passcode) missing.push('Password/PIN');
+      if (errors.terms) missing.push('Accettazione Avviso Legale');
+
       setStatusMessage({
         type: 'error',
-        text: 'Compila tutti i campi (URL Worker, Utente e Password) prima di accedere.',
+        text: `Compilazione incompleta: ${missing.join(', ')}. Verifica i campi evidenziati in rosso.`,
       });
       return;
     }
 
+    setValidationErrors({});
     setLoading(true);
     setStatusMessage(null);
 
@@ -174,6 +231,55 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     onShowNotification('Disconnesso dal Cloud. Dati locali del calendario rimossi.');
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmationInput.trim().toUpperCase() !== 'ELIMINA') {
+      setStatusMessage({
+        type: 'error',
+        text: 'Digita la parola ELIMINA per confermare la cancellazione dell\'account.',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    setStatusMessage(null);
+
+    const res = await deleteAccountFromCloud(creds);
+
+    if (res.success) {
+      const cleared = {
+        workerUrl: creds.workerUrl,
+        userKey: '',
+        passcode: '',
+        autoSync: true,
+      };
+      saveSyncCredentials(cleared);
+      setCreds(cleared);
+      setIsLoggedIn(false);
+      setShowDeleteConfirm(false);
+
+      if (deleteLocalAlso) {
+        onApplyCloudData({
+          config: DEFAULT_CONFIG,
+          shifts: [],
+          templates: DEFAULT_TEMPLATES,
+        });
+      }
+
+      setStatusMessage({
+        type: 'success',
+        text: 'Account e dati cloud eliminati definitivamente (GDPR Art. 17 - Diritto all\'Oblio).',
+      });
+      onShowNotification('Account e dati cloud eliminati con successo.');
+    } else {
+      setStatusMessage({
+        type: 'error',
+        text: res.message || 'Errore durante la cancellazione dell\'account dal cloud.',
+      });
+    }
+
+    setIsDeleting(false);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg my-6 max-h-[90vh] flex flex-col overflow-hidden transition-colors">
@@ -256,7 +362,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <button
                   onClick={handleManualSync}
-                  disabled={loading}
+                  disabled={loading || isDeleting}
                   className="flex-1 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   {loading ? (
@@ -269,12 +375,115 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
                 <button
                   onClick={handleLogout}
-                  disabled={loading}
-                  className="px-3.5 py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold border border-rose-200 dark:border-rose-800 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  disabled={loading || isDeleting}
+                  className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   Disconnetti
                 </button>
+              </div>
+
+              {/* Sezione Eliminazione Account & Dati Cloud (GDPR Art. 17 - Diritto all'Oblio) */}
+              <div className="pt-3 border-t border-slate-200/80 dark:border-slate-700/80">
+                {!showDeleteConfirm ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60">
+                    <div>
+                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                        Eliminazione Account &amp; Dati Cloud
+                      </div>
+                      <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Distruggi definitivamente il profilo e tutti i turni salvati sul cloud (Art. 17 GDPR).
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDeleteConfirm(true);
+                        setDeleteConfirmationInput('');
+                        setDeleteLocalAlso(true);
+                      }}
+                      disabled={loading || isDeleting}
+                      className="px-3 py-1.5 text-rose-600 dark:text-rose-400 hover:text-white hover:bg-rose-600 border border-rose-200 dark:border-rose-900/60 hover:border-rose-600 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ml-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Elimina Account
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/70 space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                        <Trash2 className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200">
+                          Conferma Eliminazione Definitiva Account
+                        </h4>
+                        <p className="text-[11px] text-rose-800/90 dark:text-rose-300/90 leading-relaxed mt-0.5">
+                          Questa operazione è <strong>irreversibile</strong>. Tutti i tuoi dati salvati su Cloudflare KV (turni, tariffe, spese e credenziali) verranno distrutti immediatamente.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Scelta dati locali */}
+                    <label className="flex items-start gap-2 text-[11px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none bg-white dark:bg-slate-900/80 p-2.5 rounded-lg border border-rose-200/60 dark:border-rose-900/40">
+                      <input
+                        type="checkbox"
+                        checked={deleteLocalAlso}
+                        onChange={(e) => setDeleteLocalAlso(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600 shrink-0 mt-0.5"
+                      />
+                      <span className="leading-tight">
+                        Rimuovi anche tutti i dati e i turni memorizzati localmente su questo dispositivo (reset completo).
+                      </span>
+                    </label>
+
+                    {/* Campo di conferma ELIMINA */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Digita <span className="text-rose-600 font-mono font-bold">ELIMINA</span> per confermare:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="ELIMINA"
+                        value={deleteConfirmationInput}
+                        onChange={(e) => setDeleteConfirmationInput(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 rounded-lg text-xs font-mono text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
+                      />
+                    </div>
+
+                    {/* Pulsanti Annulla / Procedi */}
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={isDeleting}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Annulla
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeleteAccount}
+                        disabled={deleteConfirmationInput.trim().toUpperCase() !== 'ELIMINA' || isDeleting}
+                        className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Eliminazione...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Elimina Definitivamente
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -291,9 +500,21 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     type="url"
                     placeholder="https://tuo-worker.workers.dev"
                     value={creds.workerUrl}
-                    onChange={(e) => setCreds({ ...creds, workerUrl: e.target.value })}
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono"
+                    onChange={(e) => {
+                      setCreds({ ...creds, workerUrl: e.target.value });
+                      if (validationErrors.workerUrl) setValidationErrors((prev) => ({ ...prev, workerUrl: false }));
+                    }}
+                    className={`w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden font-mono transition-all ${
+                      validationErrors.workerUrl
+                        ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
+                    }`}
                   />
+                  {validationErrors.workerUrl && (
+                    <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 shrink-0" /> Inserisci l&apos;URL del Worker Cloudflare
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -307,9 +528,21 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       type="text"
                       placeholder="Nome utente"
                       value={creds.userKey}
-                      onChange={(e) => setCreds({ ...creds, userKey: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      onChange={(e) => {
+                        setCreds({ ...creds, userKey: e.target.value });
+                        if (validationErrors.userKey) setValidationErrors((prev) => ({ ...prev, userKey: false }));
+                      }}
+                      className={`w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden transition-all ${
+                        validationErrors.userKey
+                          ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
+                      }`}
                     />
+                    {validationErrors.userKey && (
+                      <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0" /> Inserisci il nome utente
+                      </p>
+                    )}
                   </div>
 
                   {/* Password / PIN */}
@@ -322,17 +555,67 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       type="password"
                       placeholder="Password"
                       value={creds.passcode}
-                      onChange={(e) => setCreds({ ...creds, passcode: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      onChange={(e) => {
+                        setCreds({ ...creds, passcode: e.target.value });
+                        if (validationErrors.passcode) setValidationErrors((prev) => ({ ...prev, passcode: false }));
+                      }}
+                      className={`w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden transition-all ${
+                        validationErrors.passcode
+                          ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
+                      }`}
                     />
+                    {validationErrors.passcode && (
+                      <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0" /> Inserisci la password o PIN
+                      </p>
+                    )}
                   </div>
+                </div>
+
+                {/* Checkbox Presa Visione & Accettazione Avviso Legale Cloud (INGRANDITA e posizionata SOPRA Cloudflare) */}
+                <div
+                  className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
+                    validationErrors.terms
+                      ? 'border-rose-400 bg-rose-50/80 dark:bg-rose-950/40 ring-2 ring-rose-500/50 shadow-xs shadow-rose-500/10'
+                      : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                  }`}
+                >
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => {
+                        setAcceptedTerms(e.target.checked);
+                        if (validationErrors.terms) setValidationErrors((prev) => ({ ...prev, terms: false }));
+                      }}
+                      className="w-5 h-5 min-w-[20px] min-h-[20px] mt-0.5 rounded-md border-2 border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer accent-blue-600 shrink-0"
+                    />
+                    <div className="flex-1 text-xs sm:text-[13px] leading-snug font-medium text-slate-800 dark:text-slate-200">
+                      <span>Attivando la sincronizzazione, confermi di aver letto e accettato l&apos;</span>
+                      <button
+                        type="button"
+                        onClick={() => onOpenPrivacyModal?.()}
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-bold text-left inline cursor-pointer mx-1"
+                      >
+                        Avviso Legale e l&apos;Informativa sul trattamento dei dati nel Cloud
+                      </button>
+                      <span>.</span>
+                    </div>
+                  </label>
+                  {validationErrors.terms && (
+                    <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 pt-2 border-t border-rose-200/80 dark:border-rose-900/60 mt-2.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      Spunta obbligatoria: conferma di aver letto e accettato l&apos;Avviso Legale per procedere.
+                    </div>
+                  )}
                 </div>
 
                 {/* Widget Anti-bot Cloudflare Turnstile */}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1 text-center flex items-center justify-center gap-1">
                     <ShieldAlert className="w-3.5 h-3.5 text-blue-500" />
-                    Verifica di sicurezza anti-bot prima dell'accesso
+                    Verifica di sicurezza anti-bot prima dell&apos;accesso
                   </div>
                   <TurnstileWidget
                     onVerify={(token) => setTurnstileToken(token)}
@@ -342,19 +625,33 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                 </div>
               </div>
 
-              {/* Pulsante Login */}
+              {/* Pulsante Login con Animazione Shake e Rosso in caso di errore */}
               <div className="pt-1">
                 <button
                   onClick={handleLogin}
                   disabled={loading}
-                  className="w-full px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className={`w-full px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    isShaking
+                      ? 'animate-shake bg-rose-600 hover:bg-rose-700 ring-2 ring-rose-400 shadow-rose-500/40 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white'
+                  }`}
                 >
                   {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Connessione in corso...
+                    </>
+                  ) : isShaking ? (
+                    <>
+                      <AlertCircle className="w-4 h-4" />
+                      Dati Mancanti o Non Accettati!
+                    </>
                   ) : (
-                    <LogIn className="w-4 h-4" />
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      Accedi e Sincronizza
+                    </>
                   )}
-                  Accedi e Sincronizza
                 </button>
               </div>
             </div>

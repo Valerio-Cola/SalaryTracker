@@ -661,6 +661,7 @@ export default function App() {
             templates={templates}
             onApplyCloudData={handleApplyCloudData}
             onShowNotification={showNotification}
+            onOpenPrivacyModal={() => setIsPrivacyModalOpen(true)}
           />
         )}
 
@@ -719,7 +720,7 @@ export default function App() {
                   height="36"
                   loading="lazy"
                   decoding="async"
-                  style={{ border: '0px', height: '36px', width: 'auto' }}
+                  style={{ border: '0px', width: '143px', height: '36px', aspectRatio: '143 / 36' }}
                   alt="Buy Me a Coffee at ko-fi.com"
                 />
               </a>
