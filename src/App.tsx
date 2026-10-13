@@ -22,14 +22,13 @@ import { CalendarView } from './components/CalendarView';
 import { ShiftList } from './components/ShiftList';
 import { ExpensesList } from './components/ExpensesList';
 
-// Code-splitting delle componenti pesanti e dei modali per velocizzare il caricamento iniziale (PageSpeed / LCP)
-const ChartsView = React.lazy(() => import('./components/ChartsView').then((m) => ({ default: m.ChartsView })));
-const ContractSetupModal = React.lazy(() => import('./components/ContractSetupModal').then((m) => ({ default: m.ContractSetupModal })));
-const ShiftFormModal = React.lazy(() => import('./components/ShiftFormModal').then((m) => ({ default: m.ShiftFormModal })));
-const ExpenseFormModal = React.lazy(() => import('./components/ExpenseFormModal').then((m) => ({ default: m.ExpenseFormModal })));
-const PrivacyLegalModal = React.lazy(() => import('./components/PrivacyLegalModal').then((m) => ({ default: m.PrivacyLegalModal })));
-const CloudSyncModal = React.lazy(() => import('./components/CloudSyncModal').then((m) => ({ default: m.CloudSyncModal })));
-const HelpModal = React.lazy(() => import('./components/HelpModal').then((m) => ({ default: m.HelpModal })));
+import { ChartsView } from './components/ChartsView';
+import { ContractSetupModal } from './components/ContractSetupModal';
+import { ShiftFormModal } from './components/ShiftFormModal';
+import { ExpenseFormModal } from './components/ExpenseFormModal';
+import { PrivacyLegalModal } from './components/PrivacyLegalModal';
+import { CloudSyncModal } from './components/CloudSyncModal';
+import { HelpModal } from './components/HelpModal';
 
 
 import {
@@ -726,7 +725,7 @@ export default function App() {
               </a>
             </div>
           </div>
-          <p className="text-[11px] text-slate-600 dark:text-slate-400 text-center sm:text-right leading-relaxed font-medium">
+          <p className="max-w-md sm:ml-auto text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal bg-slate-50/80 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
             *Il supporto su Ko-fi è un libero contributo facoltativo: non costituisce compravendita di servizi né garantisce o preclude la disponibilità di un account cloud riservato.
           </p>
         </div>
