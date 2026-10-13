@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Cloud,
@@ -14,6 +14,10 @@ import {
   ShieldCheck,
   ShieldAlert,
   Trash2,
+  Eye,
+  EyeOff,
+  Check,
+  Shield,
 } from 'lucide-react';
 import {
   SyncCredentials,
@@ -27,6 +31,114 @@ import {
 import { DEFAULT_CONFIG, DEFAULT_TEMPLATES } from '../utils/storage';
 import { ContractConfig, Shift, QuickTemplate } from '../types';
 import { TurnstileWidget } from './TurnstileWidget';
+
+export interface PasswordStrength {
+  score: number; // 0..4
+  label: string;
+  color: string;
+  textColor: string;
+  criteria: {
+    minLength: boolean; // >= 8 caratteri
+    hasLetter: boolean; // lettere
+    hasUpper: boolean; // maiuscole
+    hasNumber: boolean; // numeri
+    hasSpecial: boolean; // caratteri speciali
+    notCommon: boolean; // non banale o coincidente con username
+  };
+  isValid: boolean; // robustezza sufficiente per la registrazione
+}
+
+const COMMON_WEAK_PASSWORDS = new Set([
+  '123456',
+  '12345678',
+  '123456789',
+  'password',
+  'qwerty',
+  'admin',
+  'passcode',
+  '111111',
+  '000000',
+  '123123',
+  'welcome',
+  'iloveyou',
+  'administrator',
+]);
+
+export function evaluatePasswordStrength(password: string, username: string = ''): PasswordStrength {
+  if (!password) {
+    return {
+      score: 0,
+      label: 'Non inserita',
+      color: 'bg-slate-200 dark:bg-slate-700',
+      textColor: 'text-slate-400',
+      criteria: {
+        minLength: false,
+        hasLetter: false,
+        hasUpper: false,
+        hasNumber: false,
+        hasSpecial: false,
+        notCommon: true,
+      },
+      isValid: false,
+    };
+  }
+
+  const minLength = password.length >= 8;
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  const cleanLower = password.toLowerCase();
+  const userLower = username.trim().toLowerCase();
+  const containsUsername = userLower.length >= 3 && cleanLower.includes(userLower);
+  const notCommon = !COMMON_WEAK_PASSWORDS.has(cleanLower) && !containsUsername;
+
+  let score = 0;
+  if (minLength) score++;
+  if (password.length >= 12) score++;
+  if (hasLetter && hasNumber) score++;
+  if (hasUpper && hasSpecial) score++;
+
+  if (!notCommon || password.length < 6) {
+    score = 0;
+  }
+
+  const scoreLabels = ['Molto debole', 'Debole', 'Media', 'Forte', 'Molto forte'];
+  const scoreColors = [
+    'bg-rose-500',
+    'bg-orange-500',
+    'bg-amber-500',
+    'bg-emerald-500',
+    'bg-emerald-600',
+  ];
+  const scoreTextColors = [
+    'text-rose-600 dark:text-rose-400',
+    'text-orange-600 dark:text-orange-400',
+    'text-amber-600 dark:text-amber-400',
+    'text-emerald-600 dark:text-emerald-400',
+    'text-emerald-700 dark:text-emerald-300',
+  ];
+
+  const clampedScore = Math.min(4, Math.max(0, score));
+
+  return {
+    score: clampedScore,
+    label: scoreLabels[clampedScore],
+    color: scoreColors[clampedScore],
+    textColor: scoreTextColors[clampedScore],
+    criteria: {
+      minLength,
+      hasLetter,
+      hasUpper,
+      hasNumber,
+      hasSpecial,
+      notCommon,
+    },
+    // Valida se ha almeno 8 caratteri, lettere e numeri, e non è banale
+    isValid: minLength && hasLetter && hasNumber && notCommon,
+  };
+}
 
 interface CloudSyncModalProps {
   isOpen: boolean;
@@ -66,6 +178,23 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   }>({});
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
+  // Riferimenti per lo scorrimento automatico alla fine del modale / sul banner di errore
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+  const statusMessageRef = useRef<HTMLDivElement>(null);
+
+  const scrollToErrorBanner = () => {
+    setTimeout(() => {
+      if (statusMessageRef.current) {
+        statusMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } else if (modalBodyRef.current) {
+        modalBodyRef.current.scrollTo({
+          top: modalBodyRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
+    }, 60);
+  };
+
   // Stato per cancellazione account (GDPR Art. 17)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [deleteConfirmationInput, setDeleteConfirmationInput] = useState<string>('');
@@ -73,6 +202,16 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   const [deletePasswordError, setDeletePasswordError] = useState<boolean>(false);
   const [deleteLocalAlso, setDeleteLocalAlso] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  // Calcolo dinamico robustezza password
+  const passwordStrength = evaluatePasswordStrength(creds.passcode, creds.userKey);
+
+  useEffect(() => {
+    if (statusMessage) {
+      scrollToErrorBanner();
+    }
+  }, [statusMessage]);
 
   useEffect(() => {
     if (isOpen) {
@@ -90,6 +229,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setDeletePasswordError(false);
       setDeleteLocalAlso(true);
       setIsDeleting(false);
+      setShowPassword(false);
     }
   }, [isOpen]);
 
@@ -132,6 +272,26 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         type: 'error',
         text: `Compilazione incompleta: ${missing.join(', ')}. Verifica i campi evidenziati in rosso.`,
       });
+      scrollToErrorBanner();
+      return;
+    }
+
+    // Verifica robustezza minima password
+    if (!passwordStrength.isValid) {
+      setValidationErrors((prev) => ({ ...prev, passcode: true }));
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+
+      const tips: string[] = [];
+      if (!passwordStrength.criteria.minLength) tips.push('almeno 8 caratteri');
+      if (!passwordStrength.criteria.hasLetter || !passwordStrength.criteria.hasNumber) tips.push('lettere e numeri');
+      if (!passwordStrength.criteria.hasSpecial) tips.push('un simbolo speciale');
+
+      setStatusMessage({
+        type: 'error',
+        text: `Password debole: per proteggere i tuoi dati usa ${tips.join(', ')}.`,
+      });
+      scrollToErrorBanner();
       return;
     }
 
@@ -320,7 +480,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         </div>
 
         {/* Corpo Modale */}
-        <div className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex-1 overflow-y-auto">
+        <div ref={modalBodyRef} className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex-1 overflow-y-auto">
           {/* Banner Stato e Condizioni di Accesso al Servizio */}
           <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-[11px] text-blue-950 dark:text-blue-200 space-y-1.5">
             <div className="flex items-center gap-1.5 text-[14.44px] font-bold text-blue-900 dark:text-blue-100">
@@ -571,7 +731,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                   {/* Nome Utente */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
@@ -599,30 +759,110 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     )}
                   </div>
 
-                  {/* Password / PIN */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                      <KeyRound className="w-3.5 h-3.5 text-blue-500" />
-                      Password o PIN
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={creds.passcode}
-                      onChange={(e) => {
-                        setCreds({ ...creds, passcode: e.target.value });
-                        if (validationErrors.passcode) setValidationErrors((prev) => ({ ...prev, passcode: false }));
-                      }}
-                      className={`w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden transition-all ${
-                        validationErrors.passcode
-                          ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20'
-                          : 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
-                      }`}
-                    />
+                  {/* Password / PIN con Analisi di Robustezza in Tempo Reale */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <KeyRound className="w-3.5 h-3.5 text-blue-500" />
+                        Password o PIN
+                      </label>
+                      {creds.passcode.length > 0 && (
+                        <span className={`text-[11px] sm:text-xs font-bold ${passwordStrength.textColor}`}>
+                          {passwordStrength.label}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Password di sincronizzazione"
+                        value={creds.passcode}
+                        onChange={(e) => {
+                          setCreds({ ...creds, passcode: e.target.value });
+                          if (validationErrors.passcode) setValidationErrors((prev) => ({ ...prev, passcode: false }));
+                        }}
+                        className={`w-full pl-2.5 pr-8 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden transition-all ${
+                          validationErrors.passcode
+                            ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20'
+                            : 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded cursor-pointer"
+                        title={showPassword ? 'Nascondi password' : 'Mostra password'}
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+
                     {validationErrors.passcode && (
-                      <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3 shrink-0" /> Inserisci la password o PIN
+                      <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        {!creds.passcode
+                          ? 'Inserisci la password'
+                          : 'Password troppo debole: usa almeno 8 caratteri con lettere e numeri'}
                       </p>
+                    )}
+
+                    {/* Barra di robustezza dinamica a 4 livelli */}
+                    {creds.passcode.length > 0 && (
+                      <div className="space-y-1.5 pt-0.5">
+                        <div className="grid grid-cols-4 gap-1 h-1.5">
+                          {[1, 2, 3, 4].map((step) => (
+                            <div
+                              key={step}
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                passwordStrength.score >= step
+                                  ? passwordStrength.color
+                                  : 'bg-slate-200 dark:bg-slate-700'
+                              }`}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Checklist dei requisiti di sicurezza */}
+                        <div className="grid grid-cols-2 gap-x-2.5 gap-y-1 pt-1.5 text-[11.5px]">
+                          <span
+                            className={`flex items-center gap-1.5 ${
+                              passwordStrength.criteria.minLength
+                                ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                                : 'text-slate-400 dark:text-slate-500'
+                            }`}
+                          >
+                            <Check className="w-3 h-3 shrink-0" /> 8+ caratteri
+                          </span>
+                          <span
+                            className={`flex items-center gap-1.5 ${
+                              passwordStrength.criteria.hasLetter && passwordStrength.criteria.hasNumber
+                                ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                                : 'text-slate-400 dark:text-slate-500'
+                            }`}
+                          >
+                            <Check className="w-3 h-3 shrink-0" /> Lettere &amp; numeri
+                          </span>
+                          <span
+                            className={`flex items-center gap-1.5 ${
+                              passwordStrength.criteria.hasUpper
+                                ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                                : 'text-slate-400 dark:text-slate-500'
+                            }`}
+                          >
+                            <Check className="w-3 h-3 shrink-0" /> Maiuscola
+                          </span>
+                          <span
+                            className={`flex items-center gap-1.5 ${
+                              passwordStrength.criteria.hasSpecial
+                                ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                                : 'text-slate-400 dark:text-slate-500'
+                            }`}
+                          >
+                            <Check className="w-3 h-3 shrink-0" /> Simbolo
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -711,21 +951,22 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
             </div>
           )}
 
-          {/* Messaggio di stato */}
+          {/* Messaggio di stato (con scroll automatico in vista) */}
           {statusMessage && (
             <div
-              className={`p-2.5 rounded-lg text-[11px] flex items-center gap-2 ${
+              ref={statusMessageRef}
+              className={`p-3 rounded-xl text-xs flex items-start gap-2.5 transition-all shadow-sm ${
                 statusMessage.type === 'success'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                  : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20'
+                  : 'bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/30'
               }`}
             >
               {statusMessage.type === 'success' ? (
-                <CheckCircle className="w-4 h-4 shrink-0" />
+                <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle className="w-4 h-4 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               )}
-              <span>{statusMessage.text}</span>
+              <span className="font-semibold leading-relaxed">{statusMessage.text}</span>
             </div>
           )}
 
