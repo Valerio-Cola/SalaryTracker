@@ -184,7 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Azioni Principali (Scorrevole fluidamente su mobile, responsive su desktop senza tagli) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 w-full lg:w-auto justify-start sm:justify-end overflow-x-auto no-scrollbar scroll-smooth py-1 sm:py-0 px-0.5 sm:px-0 shrink-0">
+          <div className="flex items-center justify-between sm:justify-end w-full lg:w-auto gap-1 sm:gap-2 py-1 sm:py-0 px-0.5 sm:px-0 shrink-0">
             {/* Pulsante AIUTO (Desktop/Tablet: a sinistra di giorno/notte) */}
             {onOpenHelp && (
               <button
@@ -201,9 +201,9 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onToggleTheme}
               className="hidden sm:flex p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
-              title={theme === 'dark' ? 'Passa alla Modalità Giorno' : 'Passa alla Modalità Notte'}
+              title={theme === "dark" ? "Passa alla Modalità Giorno" : "Passa alla Modalità Notte"}
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <>
                   <Sun className="w-4 h-4 text-amber-400 shrink-0" />
                   <span className="hidden xl:inline">Giorno</span>
@@ -219,7 +219,7 @@ export const Header: React.FC<HeaderProps> = ({
             {!hasShifts && (
               <button
                 onClick={onGenerateSampleData}
-                className="px-3 py-2 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                className="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl text-[11px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 title="Carica turni di prova"
               >
                 Carica Esempi
@@ -229,43 +229,47 @@ export const Header: React.FC<HeaderProps> = ({
             {hasShifts && (
               <button
                 onClick={() => setIsExportModalOpen(true)}
-                className="p-2 sm:px-3 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+                className="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-colors shrink-0 cursor-pointer"
                 title="Stampa ed Esporta Turni (PDF, CSV, Google Calendar, JSON)"
               >
-                <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
-                <span className="hidden sm:inline">Stampa</span>
+                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-400 shrink-0" />
+                <span className="hidden min-[360px]:inline">Stampa</span>
               </button>
             )}
 
             <button
               onClick={onOpenConfig}
-              className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+              className="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-colors shrink-0 cursor-pointer"
               title="Configurazione Tariffe e Contratto"
             >
-              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-400 shrink-0" />
               <span>Tariffe</span>
             </button>
 
             {onOpenCloudSync && (
               <button
                 onClick={onOpenCloudSync}
-                className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors relative shrink-0 cursor-pointer"
+                className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-colors relative shrink-0 cursor-pointer rounded-xl ${
+                  isCloudConnected
+                    ? "border-2 border-blue-500 bg-blue-500/10 dark:bg-blue-500/20 text-slate-900 dark:text-white shadow-xs shadow-blue-500/20"
+                    : "border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
                 title="Sincronizzazione Cloud (Cloudflare Worker)"
               >
-                <Cloud className={`w-4 h-4 shrink-0 ${isCloudConnected ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-400'}`} />
+                <Cloud className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isCloudConnected ? "text-blue-500 dark:text-blue-400" : "text-slate-600 dark:text-slate-400"}`} />
                 <span>Cloud</span>
                 {isCloudConnected && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -top-1 -right-1 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
                 )}
               </button>
             )}
 
             <button
               onClick={onOpenAddShift}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-xs shadow-blue-500/20 whitespace-nowrap shrink-0 cursor-pointer"
+              className="flex-1 sm:flex-none px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] sm:text-sm font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-colors shadow-xs shadow-blue-500/20 whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <Plus className="w-4 h-4 shrink-0" />
-              Nuovo Turno
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="hidden min-[360px]:inline">Nuovo </span>Turno
             </button>
           </div>
         </div>
