@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import {
   SyncCredentials,
+  DEFAULT_WORKER_URL,
   getSyncCredentials,
   saveSyncCredentials,
   loginToCloud,
@@ -175,7 +176,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<{
-    workerUrl?: boolean;
     userKey?: boolean;
     passcode?: boolean;
     terms?: boolean;
@@ -243,15 +243,11 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   const handleLogin = async () => {
     // Verifica campi obbligatori
     const errors: {
-      workerUrl?: boolean;
       userKey?: boolean;
       passcode?: boolean;
       terms?: boolean;
     } = {};
 
-    if (!creds.workerUrl || !creds.workerUrl.trim()) {
-      errors.workerUrl = true;
-    }
     if (!creds.userKey || !creds.userKey.trim()) {
       errors.userKey = true;
     }
@@ -268,7 +264,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setTimeout(() => setIsShaking(false), 500);
 
       const missing: string[] = [];
-      if (errors.workerUrl) missing.push('URL Cloudflare Worker');
       if (errors.userKey) missing.push('Nome Utente');
       if (errors.passcode) missing.push(authMode === 'register' ? 'Crea Nuova Password' : 'Password/PIN');
       if (errors.terms) missing.push('Accettazione Avviso Legale');
@@ -305,7 +300,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     setLoading(true);
     setStatusMessage(null);
 
-    const credsToTest: SyncCredentials = { ...creds, autoSync: true };
+    const effectiveWorkerUrl = (creds.workerUrl && creds.workerUrl.trim()) ? creds.workerUrl.trim() : DEFAULT_WORKER_URL;
+    const credsToTest: SyncCredentials = { ...creds, workerUrl: effectiveWorkerUrl, autoSync: true };
 
     // Effettua login/auth passando authMode ('login' o 'register')
     const res = await loginToCloud(credsToTest, turnstileToken, authMode);
@@ -531,7 +527,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               </div>
             </div>
             <p className="text-[11px] text-blue-800/90 dark:text-blue-300/90">
-              Se disponi delle credenziali rilasciate dall&apos;amministratore, inserisci di seguito l&apos;URL del Worker, il tuo Nome Utente e la Password.
+              Se disponi delle credenziali rilasciate dall&apos;amministratore, inserisci di seguito il tuo Nome Utente e la Password.
             </p>
           </div>
 
@@ -781,33 +777,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               </div>
 
               <div className="space-y-4">
-                {/* URL Worker */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-blue-500" />
-                    URL del tuo Cloudflare Worker
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://tuo-worker.workers.dev"
-                    value={creds.workerUrl}
-                    onChange={(e) => {
-                      setCreds({ ...creds, workerUrl: e.target.value });
-                      if (validationErrors.workerUrl) setValidationErrors((prev) => ({ ...prev, workerUrl: false }));
-                    }}
-                    className={`w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden font-mono transition-all ${
-                      validationErrors.workerUrl
-                        ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20'
-                        : 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
-                    }`}
-                  />
-                  {validationErrors.workerUrl && (
-                    <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3 shrink-0" /> Inserisci l&apos;URL del Worker Cloudflare
-                    </p>
-                  )}
-                </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                   {/* Nome Utente */}
                   <div>
@@ -945,6 +914,30 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* Opzioni server avanzate (facoltativo, preconfigurato) */}
+                <details className="text-left group pt-0.5">
+                  <summary className="text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer list-none flex items-center gap-1.5 select-none w-fit">
+                    <Globe className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Opzioni server avanzate (facoltativo)</span>
+                    <span className="text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <div className="mt-2 p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Endpoint Cloudflare Worker (Predefinito)
+                    </label>
+                    <input
+                      type="url"
+                      value={creds.workerUrl}
+                      onChange={(e) => setCreds({ ...creds, workerUrl: e.target.value })}
+                      placeholder={DEFAULT_WORKER_URL}
+                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                      Preconfigurato per il server cloud ufficiale. Lascia invariato per la normale sincronizzazione.
+                    </p>
+                  </div>
+                </details>
 
                 {/* Checkbox Presa Visione & Accettazione Avviso Legale Cloud */}
                 <div
