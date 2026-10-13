@@ -53,14 +53,14 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between shrink-0">
-          <h3 className="font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-rose-500" />
+        <div className="px-6 py-4 border-b border-slate-800 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between shrink-0">
+          <h3 className="font-black text-lg text-white flex items-center gap-2">
+            <Receipt className="w-5 h-5 text-rose-400" />
             {expense ? 'Modifica Spesa' : 'Nuova Spesa'}
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-full bg-slate-200/50 dark:bg-slate-800/50"
+            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
           >
             ✕
           </button>

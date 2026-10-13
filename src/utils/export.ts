@@ -233,3 +233,100 @@ export function printMonthlyReport(
   printWindow.document.write(html);
   printWindow.document.close();
 }
+
+/**
+ * Esporta i turni del mese in formato iCalendar (.ics) compatibile al 100% con Google Calendar, Apple Calendar e Outlook
+ */
+export function exportShiftsToGoogleCalendar(shifts: Shift[], monthTitle: string = 'Turni') {
+  if (shifts.length === 0) return;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  const formatIcsDateTime = (dateStr: string, timeStr: string) => {
+    const [y, m, d] = dateStr.split('-');
+    const [hh, mm] = timeStr.split(':');
+    return `${y}${m}${d}T${hh}${mm}00`;
+  };
+
+  const formatIcsDateOnly = (dateStr: string) => {
+    return dateStr.replace(/-/g, '');
+  };
+
+  const nowIcs = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+  const events = shifts.map((s) => {
+    const isFerie = s.tipoGiorno === 'ferie' || s.isFerie;
+    
+    if (isFerie) {
+      const [y, m, d] = s.dataGrezza.split('-');
+      const nextDay = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+      const nextDayStr = `${nextDay.getFullYear()}${pad(nextDay.getMonth() + 1)}${pad(nextDay.getDate())}`;
+      const dtStart = formatIcsDateOnly(s.dataGrezza);
+      
+      return [
+        'BEGIN:VEVENT',
+        `UID:${s.id || Date.now()}_ferie@salarytracker`,
+        `DTSTAMP:${nowIcs}`,
+        `DTSTART;VALUE=DATE:${dtStart}`,
+        `DTEND;VALUE=DATE:${nextDayStr}`,
+        'SUMMARY:🏖️ Ferie / ROL',
+        `DESCRIPTION:Giorno di Ferie (${s.oreTotali}h). Stima Lordo: €${Math.round(s.guadagnoTotaleLordo)}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+      ].join('\r\n');
+    }
+
+    const dtStart = formatIcsDateTime(s.dataGrezza, s.orarioInizio);
+    
+    // Gestione turni a cavallo di mezzanotte (es. 22:00 -> 06:00)
+    let endDateStr = s.dataGrezza;
+    if (s.orarioFine < s.orarioInizio) {
+      const [y, m, d] = s.dataGrezza.split('-');
+      const nextDay = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+      endDateStr = `${nextDay.getFullYear()}-${pad(nextDay.getMonth() + 1)}-${pad(nextDay.getDate())}`;
+    }
+    const dtEnd = formatIcsDateTime(endDateStr, s.orarioFine);
+
+    const description = [
+      `Turno di lavoro: ${s.orarioInizio} - ${s.orarioFine} (${s.oreTotali}h)`,
+      s.pausaMinuti > 0 ? `Pausa: ${s.pausaMinuti} min` : '',
+      s.oreNotturne > 0 ? `Ore Notte: ${s.oreNotturne}h` : '',
+      s.oreSupplementari > 0 ? `Straordinario: ${s.oreSupplementari}h` : '',
+      `Compenso Lordo Stimato: €${s.guadagnoTotaleLordo.toFixed(2)}`,
+      s.note ? `Note: ${s.note}` : '',
+    ].filter(Boolean).join('\\n');
+
+    return [
+      'BEGIN:VEVENT',
+      `UID:${s.id || Date.now()}@salarytracker`,
+      `DTSTAMP:${nowIcs}`,
+      `DTSTART:${dtStart}`,
+      `DTEND:${dtEnd}`,
+      `SUMMARY:Turno ${s.orarioInizio} - ${s.orarioFine}`,
+      `DESCRIPTION:${description}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+    ].join('\r\n');
+  });
+
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Salary Tracker SK//Turni Lavorativi//IT',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:Turni ${monthTitle}`,
+    ...events,
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `Turni_${monthTitle.replace(/\s+/g, '_')}_Google_Calendar.ics`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

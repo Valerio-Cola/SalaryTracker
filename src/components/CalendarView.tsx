@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Shift, Expense } from '../types';
-import { Plus, Moon, Sun, Clock, Receipt, Sparkles } from 'lucide-react';
+import { Plus, Moon, Clock, Receipt } from 'lucide-react';
 import { checkDayTypeInfo } from '../utils/holidays';
 
 interface CalendarViewProps {
@@ -11,6 +11,16 @@ interface CalendarViewProps {
   onAddExpense: (dateIso: string) => void;
   onEditShift: (shift: Shift) => void;
   onEditExpense: (expense: Expense) => void;
+}
+
+interface CalendarGridCell {
+  type: 'empty' | 'day';
+  id?: string;
+  dayNumber?: number;
+  dateIso?: string;
+  dayShifts?: Shift[];
+  dayExpenses?: Expense[];
+  dayInfo?: { isSunday: boolean; isHoliday: boolean; holidayName?: string };
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -30,39 +40,50 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7; // 0 = Lunedì, 6 = Domenica
 
-  // Mappa dei turni e delle spese per giorno (chiave: YYYY-MM-DD)
-  const shiftMap: Record<string, Shift[]> = {};
-  shifts.forEach((s) => {
-    if (!shiftMap[s.dataGrezza]) shiftMap[s.dataGrezza] = [];
-    shiftMap[s.dataGrezza].push(s);
-  });
-
-  const expenseMap: Record<string, Expense[]> = {};
-  expenses.forEach((e) => {
-    if (!expenseMap[e.data]) expenseMap[e.data] = [];
-    expenseMap[e.data].push(e);
-  });
-
-  const weekDayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-
-  const calendarGrid = [];
-  // Celle vuote per i giorni del mese precedente
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    calendarGrid.push({ type: 'empty', id: `empty-${i}` });
-  }
-
-  // Giorni del mese
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dayPadded = String(d).padStart(2, '0');
-    const dateIso = `${yearStr}-${monthStr}-${dayPadded}`;
-    calendarGrid.push({
-      type: 'day',
-      dayNumber: d,
-      dateIso,
-      dayShifts: shiftMap[dateIso] || [],
-      dayExpenses: expenseMap[dateIso] || [],
+  // Mappa turni e spese (memoizzata per zero ricalcoli durante lo scroll)
+  const shiftMap = useMemo(() => {
+    const map: Record<string, Shift[]> = {};
+    shifts.forEach((s) => {
+      if (!map[s.dataGrezza]) map[s.dataGrezza] = [];
+      map[s.dataGrezza].push(s);
     });
-  }
+    return map;
+  }, [shifts]);
+
+  const expenseMap = useMemo(() => {
+    const map: Record<string, Expense[]> = {};
+    expenses.forEach((e) => {
+      if (!map[e.data]) map[e.data] = [];
+      map[e.data].push(e);
+    });
+    return map;
+  }, [expenses]);
+
+  const weekDayNames = useMemo(() => ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'], []);
+
+  // Memoizzazione della griglia completa (inclusi i check festività)
+  const calendarGrid = useMemo(() => {
+    const grid: CalendarGridCell[] = [];
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      grid.push({ type: 'empty', id: `empty-${i}` });
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayPadded = String(d).padStart(2, '0');
+      const dateIso = `${yearStr}-${monthStr}-${dayPadded}`;
+      const dayInfo = checkDayTypeInfo(dateIso);
+
+      grid.push({
+        type: 'day',
+        dayNumber: d,
+        dateIso,
+        dayShifts: shiftMap[dateIso] || [],
+        dayExpenses: expenseMap[dateIso] || [],
+        dayInfo,
+      });
+    }
+    return grid;
+  }, [daysInMonth, firstDayOfWeek, yearStr, monthStr, shiftMap, expenseMap]);
 
   const todayIso = new Date().toISOString().split('T')[0];
 
@@ -73,24 +94,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" /> Calendario Mensile
         </h3>
         <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
-          Clicca su un giorno per aggiungere un turno
+          Tocca un giorno per aggiungere un turno
         </span>
       </div>
 
-      {/* Scorrimento orizzontale su schermi molto stretti */}
-      <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-2 scrollbar-thin">
+      {/* Scorrimento orizzontale nativo al 100%, leggero e ultra-fluido (60/120fps senza lag o scia) */}
+      <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-2 no-scrollbar">
         <div className="min-w-[700px] sm:min-w-0">
-          {/* Intestazione Giorni della Settimana (Lun-Dom) */}
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
+          {/* Intestazione Giorni della Settimana a Nuvoletta (Pill Chips morbide e leggere) */}
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-3 text-center">
             {weekDayNames.map((w, idx) => (
               <div
                 key={w}
-                className={`text-xs sm:text-sm font-bold py-2 rounded-xl ${
+                className={`text-xs sm:text-sm font-extrabold py-1.5 px-1 rounded-full transition-all border shadow-2xs ${
                   idx === 6
-                    ? 'text-rose-800 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-950/50'
+                    ? 'text-rose-800 dark:text-rose-300 bg-rose-100/90 dark:bg-rose-950/60 border-rose-200/80 dark:border-rose-900/60'
                     : idx === 5
-                    ? 'text-blue-800 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/50'
-                    : 'text-slate-700 dark:text-slate-200 bg-slate-100/80 dark:bg-slate-800/70'
+                    ? 'text-blue-800 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/60 border-blue-200/80 dark:border-blue-900/60'
+                    : 'text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700/60'
                 }`}
               >
                 {w}
@@ -98,7 +119,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             ))}
           </div>
 
-          {/* Griglia Calendario - items-stretch permette l'allungamento verticale dinamico */}
+          {/* Celle del calendario */}
           <div className="grid grid-cols-7 gap-1.5 sm:gap-2 items-stretch">
             {calendarGrid.map((cell) => {
               if (cell.type === 'empty') {
@@ -110,7 +131,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 );
               }
 
-              const dayInfo = cell.dateIso ? checkDayTypeInfo(cell.dateIso) : { isSunday: false, isHoliday: false, holidayName: undefined };
+              const dayInfo = cell.dayInfo || { isSunday: false, isHoliday: false, holidayName: undefined };
               const isToday = cell.dateIso === todayIso;
               const isHoliday = dayInfo.isHoliday;
               const isSunday = dayInfo.isSunday;
@@ -122,23 +143,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   key={cell.dateIso}
                   onClick={() => onSelectDate(cell.dateIso!)}
                   title={isHoliday ? `Festività italiana: ${dayInfo.holidayName}` : undefined}
-                  className={`min-h-[85px] sm:min-h-[105px] h-auto p-1.5 sm:p-2.5 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between group min-w-0 ${
+                  className={`min-h-[85px] sm:min-h-[105px] h-auto p-1.5 sm:p-2.5 rounded-xl border cursor-pointer relative flex flex-col justify-between group min-w-0 transition-colors ${
                     isToday
                       ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-950/50 ring-2 ring-blue-400/30'
                       : isHoliday
                       ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 hover:border-rose-300 dark:hover:border-rose-700'
-                      : (hasShifts || hasExpenses)
+                      : hasShifts || hasExpenses
                       ? 'border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700'
                       : isSunday
                       ? 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
                       : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60'
                   }`}
                 >
-                  {/* Header Giorno con numeri grandi ed evidenti */}
+                  {/* Header Giorno */}
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 min-w-0">
                       <span
-                        className={`w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm font-black flex items-center justify-center rounded-lg transition-colors shrink-0 ${
+                        className={`w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm font-black flex items-center justify-center rounded-lg shrink-0 ${
                           isToday && isHoliday
                             ? 'bg-rose-600 text-white font-black ring-2 ring-rose-400/30 shadow-xs'
                             : isToday
@@ -154,7 +175,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       </span>
                       {isHoliday && dayInfo.holidayName && (
                         <span
-                          className="text-[10px] sm:text-xs font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-900/60 rounded-md px-1.5 py-0.5 truncate max-w-[90px] hidden sm:inline-block"
+                          className="text-[10px] sm:text-xs font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-900/60 rounded-md px-1.5 py-0.5 truncate max-w-[80px] hidden sm:inline-block"
                           title={`Festività Italiana: ${dayInfo.holidayName}`}
                         >
                           {dayInfo.holidayName}
@@ -169,7 +190,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           e.stopPropagation();
                           onSelectDate(cell.dateIso!);
                         }}
-                        className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-slate-800 rounded-lg transition-all block cursor-pointer"
+                        className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors block cursor-pointer"
                         title="Aggiungi turno"
                       >
                         <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -180,7 +201,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           e.stopPropagation();
                           onAddExpense(cell.dateIso!);
                         }}
-                        className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
+                        className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                         title="Aggiungi spesa"
                       >
                         <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -188,7 +209,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Badge Turno/i o Ferie con layout flessibile responsive senza sovrapposizioni */}
+                  {/* Badge Turno/i o Ferie */}
                   <div className="space-y-1.5 mt-1">
                     {cell.dayShifts?.map((s) => {
                       const isFerie = s.tipoGiorno === 'ferie' || s.isFerie;
@@ -199,30 +220,33 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             e.stopPropagation();
                             onEditShift(s);
                           }}
-                          className={`p-1.5 sm:p-2 rounded-xl border shadow-2xs transition-all text-left min-w-0 ${
+                          className={`p-1.5 sm:p-2 rounded-xl border shadow-2xs transition-colors text-left min-w-0 ${
                             isFerie
                               ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 hover:border-amber-400'
                               : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-blue-400'
                           }`}
                         >
-                          {/* Orario o Titolo Ferie */}
-                          <div className={`text-xs sm:text-sm font-bold leading-tight ${
-                            isFerie ? 'text-amber-950 dark:text-amber-200 flex items-center gap-1' : 'text-slate-900 dark:text-slate-100 font-mono'
-                          }`}>
+                          <div
+                            className={`text-xs sm:text-sm font-bold leading-tight ${
+                              isFerie
+                                ? 'text-amber-950 dark:text-amber-200 flex items-center gap-1'
+                                : 'text-slate-900 dark:text-slate-100 font-mono'
+                            }`}
+                          >
                             {isFerie ? (
                               <span>🏖️ Ferie ({s.oreTotali}h)</span>
                             ) : (
-                              <span>{s.orarioInizio}-{s.orarioFine}</span>
+                              <span>
+                                {s.orarioInizio}-{s.orarioFine}
+                              </span>
                             )}
                           </div>
 
-                          {/* Guadagno e Etichette/Badge che andranno a capo pulitamente */}
                           <div className="mt-1 flex flex-col gap-1 text-xs">
                             <span className="text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm">
                               +€{Math.round(s.guadagnoTotaleLordo)}
                             </span>
 
-                            {/* Tag extra flessibili (straordinari, notte, festa, domenica) */}
                             <div className="flex flex-wrap items-center gap-1 mt-0.5">
                               {!isFerie && (
                                 <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 font-semibold text-[10px] sm:text-xs">

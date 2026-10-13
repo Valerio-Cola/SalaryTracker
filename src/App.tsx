@@ -13,7 +13,7 @@ import {
   DEFAULT_CONFIG,
 } from './utils/storage';
 import { recalculateAllShifts } from './utils/calculator';
-import { exportDataToJson, exportShiftsToCsv, printMonthlyReport } from './utils/export';
+import { exportDataToJson, exportShiftsToCsv, printMonthlyReport, exportShiftsToGoogleCalendar } from './utils/export';
 import { getSyncCredentials, pushToCloud, pullFromCloud } from './utils/syncService';
 
 import { Header } from './components/Header';
@@ -362,6 +362,9 @@ export default function App() {
         onOpenHelp={() => setIsHelpModalOpen(true)}
         onExportCsv={() => exportShiftsToCsv(currentMonthShifts, formattedMonthTitle)}
         onPrintReport={() => printMonthlyReport(currentMonthShifts, config, formattedMonthTitle)}
+        onExportGoogleCalendar={() => exportShiftsToGoogleCalendar(currentMonthShifts, formattedMonthTitle)}
+        onExportJson={() => exportDataToJson(config, shifts, expenses)}
+        onImportJson={handleImportJson}
         onGenerateSampleData={handleGenerateSampleData}
         hasShifts={shifts.length > 0}
         theme={theme}
@@ -425,9 +428,9 @@ export default function App() {
             <div className="flex flex-wrap sm:flex-nowrap lg:flex-col gap-2.5 w-full lg:w-auto shrink-0">
               <button
                 onClick={() => handleOpenAddShift()}
-                className="flex-1 lg:flex-initial px-4 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 lg:flex-initial px-4 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 text-blue-200" />
                 Aggiungi Primo Turno
               </button>
               
@@ -519,19 +522,11 @@ export default function App() {
             </button>
           </div>
 
-          {/* Backup Actions JSON */}
+          {/* Azioni Backup Ripristino JSON */}
           <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={() => exportDataToJson(config, shifts, expenses)}
-              className="px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
-            >
-              <Download className="w-4 h-4 shrink-0" />
-              Backup JSON
-            </button>
-
             <label className="px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">
               <Upload className="w-4 h-4 shrink-0" />
-              Ripristina
+              Ripristina Backup
               <input
                 type="file"
                 accept=".json"
@@ -683,9 +678,9 @@ export default function App() {
             </div>
             <button
               onClick={() => setIsPrivacyModalOpen(true)}
-              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1"
+              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold transition-colors flex items-center gap-1.5 cursor-pointer text-xs"
             >
-              <Info className="w-3.5 h-3.5" />
+              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               Note Legali, Privacy & Cookie Policy
             </button>
           </div>
@@ -725,9 +720,6 @@ export default function App() {
               </a>
             </div>
           </div>
-          <p className="max-w-md sm:ml-auto text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal bg-slate-50/80 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
-            *Il supporto su Ko-fi è un libero contributo facoltativo: non costituisce compravendita di servizi né garantisce o preclude la disponibilità di un account cloud riservato.
-          </p>
         </div>
       </footer>
     </div>

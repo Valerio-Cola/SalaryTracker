@@ -235,8 +235,8 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6 flex flex-col max-h-[90vh] transition-colors">
         
-        {/* Header Modal - Sticky */}
-        <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
+        {/* Header Modal - Sticky con Gradiente Elegante */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
           <div className="flex items-center gap-2.5">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
               entryMode === 'ferie' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'

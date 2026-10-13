@@ -13,6 +13,11 @@ import {
   ShieldCheck,
   CheckCircle2,
   FileText,
+  Printer,
+  FileSpreadsheet,
+  FileCode2,
+  Download,
+  Upload,
 } from 'lucide-react';
 
 interface HelpModalProps {
@@ -20,7 +25,7 @@ interface HelpModalProps {
   onClose: () => void;
 }
 
-type TabType = 'turni' | 'tariffe' | 'bonus' | 'ferie' | 'cloud';
+type TabType = 'turni' | 'tariffe' | 'bonus' | 'ferie' | 'export' | 'cloud';
 
 export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>('turni');
@@ -30,22 +35,22 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6 transition-colors flex flex-col max-h-[85vh]">
-        {/* Header Modal */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 flex items-center justify-between shrink-0">
+        {/* Header Modal - Stesso gradiente elegante */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center font-bold">
-              <HelpCircle className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-400/20 shadow-inner flex items-center justify-center font-bold">
+              <HelpCircle className="w-6 h-6 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Guida & Aiuto Salary Tracker</h2>
-              <p className="text-xs text-blue-100">
-                Tutto quello che c'è da sapere per calcolare stipendio, turni e ferie
+              <h2 className="text-lg font-bold text-white">Guida & Aiuto Salary Tracker</h2>
+              <p className="text-xs text-slate-300">
+                Tutto quello che c'è da sapere per calcolare stipendio, turni, ferie ed esportazioni
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -102,6 +107,18 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           </button>
 
           <button
+            onClick={() => setActiveTab('export')}
+            className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'export'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Stampa, Calendar & Backup
+          </button>
+
+          <button
             onClick={() => setActiveTab('cloud')}
             className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'cloud'
@@ -110,7 +127,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             }`}
           >
             <Cloud className="w-3.5 h-3.5" />
-            Cloud & Backup
+            Cloud & Sync
           </button>
         </div>
 
@@ -334,6 +351,126 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
                     Nel calendario, tutti i <strong>giorni festivi del calendario italiano</strong> (Capodanno, Epifania, Pasqua, Pasquetta, 25 Aprile, 1 Maggio, 2 Giugno, Ferragosto, Ognissanti, 8 Dicembre, Natale, Santo Stefano) sono evidenziati con il <strong>numero rosso</strong> e la relativa etichetta. Se lavori in uno di questi giorni, viene applicata la maggiorazione per giorno festivo!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'export' && (
+            <div className="space-y-4">
+              {/* Header Sezione */}
+              <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl space-y-1">
+                <h3 className="font-bold text-sm text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
+                  <Printer className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  Stampa, Google Calendar, CSV & Backup JSON
+                </h3>
+                <p>
+                  Dalla barra in alto, toccando l&apos;icona della <strong>Stampante (Stampa ed Esporta)</strong> puoi scaricare i tuoi turni in diversi formati o creare un backup di sicurezza.
+                </p>
+              </div>
+
+              {/* Box 1: Come Importare su Google Calendar */}
+              <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl space-y-2.5">
+                <div className="flex items-center gap-2 text-blue-950 dark:text-blue-200">
+                  <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs sm:text-sm">Come importare i turni su Google Calendar</h4>
+                    <span className="text-[10px] text-blue-700 dark:text-blue-300 font-medium">Sincronizzazione orari su PC, Mac, Android e iPhone</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-[11px] text-slate-700 dark:text-slate-300">
+                  <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-blue-200/80 dark:border-blue-900/50 space-y-1">
+                    <strong className="block text-slate-900 dark:text-white font-semibold flex items-center gap-1">
+                      💻 Procedura da Computer (Web):
+                    </strong>
+                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
+                      <li>Tocca il pulsante <strong>Stampa</strong> nella barra superiore e seleziona <strong>&quot;Google Calendar (File .ics)&quot;</strong>.</li>
+                      <li>Verrà scaricato un file <code>.ics</code> contenente tutti i tuoi turni del mese con orari precisi.</li>
+                      <li>Apri <strong>Google Calendar</strong> nel browser (calendar.google.com).</li>
+                      <li>Clicca sull&apos;icona ingranaggio ⚙️ in alto a destra &gt; seleziona <strong>&quot;Impostazioni&quot;</strong>.</li>
+                      <li>Nel menu laterale sinistro, clicca su <strong>&quot;Importazione ed esportazione&quot;</strong>.</li>
+                      <li>Clicca su <em>&quot;Seleziona il file dal computer&quot;</em>, scegli il file <code>.ics</code> appena scaricato e premi <strong>&quot;Importa&quot;</strong>.</li>
+                      <li>I turni appariranno subito sul tuo calendario con l&apos;orario di entrata, uscita e pause!</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-blue-200/80 dark:border-blue-900/50 space-y-1">
+                    <strong className="block text-slate-900 dark:text-white font-semibold flex items-center gap-1">
+                      📱 Procedura da Smartphone (Android &amp; iPhone):
+                    </strong>
+                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
+                      <li>Tocca il pulsante <strong>Stampa</strong> in alto e premi <strong>&quot;Google Calendar (File .ics)&quot;</strong>.</li>
+                      <li>Appena terminato il download, tocca la notifica di download o apri il file dall&apos;app <strong>File / Download</strong> del telefono.</li>
+                      <li>Il sistema operativo ti chiederà automaticamente con quale applicazione aprirlo (Google Calendar o Calendario Apple).</li>
+                      <li>Seleziona <strong>&quot;Aggiungi tutti gli eventi&quot;</strong> per salvarli nel tuo calendario con promemoria e notifiche integrate.</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 2: Come Salvare e Ripristinare il Backup JSON */}
+              <div className="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/60 rounded-xl space-y-2.5">
+                <div className="flex items-center gap-2 text-purple-950 dark:text-purple-200">
+                  <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                    <FileCode2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs sm:text-sm">Come eseguire e ripristinare il Backup JSON</h4>
+                    <span className="text-[10px] text-purple-700 dark:text-purple-300 font-medium">Backup sicuro di turni, tariffe, spese e preset</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-[11px] text-slate-700 dark:text-slate-300">
+                  <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-purple-200/80 dark:border-purple-900/50 space-y-1">
+                    <strong className="block text-slate-900 dark:text-white font-semibold flex items-center gap-1">
+                      💾 Come Scaricare la Copia di Backup (Download):
+                    </strong>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Clicca sull&apos;icona <strong>Stampa</strong> nella barra in alto e seleziona <strong>&quot;Backup Completo (JSON)&quot;</strong>.
+                      Verrà generato e salvato un file <code>.json</code> contenente tutti i tuoi turni registrati di ogni mese, le tue spese, le tariffe personalizzate e i preset di orario.
+                    </p>
+                  </div>
+
+                  <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-purple-200/80 dark:border-purple-900/50 space-y-1">
+                    <strong className="block text-slate-900 dark:text-white font-semibold flex items-center gap-1">
+                      🔄 Come Ripristinare i Dati (Restore):
+                    </strong>
+                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
+                      <li>Apri la finestra <strong>Stampa</strong> (icona stampante in alto).</li>
+                      <li>Tocca la voce <strong>&quot;Ripristina Backup da file JSON&quot;</strong>.</li>
+                      <li>Seleziona il file <code>.json</code> precedentemente salvato dal tuo smartphone o computer.</li>
+                      <li>L&apos;app ricaricherà immediatamente tutti i turni, le spese e le impostazioni del contratto senza alcuna perdita di dati.</li>
+                    </ol>
+                    <p className="text-[10px] text-purple-800 dark:text-purple-300 pt-0.5 italic">
+                      💡 Consiglio: esegui un backup JSON prima di pulire i dati del browser o quando cambi telefono per trasferire tutto in un secondo!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 3: PDF e CSV */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                    <Printer className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Stampa o Salva PDF</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Genera un documento A4 pulito con riepilogo ore lavorate, totali notturni/festivi, straordinari e stima netto, pronto per essere stampato o salvato come file PDF.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>File CSV per Excel</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Esporta tutti i dati in formato tabellare compatibile con Microsoft Excel, Google Fogli, LibreOffice Calc o Apple Numbers per analisi approfondite.
                   </p>
                 </div>
               </div>

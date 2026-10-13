@@ -265,7 +265,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
       const missing: string[] = [];
       if (errors.userKey) missing.push('Nome Utente');
-      if (errors.passcode) missing.push(authMode === 'register' ? 'Crea Nuova Password' : 'Password/PIN');
+      if (errors.passcode) missing.push('Password');
       if (errors.terms) missing.push('Accettazione Avviso Legale');
 
       setStatusMessage({
@@ -486,21 +486,21 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg my-6 max-h-[90vh] flex flex-col overflow-hidden transition-colors">
-        {/* Header Modale */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 shrink-0">
+        {/* Header Modale - Gradiente Elegante */}
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-800 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold shrink-0">
-              <Cloud className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-400/20 shadow-inner flex items-center justify-center font-bold shrink-0">
+              <Cloud className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                Sincronizzazione Multi-Device
+              <h2 className="text-sm sm:text-base font-bold text-white">
+                Sincronizzazione Multi-Device Cloud
               </h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -510,10 +510,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         <div ref={modalBodyRef} className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex-1 overflow-y-auto">
           {/* Banner Stato e Condizioni di Accesso al Servizio */}
           <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-[11px] text-blue-950 dark:text-blue-200 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[14.44px] font-bold text-blue-900 dark:text-blue-100">
-              <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              Sincronizzazione Multi-Device Cloud
-            </div>
             <div className="p-2 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-lg text-[10px] text-amber-900 dark:text-amber-200 space-y-1">
               <div className="font-bold flex items-center gap-1 text-xs text-amber-800 dark:text-amber-300">
                 <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
@@ -810,7 +806,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <KeyRound className="w-3.5 h-3.5 text-blue-500" />
-                        {authMode === 'register' ? 'Crea Nuova Password' : 'Password o PIN'}
+                        Password
                       </label>
                       {authMode === 'register' && creds.passcode.length > 0 && (
                         <span className={`text-[11px] sm:text-xs font-bold ${passwordStrength.textColor}`}>
@@ -1015,7 +1011,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                   ) : authMode === 'register' ? (
                     <>
                       <UserPlus className="w-4 h-4" />
-                      Crea Password e Accedi
+                      Registrati
                     </>
                   ) : (
                     <>

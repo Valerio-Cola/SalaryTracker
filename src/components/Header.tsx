@@ -14,6 +14,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { MonthPickerPopover } from './MonthPickerPopover';
+import { ExportModal } from './ExportModal';
 
 interface HeaderProps {
   currentMonthKey: string; // YYYY-MM
@@ -25,6 +26,9 @@ interface HeaderProps {
   onOpenHelp?: () => void;
   onExportCsv: () => void;
   onPrintReport: () => void;
+  onExportGoogleCalendar?: () => void;
+  onExportJson?: () => void;
+  onImportJson?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onGenerateSampleData: () => void;
   hasShifts: boolean;
   theme: 'light' | 'dark';
@@ -41,6 +45,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenHelp,
   onExportCsv,
   onPrintReport,
+  onExportGoogleCalendar,
+  onExportJson,
+  onImportJson,
   onGenerateSampleData,
   hasShifts,
   theme,
@@ -48,6 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
   isCloudConnected = false,
 }) => {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Parsing del mese corrente (es. "2026-08")
   const [yearStr, monthStr] = currentMonthKey.split('-');
@@ -82,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors">
+    <header id="app-header" className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between py-2.5 sm:py-3 gap-2.5 sm:gap-3 flex-wrap xl:flex-nowrap">
           {/* Logo e Titolo (con Aiuto e Sole/Luna in alto a destra SOLO su Mobile) */}
@@ -219,57 +227,42 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             {hasShifts && (
-              <>
-                <button
-                  onClick={onExportCsv}
-                  className="p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
-                  title="Esporta CSV per Excel"
-                >
-                  <Download className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
-                  <span className="hidden xl:inline">CSV</span>
-                </button>
-
-                <button
-                  onClick={onPrintReport}
-                  className="p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
-                  title="Stampa prospetto mensile"
-                >
-                  <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
-                  <span className="hidden xl:inline">Stampa</span>
-                </button>
-              </>
+              <button
+                onClick={() => setIsExportModalOpen(true)}
+                className="p-2 sm:px-3 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+                title="Stampa ed Esporta Turni (PDF, CSV, Google Calendar, JSON)"
+              >
+                <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
+                <span className="hidden sm:inline">Stampa</span>
+              </button>
             )}
 
             <button
               onClick={onOpenConfig}
-              className="p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
               title="Configurazione Tariffe e Contratto"
             >
               <Settings className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
-              <span className="hidden lg:inline">Tariffe</span>
+              <span>Tariffe</span>
             </button>
 
             {onOpenCloudSync && (
               <button
                 onClick={onOpenCloudSync}
-                className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors relative shrink-0 cursor-pointer ${
-                  isCloudConnected
-                    ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700'
-                }`}
+                className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors relative shrink-0 cursor-pointer"
                 title="Sincronizzazione Cloud (Cloudflare Worker)"
               >
-                <Cloud className={`w-4 h-4 shrink-0 ${isCloudConnected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`} />
-                <span className="hidden lg:inline">Cloud</span>
+                <Cloud className={`w-4 h-4 shrink-0 ${isCloudConnected ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-400'}`} />
+                <span>Cloud</span>
                 {isCloudConnected && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5 ring-2 ring-white dark:ring-slate-900" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
                 )}
               </button>
             )}
 
             <button
               onClick={onOpenAddShift}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-blue-500/10 flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0 cursor-pointer"
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-xs shadow-blue-500/20 whitespace-nowrap shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4 shrink-0" />
               Nuovo Turno
@@ -277,6 +270,17 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        monthTitle={formattedMonth}
+        onPrintPdf={onPrintReport}
+        onExportCsv={onExportCsv}
+        onExportGoogleCalendar={onExportGoogleCalendar || (() => {})}
+        onExportJson={onExportJson || (() => {})}
+        onImportJson={onImportJson}
+      />
     </header>
   );
 };
