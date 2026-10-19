@@ -29,6 +29,7 @@ import { ExpenseFormModal } from './components/ExpenseFormModal';
 import { PrivacyLegalModal } from './components/PrivacyLegalModal';
 import { CloudSyncModal } from './components/CloudSyncModal';
 import { HelpModal } from './components/HelpModal';
+import { ShareShiftsModal } from './components/ShareShiftsModal';
 
 
 import {
@@ -95,7 +96,25 @@ export default function App() {
     setMonthChangeTrigger((prev) => prev + 1);
   };
 
-  const [activeTab, setActiveTab] = useState<'calendar' | 'list' | 'expenses' | 'charts'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'list' | 'expenses' | 'charts'>(() => {
+    try {
+      const saved = localStorage.getItem('app_active_tab');
+      if (saved === 'calendar' || saved === 'list' || saved === 'expenses' || saved === 'charts') {
+        return saved;
+      }
+    } catch {
+      // fallback
+    }
+    return 'calendar';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_active_tab', activeTab);
+    } catch {
+      // fallback
+    }
+  }, [activeTab]);
 
   // Modali
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
@@ -104,6 +123,7 @@ export default function App() {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
   const [shiftToEdit, setShiftToEdit] = useState<Shift | null>(null);
   const [initialDateForShift, setInitialDateForShift] = useState<string | undefined>(undefined);
@@ -279,6 +299,30 @@ export default function App() {
       saveStoredShifts([]);
       setIsConfigOpen(false);
       showNotification('Storico turni svuotato.');
+      checkAndAutoSync(config, [], expenses);
+    }
+  };
+
+  // Elimina turni in un intervallo di date
+  const handleDeleteShiftsInRange = (fromDate: string, toDate: string) => {
+    const toDeleteCount = shifts.filter((s) => s.dataGrezza >= fromDate && s.dataGrezza <= toDate).length;
+    if (toDeleteCount === 0) {
+      alert('Nessun turno trovato nell\'intervallo selezionato.');
+      return;
+    }
+    const [y1, m1, d1] = fromDate.split('-');
+    const [y2, m2, d2] = toDate.split('-');
+    const formattedFrom = `${d1}/${m1}/${y1}`;
+    const formattedTo = `${d2}/${m2}/${y2}`;
+
+    if (confirm(`Confermi di voler eliminare ${toDeleteCount} turno/i compresi tra il ${formattedFrom} e il ${formattedTo}? Le tariffe contrattuali rimarranno salvate.`)) {
+      const remainingShifts = shifts.filter((s) => s.dataGrezza < fromDate || s.dataGrezza > toDate);
+      const recalculated = recalculateAllShifts(remainingShifts, config);
+      setShifts(recalculated);
+      saveStoredShifts(recalculated);
+      setIsConfigOpen(false);
+      showNotification(`${toDeleteCount} turno/i eliminati con successo tra il ${formattedFrom} e il ${formattedTo}.`);
+      checkAndAutoSync(config, recalculated, expenses);
     }
   };
 
@@ -367,6 +411,7 @@ export default function App() {
         onOpenCloudSync={() => setIsCloudSyncOpen(true)}
         onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         onOpenHelp={() => setIsHelpModalOpen(true)}
+        onOpenShare={() => setIsShareModalOpen(true)}
         onExportCsv={() => exportShiftsToCsv(currentMonthShifts, formattedMonthTitle)}
         onPrintReport={() => printMonthlyReport(currentMonthShifts, config, formattedMonthTitle)}
         onExportGoogleCalendar={() => exportShiftsToGoogleCalendar(currentMonthShifts, formattedMonthTitle)}
@@ -556,6 +601,7 @@ export default function App() {
             onEditShift={handleOpenEditShift}
             onEditExpense={handleOpenEditExpense}
             onMonthChange={handleMonthChange}
+            onOpenShare={() => setIsShareModalOpen(true)}
           />
         )}
 
@@ -606,8 +652,10 @@ export default function App() {
             isOpen={isConfigOpen}
             onClose={() => setIsConfigOpen(false)}
             config={config}
+            shifts={shifts}
             onSave={handleSaveConfig}
             onResetShiftsOnly={handleResetShiftsOnly}
+            onDeleteShiftsInRange={handleDeleteShiftsInRange}
             templates={templates}
             onSaveTemplates={(newTemplates) => {
               setTemplates(newTemplates);
@@ -672,6 +720,17 @@ export default function App() {
           <HelpModal
             isOpen={isHelpModalOpen}
             onClose={() => setIsHelpModalOpen(false)}
+          />
+        )}
+
+        {isShareModalOpen && (
+          <ShareShiftsModal
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            shifts={shifts}
+            currentMonthKey={currentMonthKey}
+            config={config}
+            onShowNotification={showNotification}
           />
         )}
       </React.Suspense>

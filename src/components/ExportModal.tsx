@@ -6,6 +6,7 @@ import {
   Calendar,
   FileCode2,
   Sparkles,
+  Share2,
 } from 'lucide-react';
 
 interface ExportModalProps {
@@ -17,6 +18,7 @@ interface ExportModalProps {
   onExportGoogleCalendar: () => void;
   onExportJson: () => void;
   onImportJson?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onOpenShare?: () => void;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -28,6 +30,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onExportGoogleCalendar,
   onExportJson,
   onImportJson,
+  onOpenShare,
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -64,6 +67,38 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         {/* Contenuto a scorrimento verticale che si adatta a ogni schermo mobile */}
         <div className="p-3 sm:p-4 space-y-2 overflow-y-auto overscroll-contain flex-1 no-scrollbar sm:scrollbar-thin">
           
+          {/* Opzione In evidenza: Condividi su WhatsApp & Social */}
+          {onOpenShare && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenShare();
+              }}
+              className="w-full text-left p-3 rounded-xl sm:rounded-2xl border border-emerald-300 dark:border-emerald-800 hover:border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 transition-all flex items-start gap-3 group cursor-pointer shadow-2xs"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-xs shadow-emerald-500/30">
+                <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1 mb-0.5">
+                  <span className="font-bold text-xs sm:text-sm text-emerald-950 dark:text-emerald-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors flex items-center gap-1.5">
+                    Condividi su WhatsApp & Social
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
+                      Novità
+                    </span>
+                  </span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 shrink-0">
+                    Card / Testo
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/80 leading-snug">
+                  Invia i tuoi turni della settimana o del mese via WhatsApp/Telegram o scarica la card grafica HD per amici e famiglia.
+                </p>
+              </div>
+            </button>
+          )}
+
           {/* Opzione 1: PDF / Stampa */}
           <button
             type="button"

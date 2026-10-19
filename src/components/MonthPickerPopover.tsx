@@ -6,6 +6,7 @@ interface MonthPickerPopoverProps {
   onSelectMonth: (monthKey: string) => void;
   isOpen: boolean;
   onClose: () => void;
+  triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
 const MONTH_NAMES = [
@@ -43,6 +44,7 @@ export const MonthPickerPopover: React.FC<MonthPickerPopoverProps> = ({
   onSelectMonth,
   isOpen,
   onClose,
+  triggerRef,
 }) => {
   const [selectedYear, setSelectedYear] = useState<number>(() => {
     const [y] = currentMonthKey.split('-');
@@ -59,21 +61,34 @@ export const MonthPickerPopover: React.FC<MonthPickerPopoverProps> = ({
     }
   }, [isOpen, currentMonthKey]);
 
-  // Gestione click esterno per chiudere
+  // Gestione click esterno per chiudere (escludendo il pulsante trigger) ed Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      // Se il click è avvenuto sul pulsante trigger che apre/chiude il menu, non chiudere qui (ci pensa l'onClick del pulsante)
+      if (triggerRef?.current && triggerRef.current.contains(target)) {
+        return;
+      }
+      if (popoverRef.current && !popoverRef.current.contains(target)) {
+        onClose();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, triggerRef]);
 
   if (!isOpen) return null;
 
@@ -99,8 +114,11 @@ export const MonthPickerPopover: React.FC<MonthPickerPopoverProps> = ({
   };
 
   return (
-    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-80 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 transition-all fade-in">
-      <div ref={popoverRef}>
+    <div
+      ref={popoverRef}
+      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-80 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 transition-all fade-in"
+    >
+      <div>
         {/* Header Calendario: Anno e Frecce */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
           <button

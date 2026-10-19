@@ -79,7 +79,7 @@ export async function loginToCloud(
       body: JSON.stringify({
         action: authMode === 'register' ? 'register' : 'login',
         authMode,
-        userKey: creds.userKey,
+        userKey: creds.userKey.trim(),
         passcode: creds.passcode,
         turnstileToken,
       }),
