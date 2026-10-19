@@ -231,7 +231,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     <li><strong>Dati Contrattuali e Retributivi:</strong> Parametri di tariffa oraria, stipendio lordo/netto teorico, monte ore settimanale, percentuali di maggiorazione oraria, ratei 13ª/14ª, bonus Legge 207/2024 e voci personalizzate.</li>
                     <li><strong>Dati di Turnistica e Presenza:</strong> Date dei turni, orari di entrata/uscita, pause non retribuite, giornate di ferie/permessi retribuiti e note personali di lavoro.</li>
                     <li><strong>Gestione Spese e Rimborsi:</strong> Titoli delle spese, importi in euro, categorie e date (memorizzati unicamente per il bilancio personale dell&apos;utente).</li>
-                    <li><strong>Dati di Autenticazione Sync (opzionali):</strong> Identificativo Utente e Passcode scelti dall&apos;utente per l&apos;accesso al proprio Cloudflare Worker privato.</li>
+                    <li><strong>Dati di Autenticazione Sync (opzionali):</strong> Identificativo Utente e Password personale (memorizzata nel database cloud esclusivamente in formato crittografato e irreversibile tramite algoritmo di hashing, senza conservazione del testo in chiaro).</li>
                   </ul>
                 </div>
 
@@ -306,6 +306,16 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     <li>Tutti i trasferimenti tra il dispositivo dell&apos;utente e l&apos;infrastruttura server avvengono mediante canale crittografato <strong>HTTPS / TLS 1.3</strong>.</li>
                     <li>L&apos;autenticazione è protetta da header di sicurezza HTTP dedicati (<code>X-User-Key</code>, <code>X-Passcode</code>) per verificare l&apos;identità ed evitare accessi non autorizzati.</li>
                   </ul>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <KeyRound className="w-4 h-4 text-emerald-500" />
+                    Protezione Crittografica delle Credenziali (Hashing Irreversibile)
+                  </strong>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11.5px]">
+                    A tutela della massima sicurezza e riservatezza dell&apos;account, la password dell&apos;utente <strong>non viene mai memorizzata in chiaro</strong> nel database cloud. All&apos;atto della registrazione o del login, le credenziali vengono trasformate in un&apos;impronta digitale crittografica irreversibile (mediante standard <strong>SHA-256</strong> tramite Web Crypto API native) prima del salvataggio nel database. In questo modo, l&apos;accesso ai dati rimane protetto e la password reale non è consultabile né recuperabile neppure dall&apos;amministratore dell&apos;infrastruttura.
+                  </p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
