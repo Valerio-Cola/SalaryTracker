@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Shift, Expense } from '../types';
-import { Plus, Moon, Clock, Receipt, ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarDays, TrendingUp, Share2 } from 'lucide-react';
+import { Plus, Moon, Clock, Receipt, ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarDays, TrendingUp } from 'lucide-react';
 import { checkDayTypeInfo } from '../utils/holidays';
 
 interface CalendarViewProps {
@@ -13,7 +13,6 @@ interface CalendarViewProps {
   onEditShift: (shift: Shift) => void;
   onEditExpense: (expense: Expense) => void;
   onMonthChange?: (monthKey: string) => void;
-  onOpenShare?: () => void;
 }
 
 interface CalendarGridCell {
@@ -66,26 +65,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onEditShift,
   onEditExpense,
   onMonthChange,
-  onOpenShare,
 }) => {
-  // Modalità Vista: 'month' (Mensile) oppure 'week' (Settimanale) con persistenza in localStorage
-  const [viewMode, setViewMode] = useState<'month' | 'week'>(() => {
-    try {
-      const saved = localStorage.getItem('calendar_view_mode');
-      if (saved === 'month' || saved === 'week') return saved;
-    } catch {
-      // fallback
-    }
-    return 'month';
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('calendar_view_mode', viewMode);
-    } catch {
-      // fallback
-    }
-  }, [viewMode]);
+  // Modalità Vista: 'month' (Mensile) oppure 'week' (Settimanale)
+  const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
 
   // Mese & Anno correnti selezionati dall'header
   const [yearStr, monthStr] = currentMonthKey.split('-');
@@ -287,7 +269,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
         </div>
 
-        {/* Selettore Modalità Vista (Mese / Settimana) & Condividi */}
+        {/* Selettore Modalità Vista (Mese / Settimana) */}
         <div className="flex items-center gap-2">
           <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center border border-slate-200 dark:border-slate-700">
             <button
@@ -313,18 +295,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <span>Settimana</span>
             </button>
           </div>
-
-          {onOpenShare && (
-            <button
-              type="button"
-              onClick={onOpenShare}
-              className="px-2.5 sm:px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-              title="Condividi i tuoi turni su WhatsApp o salva la card grafica"
-            >
-              <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span className="hidden sm:inline">Condividi</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -382,24 +352,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             </div>
           </div>
 
-          {/* Intestazione Giorni della Settimana a Nuvoletta (stile vista mensile, solo desktop) */}
-          <div className="hidden md:grid grid-cols-7 gap-3 sm:gap-2 mb-3 text-center">
-            {weekDayNames.map((w, idx) => (
-              <div
-                key={w}
-                className={`text-xs sm:text-sm font-extrabold py-1.5 px-1 rounded-full transition-all border shadow-2xs ${
-                  idx === 6
-                    ? 'text-rose-800 dark:text-rose-300 bg-rose-100/90 dark:bg-rose-950/60 border-rose-200/80 dark:border-rose-900/60'
-                    : idx === 5
-                    ? 'text-blue-800 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/60 border-blue-200/80 dark:border-blue-900/60'
-                    : 'text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700/60'
-                }`}
-              >
-                {w}
-              </div>
-            ))}
-          </div>
-
           {/* Griglia a 7 Giorni della Settimana */}
           <div className="grid grid-cols-1 md:grid-cols-7 gap-3 sm:gap-2 items-stretch">
             {weekDaysList.map((day) => {
@@ -413,7 +365,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 <div
                   key={day.dateIso}
                   onClick={() => onSelectDate(day.dateIso)}
-                  className={`p-2 sm:p-2.5 lg:p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group min-w-0 ${
+                  className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group min-w-0 ${
                     isToday
                       ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/50 ring-2 ring-blue-400/30 shadow-xs'
                       : isHoliday
@@ -427,10 +379,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 >
                   {/* Testata Giorno Settimana */}
                   <div>
-                    <div className="flex items-center justify-between gap-1 mb-2">
-                      <div className="flex items-center gap-1.5 min-w-0 shrink">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
                         <span
-                          className={`w-6 h-6 sm:w-7 sm:h-7 text-xs font-black flex items-center justify-center rounded-lg sm:rounded-xl shrink-0 ${
+                          className={`w-7 h-7 text-xs font-black flex items-center justify-center rounded-xl shrink-0 ${
                             isToday
                               ? 'bg-blue-600 text-white shadow-xs'
                               : isHoliday
@@ -442,26 +394,25 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         >
                           {day.dayNumber}
                         </span>
-                        {/* Su desktop nascosto perché ci sono le nuvolette dei giorni sopra la colonna */}
-                        <div className="min-w-0 md:hidden">
-                          <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider truncate">
+                        <div>
+                          <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                             {day.dayNameShort}
                           </div>
-                          <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 capitalize truncate">
+                          <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 capitalize">
                             {day.monthNameShort}
                           </div>
                         </div>
                       </div>
 
-                      {/* Pulsanti Rapidi Aggiungi: visibili sempre su mobile, su desktop solo al passaggio del mouse (hover) */}
-                      <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+                      {/* Pulsanti Rapidi Aggiungi */}
+                      <div className="flex items-center gap-0.5">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onSelectDate(day.dateIso);
                           }}
-                          className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
+                          className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                           title="Aggiungi turno"
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -472,7 +423,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             e.stopPropagation();
                             onAddExpense(day.dateIso);
                           }}
-                          className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
+                          className="p-1 text-slate-500 hover:text-rose-600 hover:bg-rose-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                           title="Aggiungi spesa"
                         >
                           <Receipt className="w-3.5 h-3.5" />

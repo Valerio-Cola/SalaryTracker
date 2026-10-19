@@ -47,9 +47,6 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
 
   const totalNotturne = shifts.reduce((acc, curr) => acc + curr.oreNotturne, 0);
   const totalSupplementari = shifts.reduce((acc, curr) => acc + curr.oreSupplementari, 0);
-  const totalFestivoOre = shifts
-    .filter((s) => (s.tipoGiorno === 'domenica' || s.tipoGiorno === 'festivo') && s.tipoGiorno !== 'ferie' && !s.isFerie)
-    .reduce((acc, curr) => acc + curr.oreTotali, 0);
 
   const totalBase = shifts.reduce((acc, curr) => acc + curr.guadagnoBase, 0);
   const totalNotteExtra = shifts.reduce((acc, curr) => acc + curr.guadagnoNotturno, 0);
@@ -350,7 +347,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
             € {totalBase.toFixed(2)}
           </div>
-          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-semibold text-right">
+          <div className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-semibold">
             {totalOre.toFixed(1)}h {totalOreFerie > 0 ? `(incluso ${totalOreFerie.toFixed(1)}h ferie)` : ''} × €{config.pagaBaseOraria.toFixed(2)}/h
           </div>
         </div>
@@ -365,8 +362,8 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           <div className="text-lg sm:text-xl font-black text-indigo-950 dark:text-indigo-100 mt-0.5">
             + € {totalNotteExtra.toFixed(2)}
           </div>
-          <div className="text-sm font-bold text-indigo-900 dark:text-indigo-300 mt-1 text-right">
-            {totalNotturne.toFixed(1)}h
+          <div className="text-xs text-indigo-900 dark:text-indigo-300 mt-1 font-semibold">
+            {totalNotturne.toFixed(1)}h notturne
           </div>
         </div>
 
@@ -380,8 +377,8 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           <div className="text-lg sm:text-xl font-black text-rose-950 dark:text-rose-100 mt-0.5">
             + € {totalFestivoExtra.toFixed(2)}
           </div>
-          <div className="text-sm font-bold text-rose-900 dark:text-rose-300 mt-1 text-right">
-            {totalFestivoOre.toFixed(1)}h
+          <div className="text-xs text-rose-900 dark:text-rose-300 mt-1 font-semibold">
+            Festivi e domeniche
           </div>
         </div>
 
@@ -395,8 +392,8 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           <div className="text-lg sm:text-xl font-black text-emerald-950 dark:text-emerald-100 mt-0.5">
             + € {totalSuppExtra.toFixed(2)}
           </div>
-          <div className="text-sm font-bold text-emerald-900 dark:text-emerald-300 mt-1 text-right">
-            {totalSupplementari.toFixed(1)}h
+          <div className="text-xs text-emerald-900 dark:text-emerald-300 mt-1 font-semibold">
+            {totalSupplementari.toFixed(1)}h oltre soglia sett.
           </div>
         </div>
 
@@ -411,7 +408,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             <div className="text-lg sm:text-xl font-black text-amber-950 dark:text-amber-100 mt-0.5">
               + € {totalMaggiorazioniOrarieExtra.toFixed(2)}
             </div>
-            <div className="text-xs sm:text-sm text-amber-900 dark:text-amber-300 mt-1 font-semibold text-right">
+            <div className="text-xs text-amber-900 dark:text-amber-300 mt-1 font-semibold">
               Indennità orarie extra
             </div>
           </div>

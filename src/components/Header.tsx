@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Calendar,
   Plus,
@@ -12,7 +12,6 @@ import {
   Moon,
   Cloud,
   HelpCircle,
-  Share2,
 } from 'lucide-react';
 import { MonthPickerPopover } from './MonthPickerPopover';
 import { ExportModal } from './ExportModal';
@@ -25,7 +24,6 @@ interface HeaderProps {
   onOpenCloudSync?: () => void;
   onOpenPrivacy?: () => void;
   onOpenHelp?: () => void;
-  onOpenShare?: () => void;
   onExportCsv: () => void;
   onPrintReport: () => void;
   onExportGoogleCalendar?: () => void;
@@ -45,7 +43,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenConfig,
   onOpenCloudSync,
   onOpenHelp,
-  onOpenShare,
   onExportCsv,
   onPrintReport,
   onExportGoogleCalendar,
@@ -59,7 +56,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const monthPickerTriggerRef = useRef<HTMLButtonElement>(null);
 
   // Parsing del mese corrente (es. "2026-08")
   const [yearStr, monthStr] = currentMonthKey.split('-');
@@ -151,7 +147,6 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              ref={monthPickerTriggerRef}
               onClick={() => setIsPickerOpen((v) => !v)}
               className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 hover:bg-white dark:hover:bg-slate-700/70 rounded-lg transition-colors cursor-pointer group"
               title="Apri selettore Mese e Anno"
@@ -185,7 +180,6 @@ export const Header: React.FC<HeaderProps> = ({
               onSelectMonth={onMonthChange}
               isOpen={isPickerOpen}
               onClose={() => setIsPickerOpen(false)}
-              triggerRef={monthPickerTriggerRef}
             />
           </div>
 
@@ -243,17 +237,6 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {hasShifts && onOpenShare && (
-              <button
-                onClick={onOpenShare}
-                className="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 text-emerald-700 dark:text-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-xl border border-emerald-200 dark:border-emerald-800 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-colors shrink-0 cursor-pointer shadow-2xs"
-                title="Condividi turni su WhatsApp o salva card grafica"
-              >
-                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="hidden min-[420px]:inline">Condividi</span>
-              </button>
-            )}
-
             <button
               onClick={onOpenConfig}
               className="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-colors shrink-0 cursor-pointer"
@@ -301,7 +284,6 @@ export const Header: React.FC<HeaderProps> = ({
         onExportGoogleCalendar={onExportGoogleCalendar || (() => {})}
         onExportJson={onExportJson || (() => {})}
         onImportJson={onImportJson}
-        onOpenShare={onOpenShare}
       />
     </header>
   );

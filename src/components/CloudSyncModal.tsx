@@ -32,7 +32,7 @@ import {
 } from '../utils/syncService';
 import { DEFAULT_CONFIG, DEFAULT_TEMPLATES } from '../utils/storage';
 import { ContractConfig, Shift, QuickTemplate } from '../types';
-import { TurnstileWidget, TurnstileWidgetRef } from './TurnstileWidget';
+import { TurnstileWidget } from './TurnstileWidget';
 
 export interface PasswordStrength {
   score: number; // 0..4
@@ -172,16 +172,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>('');
-  const turnstileTokenRef = useRef<string>('');
-  const turnstileRef = useRef<TurnstileWidgetRef>(null);
-
-  const updateTurnstileToken = (token: string) => {
-    turnstileTokenRef.current = token;
-    setTurnstileToken(token);
-  };
-
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<{
     userKey?: boolean;
@@ -231,8 +223,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       setCreds(stored);
       setIsLoggedIn(Boolean(stored.workerUrl && stored.userKey && stored.passcode));
       setStatusMessage(null);
-      updateTurnstileToken('');
-      turnstileRef.current?.reset();
+      setTurnstileToken('');
       setAcceptedTerms(false);
       setValidationErrors({});
       setIsShaking(false);
@@ -257,9 +248,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       terms?: boolean;
     } = {};
 
-    const cleanUser = creds.userKey ? creds.userKey.trim() : '';
-
-    if (!cleanUser) {
+    if (!creds.userKey || !creds.userKey.trim()) {
       errors.userKey = true;
     }
     if (!creds.passcode || !creds.passcode.trim()) {
@@ -311,31 +300,11 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     setLoading(true);
     setStatusMessage(null);
 
-    // Se il token Turnstile è in fase di generazione, attendi un istante
-    let tokenToSend = turnstileTokenRef.current;
-    if (!tokenToSend && typeof window !== 'undefined' && window.turnstile) {
-      setStatusMessage({
-        type: 'info',
-        text: 'Verifica di sicurezza anti-bot in corso, attendi un istante...',
-      });
-      const startWait = Date.now();
-      while (!tokenToSend && Date.now() - startWait < 3000) {
-        await new Promise((r) => setTimeout(r, 150));
-        tokenToSend = turnstileTokenRef.current;
-      }
-    }
-
     const effectiveWorkerUrl = (creds.workerUrl && creds.workerUrl.trim()) ? creds.workerUrl.trim() : DEFAULT_WORKER_URL;
-    const credsToTest: SyncCredentials = { ...creds, userKey: cleanUser, workerUrl: effectiveWorkerUrl, autoSync: true };
+    const credsToTest: SyncCredentials = { ...creds, workerUrl: effectiveWorkerUrl, autoSync: true };
 
     // Effettua login/auth passando authMode ('login' o 'register')
-    const res = await loginToCloud(credsToTest, tokenToSend, authMode);
-
-    // IMPORTANTE: il token Cloudflare Turnstile è rigorosamente MONOUSO.
-    // Una volta inviato e verificato via /siteverify dal Worker, il token non può più essere utilizzato.
-    // Lo invalidiamo subito e chiediamo al widget Turnstile di rigenerarne uno fresco per eventuali successivi tentativi.
-    updateTurnstileToken('');
-    turnstileRef.current?.reset();
+    const res = await loginToCloud(credsToTest, turnstileToken, authMode);
     
     if (res.success) {
       if (res.data) {
@@ -766,8 +735,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       setAuthMode('login');
                       setStatusMessage(null);
                       setValidationErrors({});
-                      updateTurnstileToken('');
-                      turnstileRef.current?.reset();
                     }}
                     className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       authMode === 'login'
@@ -785,8 +752,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       setAuthMode('register');
                       setStatusMessage(null);
                       setValidationErrors({});
-                      updateTurnstileToken('');
-                      turnstileRef.current?.reset();
                     }}
                     className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       authMode === 'register'
@@ -822,7 +787,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       onChange={(e) => {
                         setCreds({ ...creds, userKey: e.target.value });
                         if (validationErrors.userKey) setValidationErrors((prev) => ({ ...prev, userKey: false }));
-                        if (statusMessage) setStatusMessage(null);
                       }}
                       className={`w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden transition-all ${
                         validationErrors.userKey
@@ -859,7 +823,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                         onChange={(e) => {
                           setCreds({ ...creds, passcode: e.target.value });
                           if (validationErrors.passcode) setValidationErrors((prev) => ({ ...prev, passcode: false }));
-                          if (statusMessage) setStatusMessage(null);
                         }}
                         className={`w-full pl-2.5 pr-8 py-1.5 bg-white dark:bg-slate-800 border rounded-lg text-xs text-slate-900 dark:text-white focus:outline-hidden transition-all ${
                           validationErrors.passcode
@@ -1017,10 +980,9 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     Verifica di sicurezza anti-bot prima dell&apos;accesso
                   </div>
                   <TurnstileWidget
-                    ref={turnstileRef}
-                    onVerify={(token) => updateTurnstileToken(token)}
-                    onExpire={() => updateTurnstileToken('')}
-                    onError={() => updateTurnstileToken('')}
+                    onVerify={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken('')}
+                    onError={() => setTurnstileToken('')}
                   />
                 </div>
               </div>
@@ -1069,15 +1031,11 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               className={`p-3 rounded-xl text-xs flex items-start gap-2.5 transition-all shadow-sm ${
                 statusMessage.type === 'success'
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20'
-                  : statusMessage.type === 'info'
-                  ? 'bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20'
                   : 'bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/30'
               }`}
             >
               {statusMessage.type === 'success' ? (
                 <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-              ) : statusMessage.type === 'info' ? (
-                <Loader2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5 animate-spin" />
               ) : (
                 <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               )}

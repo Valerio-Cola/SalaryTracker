@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ContractConfig, CustomAllowance, CustomHourlySurcharge, QuickTemplate, Shift } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { ContractConfig, CustomAllowance, CustomHourlySurcharge, QuickTemplate } from '../types';
 import { DEFAULT_TEMPLATES } from '../utils/storage';
 import {
   X,
@@ -86,10 +86,8 @@ interface ContractSetupModalProps {
   isOpen: boolean;
   onClose: () => void;
   config: ContractConfig;
-  shifts?: Shift[];
   onSave: (newConfig: ContractConfig, newTemplates?: QuickTemplate[]) => void;
   onResetShiftsOnly: () => void;
-  onDeleteShiftsInRange?: (fromDate: string, toDate: string) => void;
   templates: QuickTemplate[];
   onSaveTemplates: (newTemplates: QuickTemplate[]) => void;
 }
@@ -98,10 +96,8 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
   isOpen,
   onClose,
   config,
-  shifts = [],
   onSave,
   onResetShiftsOnly,
-  onDeleteShiftsInRange,
   templates,
   onSaveTemplates,
 }) => {
@@ -112,30 +108,6 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
   const [localTemplates, setLocalTemplates] = useState<QuickTemplate[]>(templates || []);
   const [successMsg, setSuccessMsg] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('sec-generale');
-
-  // Calcolo delle date dei turni per la cancellazione mirata
-  const sortedShiftDates = useMemo(() => {
-    if (!shifts || shifts.length === 0) return [];
-    return Array.from(new Set(shifts.map((s) => s.dataGrezza).filter(Boolean))).sort();
-  }, [shifts]);
-
-  const earliestDate = sortedShiftDates[0] || '';
-  const latestDate = sortedShiftDates[sortedShiftDates.length - 1] || '';
-
-  const [rangeFrom, setRangeFrom] = useState<string>(earliestDate);
-  const [rangeTo, setRangeTo] = useState<string>(latestDate);
-
-  useEffect(() => {
-    if (earliestDate) {
-      setRangeFrom((prev) => (prev && prev >= earliestDate ? prev : earliestDate));
-      setRangeTo((prev) => (prev ? prev : latestDate || earliestDate));
-    }
-  }, [earliestDate, latestDate]);
-
-  const shiftsInRangeCount = useMemo(() => {
-    if (!shifts || !rangeFrom || !rangeTo) return 0;
-    return shifts.filter((s) => s.dataGrezza >= rangeFrom && s.dataGrezza <= rangeTo).length;
-  }, [shifts, rangeFrom, rangeTo]);
 
   // Ref per ScrollSpy e auto-scroll dell'indice
   const formRef = useRef<HTMLFormElement>(null);
@@ -1811,116 +1783,22 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
           </div>
 
           {/* 7. MANUTENZIONE & RESET */}
-          <div id="sec-reset" className="pt-3 border-t border-slate-200 dark:border-slate-800 scroll-mt-2 space-y-3">
-            <h3 className="text-[10.5px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+          <div id="sec-reset" className="pt-3 border-t border-slate-200 dark:border-slate-800 scroll-mt-2">
+            <h3 className="text-[10.5px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <RotateCcw className="w-3.5 h-3.5 text-rose-500" /> Manutenzione & Reset Storico
             </h3>
-
-            {(!shifts || shifts.length === 0) ? (
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
-                Nessun turno salvato nello storico da eliminare.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Info Primo Turno e Totale */}
-                <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 rounded-xl text-xs">
-                  <div className="flex items-center gap-1.5 text-blue-900 dark:text-blue-200 font-medium">
-                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                    <span>
-                      Primo turno registrato: <strong>{earliestDate ? `${earliestDate.split('-')[2]}/${earliestDate.split('-')[1]}/${earliestDate.split('-')[0]}` : 'N/D'}</strong>
-                    </span>
-                  </div>
-                  <span className="text-slate-600 dark:text-slate-400 font-semibold text-[11px]">
-                    Totale turni memorizzati: {shifts.length}
-                  </span>
-                </div>
-
-                {/* Blocco 1: Cancellazione Mirata per Intervallo di Date */}
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Cancella Turni in un Periodo a Scelta
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Seleziona l'intervallo di date da rimuovere. È possibile selezionare come data minima solo dal primo giorno in cui è presente un turno (
-                      {earliestDate ? `${earliestDate.split('-')[2]}/${earliestDate.split('-')[1]}/${earliestDate.split('-')[0]}` : ''}).
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Dal giorno (minimo {earliestDate ? `${earliestDate.split('-')[2]}/${earliestDate.split('-')[1]}/${earliestDate.split('-')[0]}` : ''}):
-                      </label>
-                      <input
-                        type="date"
-                        value={rangeFrom}
-                        min={earliestDate}
-                        max={rangeTo || latestDate}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val && val < earliestDate) {
-                            setRangeFrom(earliestDate);
-                          } else {
-                            setRangeFrom(val);
-                          }
-                        }}
-                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Al giorno:
-                      </label>
-                      <input
-                        type="date"
-                        value={rangeTo}
-                        min={rangeFrom || earliestDate}
-                        max={latestDate}
-                        onChange={(e) => setRangeTo(e.target.value)}
-                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      {shiftsInRangeCount > 0 ? (
-                        <span className="text-rose-600 dark:text-rose-400 font-bold">
-                          ⚠️ Verranno eliminati {shiftsInRangeCount} turno/i
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">Nessun turno trovato in questo intervallo</span>
-                      )}
-                    </span>
-
-                    <button
-                      type="button"
-                      disabled={shiftsInRangeCount === 0 || !rangeFrom || !rangeTo}
-                      onClick={() => onDeleteShiftsInRange?.(rangeFrom, rangeTo)}
-                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Elimina {shiftsInRangeCount > 0 ? `${shiftsInRangeCount} Turni` : 'Turni'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Blocco 2: Reset Completo */}
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Oppure cancella <strong>TUTTI i {shifts.length} turni</strong> presenti nello storico:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={onResetShiftsOnly}
-                    className="px-3 py-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg font-bold flex items-center gap-1 transition-colors border border-rose-200 dark:border-rose-900/60 cursor-pointer self-start sm:self-auto shrink-0"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" /> Svuota Tutto lo Storico
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs">
+              <span className="text-slate-600 dark:text-slate-400">
+                Vuoi svuotare i turni salvati sul calendario senza toccare le tariffe?
+              </span>
+              <button
+                type="button"
+                onClick={onResetShiftsOnly}
+                className="px-3 py-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg font-medium flex items-center gap-1 transition-colors border border-rose-200 dark:border-rose-900/60 cursor-pointer self-start sm:self-auto"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Svuota Turni
+              </button>
+            </div>
           </div>
         </form>
 

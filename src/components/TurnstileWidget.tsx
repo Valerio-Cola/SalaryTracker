@@ -1,10 +1,6 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-export interface TurnstileWidgetRef {
-  reset: () => void;
-}
-
-export interface TurnstileWidgetProps {
+interface TurnstileWidgetProps {
   siteKey?: string;
   onVerify: (token: string) => void;
   onError?: () => void;
@@ -33,28 +29,17 @@ declare global {
 // Key specifica del tuo progetto Turnstile
 const DEFAULT_SITE_KEY = '0x4AAAAAAEO0zS_26uGaZDVQ';
 
-export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetProps>(({
+export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   siteKey,
   onVerify,
   onError,
   onExpire,
   theme = 'auto',
-}, ref) => {
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeKey = siteKey || (import.meta as any).env?.VITE_TURNSTILE_SITE_KEY || DEFAULT_SITE_KEY;
-  const widgetIdRef = useRef<string | null>(null);
 
-  useImperativeHandle(ref, () => ({
-    reset() {
-      if (typeof window !== 'undefined' && window.turnstile && widgetIdRef.current) {
-        try {
-          window.turnstile.reset(widgetIdRef.current);
-        } catch (e) {
-          console.warn('Turnstile reset error', e);
-        }
-      }
-    },
-  }), []);
+  const widgetIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const scriptId = 'cf-turnstile-script';
@@ -97,14 +82,16 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
       script.addEventListener('load', renderWidget);
     }
     
+    // Cleanup - ma attenzione a non rimuovere il div container
     return () => {
+      // Non resettiamo qui per evitare loop continui se l'app si ricarica spesso
       if (script && !window.turnstile) {
-        script.removeEventListener('load', renderWidget);
+         script.removeEventListener('load', renderWidget);
       }
     };
-  }, [activeKey, theme, onVerify, onError, onExpire]);
+    // Disabilitiamo eslint per le dipendenze per non causare re-render quando onVerify cambia
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeKey, theme]);
 
   return <div ref={containerRef} className="my-2 flex justify-center" />;
-});
-
-TurnstileWidget.displayName = 'TurnstileWidget';
+};
