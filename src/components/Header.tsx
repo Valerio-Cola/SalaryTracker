@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Calendar,
   Plus,
@@ -56,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const monthPickerTriggerRef = useRef<HTMLButtonElement>(null);
 
   // Parsing del mese corrente (es. "2026-08")
   const [yearStr, monthStr] = currentMonthKey.split('-');
@@ -147,6 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              ref={monthPickerTriggerRef}
               onClick={() => setIsPickerOpen((v) => !v)}
               className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 hover:bg-white dark:hover:bg-slate-700/70 rounded-lg transition-colors cursor-pointer group"
               title="Apri selettore Mese e Anno"
@@ -180,6 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
               onSelectMonth={onMonthChange}
               isOpen={isPickerOpen}
               onClose={() => setIsPickerOpen(false)}
+              triggerRef={monthPickerTriggerRef}
             />
           </div>
 
