@@ -1,0 +1,24 @@
+# Work & Salary Tracker
+
+> Cruscotto personale per la gestione dei turni lavorativi, stima dello stipendio netto e bilancio spese.
+
+Questo sito è una web application (SPA) pensata per la gestione finanziaria e lavorativa. 
+Permette agli utenti di tenere traccia dei propri turni di lavoro, calcolare automaticamente 
+le stime dello stipendio mensile e monitorare le uscite.
+
+## Funzionalità e Casi d'Uso
+- **Calcolo Stipendio**: Stima automatica del netto in base alle ore ordinarie lavorate, straordinari e maggiorazioni.
+- **Calendario Turni**: Tracciamento dei turni diurni e notturni.
+- **Gestione Spese**: Monitoraggio delle uscite mensili per un bilancio chiaro.
+- **Cloud Sync**: I dati vengono salvati sul dispositivo, con possibilità di sincronizzazione cloud privata tra più device.
+
+## Dettagli Tecnici
+- **Stack Frontend**: React 18, TypeScript, Tailwind CSS, Vite.
+- **Stack Backend**: Architettura Serverless basata su Cloudflare Workers e Cloudflare KV per la sincronizzazione cloud (multi-dispositivo).
+- **Sicurezza**: Integrazione con Cloudflare Turnstile per la prevenzione anti-bot durante il login e il sync.
+- **Performance**: Edge computing, PWA-ready, caricamento istantaneo (Single Page Application).
+
+## Informazioni Autore
+- **Creatore**: Valerio Cola
+- **Website Principale**: [valeriocola.it](https://valeriocola.it)
+- **Tipo di Progetto**: Esperimento di sviluppo web assistito tramite Google AI Studio, focalizzato sull'esplorazione di architetture full-stack moderne.

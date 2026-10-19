@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  font-size: 16.5px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+svg,
+path,
+g,
+rect,
+circle,
+.recharts-surface,
+.recharts-layer,
+.recharts-sector,
+.recharts-bar-rectangle,
+.recharts-pie,
+.recharts-wrapper,
+.recharts-container,
+.recharts-legend-item,
+.recharts-active-shape,
+.recharts-tooltip-wrapper {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none;
+}
+
+svg:focus,
+path:focus,
+g:focus,
+rect:focus,
+circle:focus,
+.recharts-surface:focus,
+.recharts-layer:focus,
+.recharts-wrapper:focus,
+.recharts-sector:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+svg:focus-visible,
+path:focus-visible,
+g:focus-visible,
+rect:focus-visible,
+circle:focus-visible,
+.recharts-surface:focus-visible,
+.recharts-layer:focus-visible,
+.recharts-wrapper:focus-visible,
+.recharts-sector:focus-visible {
+  outline: none !important;
+}
+
+/* 
+ * Scrollbar personalizzate per PC Desktop (attive solo con mouse/trackpad, non su dispositivi mobile touch).
+ * Utilizza la media query standard (hover: hover) and (pointer: fine) per preservare lo scrolling nativo su smartphone.
+ */
+@media (hover: hover) and (pointer: fine) {
+  /* Standard per browser moderni (Firefox, Chrome 121+, Safari 17.2+) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  html.dark * {
+    scrollbar-color: #475569 transparent;
+  }
+
+  /* WebKit & Chromium (Chrome, Edge, Safari, Opera) */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+
+  /* Modalità Notte (Dark Theme) */
+  html.dark *::-webkit-scrollbar-thumb {
+    background-color: #475569;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  html.dark *::-webkit-scrollbar-thumb:hover {
+    background-color: #64748b;
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-8px);
+  }
+  40%, 80% {
+    transform: translateX(8px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.45s ease-in-out;
+}
+
+/* Rimuove le freccette (spinner su/giù) da tutti i campi numerici per tutti i browser */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+/* Nasconde visivamente la barra di scorrimento preservando il movimento touch e rotella */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
