@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agenticresourcediscovery.org/schemas/v0.9/ai-catalog.json",
+  "specVersion": "0.9.1",
+  "name": "Salary Tracker SK AI Catalog",
+  "description": "Catalogo delle risorse per agenti AI di Salary Tracker SK (Work & Salary Tracker).",
+  "host": {
+    "displayName": "Salary Tracker SK",
+    "url": "https://salarytracker.valeriocola.it",
+    "identifier": "did:web:salarytracker.valeriocola.it"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:salarytracker.valeriocola.it:app:salary-tracker",
+      "displayName": "Work & Salary Tracker",
+      "description": "Web app gratuita per la gestione dei turni lavorativi, calcolo dello stipendio netto con maggiorazioni e monitoraggio del bilancio spese.",
+      "type": "text/markdown",
+      "url": "https://salarytracker.valeriocola.it/llms.txt",
+      "representativeQueries": [
+        "calcolo stipendio netto mensile con straordinari e maggiorazioni",
+        "gestione turni di lavoro diurni e notturni",
+        "tracciamento spese e bilancio personale",
+        "esportazione turni in CSV e backup dati"
+      ]
+    }
+  ]
+}
