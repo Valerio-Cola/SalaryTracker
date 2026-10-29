@@ -1,10 +1,11 @@
-import { ContractConfig, Shift, QuickTemplate, Expense } from '../types';
+import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent } from '../types';
 import { computeShiftData } from './calculator';
 
 const CONFIG_KEY = 'bk_config_v2';
 const SHIFTS_KEY = 'bk_storico_v2';
 const TEMPLATES_KEY = 'bk_templates_v2';
 const EXPENSES_KEY = 'bk_expenses_v2';
+const EVENTS_KEY = 'bk_events_v2';
 
 export const DEFAULT_CONFIG: ContractConfig = {
   oreSettimanali: 0,
@@ -212,4 +213,93 @@ export function saveStoredExpenses(expenses: Expense[]): void {
   } catch (e) {
     console.error('Error saving expenses to localStorage', e);
   }
+}
+
+export function getStoredEvents(): AppEvent[] {
+  try {
+    const raw = localStorage.getItem(EVENTS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error reading events from localStorage', e);
+    return [];
+  }
+}
+
+export function saveStoredEvents(events: AppEvent[]): void {
+  try {
+    localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+  } catch (e) {
+    console.error('Error saving events to localStorage', e);
+  }
+}
+
+export function generateSampleEvents(): AppEvent[] {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+
+  // Alcuni eventi realistici posizionati attorno a oggi e nei giorni del mese
+  const dayNum = now.getDate();
+  const pad = (n: number) => String(Math.max(1, Math.min(28, n))).padStart(2, '0');
+
+  return [
+    {
+      id: 'ev-sample-1',
+      titolo: 'Visita medica di controllo',
+      data: `${year}-${month}-${pad(dayNum + 1)}`,
+      oraInizio: '09:30',
+      oraFine: '10:30',
+      tuttoIlGiorno: false,
+      categoria: 'salute',
+      colore: 'emerald',
+      luogo: 'Poliambulatorio Centrale',
+      note: 'Portare impegnativa e referti precedenti',
+    },
+    {
+      id: 'ev-sample-2',
+      titolo: 'Riunione pianificazione turni',
+      data: `${year}-${month}-${pad(dayNum + 3)}`,
+      oraInizio: '15:00',
+      oraFine: '16:00',
+      tuttoIlGiorno: false,
+      categoria: 'lavoro',
+      colore: 'blue',
+      luogo: 'Ufficio Direzione',
+      note: 'Discutere disponibilità per le festività',
+    },
+    {
+      id: 'ev-sample-3',
+      titolo: 'Scadenza pagamento bolletta luce',
+      data: `${year}-${month}-${pad(dayNum + 5)}`,
+      tuttoIlGiorno: true,
+      categoria: 'scadenza',
+      colore: 'rose',
+      note: 'Bolletta Enel Servizio Elettrico',
+    },
+    {
+      id: 'ev-sample-4',
+      titolo: 'Cena compleanno con amici',
+      data: `${year}-${month}-${pad(dayNum + 8)}`,
+      oraInizio: '20:30',
+      oraFine: '23:30',
+      tuttoIlGiorno: false,
+      categoria: 'svago',
+      colore: 'purple',
+      luogo: 'Ristorante Il Borgo',
+      note: 'Prenotazione a nome Marco',
+    },
+    {
+      id: 'ev-sample-5',
+      titolo: 'Revisione auto',
+      data: `${year}-${month}-${pad(dayNum + 14)}`,
+      oraInizio: '10:00',
+      oraFine: '11:00',
+      tuttoIlGiorno: false,
+      categoria: 'commissione',
+      colore: 'amber',
+      luogo: 'Officina Rossi',
+      note: 'Controllo fumi e tagliando annuale',
+    },
+  ];
 }

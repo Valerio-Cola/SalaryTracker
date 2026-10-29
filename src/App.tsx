@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ContractConfig, Shift, QuickTemplate, Expense } from './types';
+import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent } from './types';
 import {
   getStoredConfig,
   saveStoredConfig,
@@ -9,7 +9,10 @@ import {
   saveStoredTemplates,
   getStoredExpenses,
   saveStoredExpenses,
+  getStoredEvents,
+  saveStoredEvents,
   generateSampleShifts,
+  generateSampleEvents,
   DEFAULT_CONFIG,
 } from './utils/storage';
 import { recalculateAllShifts } from './utils/calculator';
@@ -18,24 +21,27 @@ import { getSyncCredentials, pushToCloud, pullFromCloud } from './utils/syncServ
 
 import { Header } from './components/Header';
 import { MonthSummaryCard } from './components/MonthSummaryCard';
+import { EventsSummaryCard } from './components/EventsSummaryCard';
 import { CalendarView } from './components/CalendarView';
 import { ShiftList } from './components/ShiftList';
+import { EventsList } from './components/EventsList';
 import { ExpensesList } from './components/ExpensesList';
 
 import { ChartsView } from './components/ChartsView';
 import { ContractSetupModal } from './components/ContractSetupModal';
 import { ShiftFormModal } from './components/ShiftFormModal';
+import { EventFormModal } from './components/EventFormModal';
 import { ExpenseFormModal } from './components/ExpenseFormModal';
 import { PrivacyLegalModal } from './components/PrivacyLegalModal';
 import { CloudSyncModal } from './components/CloudSyncModal';
 import { HelpModal } from './components/HelpModal';
-
 
 import {
   Calendar,
   List,
   BarChart2,
   Upload,
+  CalendarCheck2,
   Download,
   Info,
   CheckCircle2,
@@ -58,6 +64,26 @@ export default function App() {
   });
   const [templates, setTemplates] = useState<QuickTemplate[]>(getStoredTemplates());
   const [expenses, setExpenses] = useState<Expense[]>(getStoredExpenses());
+  const [events, setEvents] = useState<AppEvent[]>(() => getStoredEvents());
+
+  // Modalità calendario: 'shifts' (Turni di lavoro) | 'events' (Eventi)
+  const [calendarContentMode, setCalendarContentMode] = useState<'shifts' | 'events'>(() => {
+    try {
+      const saved = localStorage.getItem('app_calendar_content_mode');
+      if (saved === 'shifts' || saved === 'events') return saved;
+    } catch {
+      // fallback
+    }
+    return 'shifts';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_calendar_content_mode', calendarContentMode);
+    } catch {
+      // fallback
+    }
+  }, [calendarContentMode]);
 
   // Gestione Tema Notte / Giorno
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -95,10 +121,10 @@ export default function App() {
     setMonthChangeTrigger((prev) => prev + 1);
   };
 
-  const [activeTab, setActiveTab] = useState<'calendar' | 'list' | 'expenses' | 'charts'>(() => {
+  const [activeTab, setActiveTab] = useState<'calendar' | 'list' | 'events' | 'expenses' | 'charts'>(() => {
     try {
       const saved = localStorage.getItem('app_active_tab');
-      if (saved === 'calendar' || saved === 'list' || saved === 'expenses' || saved === 'charts') {
+      if (saved === 'calendar' || saved === 'list' || saved === 'events' || saved === 'expenses' || saved === 'charts') {
         return saved;
       }
     } catch {
@@ -119,6 +145,7 @@ export default function App() {
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState<boolean>(false);
+  const [isEventFormOpen, setIsEventFormOpen] = useState<boolean>(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
@@ -129,18 +156,38 @@ export default function App() {
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   const [initialDateForExpense, setInitialDateForExpense] = useState<string | undefined>(undefined);
 
+  const [eventToEdit, setEventToEdit] = useState<AppEvent | null>(null);
+  const [initialDateForEvent, setInitialDateForEvent] = useState<string | undefined>(undefined);
+
   const [notification, setNotification] = useState<string | null>(null);
 
   // Auto-Sincronizzazione in background se abilitata
-  const checkAndAutoSync = async (latestConfig: ContractConfig, latestShifts: Shift[], latestExpenses: Expense[]) => {
+  const checkAndAutoSync = async (
+    latestConfig: ContractConfig,
+    latestShifts: Shift[],
+    latestExpenses: Expense[],
+    latestEvents: AppEvent[]
+  ) => {
     const creds = getSyncCredentials();
     if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
-      pushToCloud(creds, { config: latestConfig, shifts: latestShifts, templates, expenses: latestExpenses }).catch(() => {});
+      pushToCloud(creds, {
+        config: latestConfig,
+        shifts: latestShifts,
+        templates,
+        expenses: latestExpenses,
+        events: latestEvents,
+      }).catch(() => {});
     }
   };
 
   // Applicazione dati scaricati dal cloud (con unione sicura del contratto per non perdere le tariffe)
-  const handleApplyCloudData = (data: { config?: ContractConfig; shifts?: Shift[]; templates?: QuickTemplate[]; expenses?: Expense[] }) => {
+  const handleApplyCloudData = (data: {
+    config?: ContractConfig;
+    shifts?: Shift[];
+    templates?: QuickTemplate[];
+    expenses?: Expense[];
+    events?: AppEvent[];
+  }) => {
     let activeConfig = config;
     if (data.config) {
       activeConfig = { ...DEFAULT_CONFIG, ...data.config };
@@ -159,6 +206,10 @@ export default function App() {
     if (data.expenses && Array.isArray(data.expenses)) {
       setExpenses(data.expenses);
       saveStoredExpenses(data.expenses);
+    }
+    if (data.events && Array.isArray(data.events)) {
+      setEvents(data.events);
+      saveStoredEvents(data.events);
     }
   };
 
@@ -202,7 +253,7 @@ export default function App() {
 
     const creds = getSyncCredentials();
     if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
-      pushToCloud(creds, { config: newConfig, shifts: updatedShifts, templates: activeTemplates, expenses }).catch(() => {});
+      pushToCloud(creds, { config: newConfig, shifts: updatedShifts, templates: activeTemplates, expenses, events }).catch(() => {});
     }
   };
 
@@ -238,7 +289,7 @@ export default function App() {
     setShifts(recalculated);
     saveStoredShifts(recalculated);
 
-    checkAndAutoSync(config, recalculated, expenses);
+    checkAndAutoSync(config, recalculated, expenses, events);
   };
 
   // Elimina Turno
@@ -249,7 +300,7 @@ export default function App() {
     saveStoredShifts(recalculated);
     showNotification('Turno eliminato dallo storico.');
 
-    checkAndAutoSync(config, recalculated, expenses);
+    checkAndAutoSync(config, recalculated, expenses, events);
   };
 
   // Salva (Aggiungi o Modifica) Spesa
@@ -267,7 +318,7 @@ export default function App() {
 
     setExpenses(updatedExpenses);
     saveStoredExpenses(updatedExpenses);
-    checkAndAutoSync(config, shifts, updatedExpenses);
+    checkAndAutoSync(config, shifts, updatedExpenses, events);
   };
 
   // Elimina Spesa
@@ -276,7 +327,7 @@ export default function App() {
     setExpenses(filtered);
     saveStoredExpenses(filtered);
     showNotification('Spesa eliminata.');
-    checkAndAutoSync(config, shifts, filtered);
+    checkAndAutoSync(config, shifts, filtered, events);
   };
 
   const handleOpenAddExpense = (dateIso?: string) => {
@@ -290,6 +341,45 @@ export default function App() {
     setIsExpenseFormOpen(true);
   };
 
+  // Salva (Aggiungi o Modifica) Evento
+  const handleSaveEvent = (event: AppEvent) => {
+    let updatedEvents: AppEvent[];
+    const exists = events.some((e) => e.id === event.id);
+
+    if (exists) {
+      updatedEvents = events.map((e) => (e.id === event.id ? event : e));
+      showNotification('Evento modificato con successo!');
+    } else {
+      updatedEvents = [...events, event];
+      showNotification('Nuovo evento salvato in agenda!');
+    }
+
+    setEvents(updatedEvents);
+    saveStoredEvents(updatedEvents);
+    checkAndAutoSync(config, shifts, expenses, updatedEvents);
+  };
+
+  // Elimina Evento
+  const handleDeleteEvent = (eventId: string) => {
+    const filtered = events.filter((e) => e.id !== eventId);
+    setEvents(filtered);
+    saveStoredEvents(filtered);
+    showNotification('Evento eliminato dall\'agenda.');
+    checkAndAutoSync(config, shifts, expenses, filtered);
+  };
+
+  const handleOpenAddEvent = (dateIso?: string) => {
+    setEventToEdit(null);
+    setInitialDateForEvent(dateIso || `${currentMonthKey}-01`);
+    setIsEventFormOpen(true);
+  };
+
+  const handleOpenEditEvent = (event: AppEvent) => {
+    setEventToEdit(event);
+    setInitialDateForEvent(event.data);
+    setIsEventFormOpen(true);
+  };
+
   // Reset solo storico turni
   const handleResetShiftsOnly = () => {
     if (confirm('Vuoi davvero cancellare TUTTI i turni dallo storico? Le impostazioni della paga rimarranno salvate.')) {
@@ -297,7 +387,7 @@ export default function App() {
       saveStoredShifts([]);
       setIsConfigOpen(false);
       showNotification('Storico turni svuotato.');
-      checkAndAutoSync(config, [], expenses);
+      checkAndAutoSync(config, [], expenses, events);
     }
   };
 
@@ -320,16 +410,20 @@ export default function App() {
       saveStoredShifts(recalculated);
       setIsConfigOpen(false);
       showNotification(`${toDeleteCount} turno/i eliminati con successo tra il ${formattedFrom} e il ${formattedTo}.`);
-      checkAndAutoSync(config, recalculated, expenses);
+      checkAndAutoSync(config, recalculated, expenses, events);
     }
   };
 
-  // Carica dati di esempio
+  // Carica dati di esempio (turni ed eventi)
   const handleGenerateSampleData = () => {
-    const samples = generateSampleShifts(config);
-    setShifts(samples);
-    saveStoredShifts(samples);
-    showNotification('Caricati turni di esempio per il mese corrente!');
+    const sampleShifts = generateSampleShifts(config);
+    const sampleEvents = generateSampleEvents();
+    setShifts(sampleShifts);
+    saveStoredShifts(sampleShifts);
+    setEvents(sampleEvents);
+    saveStoredEvents(sampleEvents);
+    showNotification('Caricati turni ed eventi di esempio per il mese corrente!');
+    checkAndAutoSync(config, sampleShifts, expenses, sampleEvents);
   };
 
   // Importa Backup JSON
@@ -352,6 +446,11 @@ export default function App() {
             if (parsed.expenses && Array.isArray(parsed.expenses)) {
               setExpenses(parsed.expenses);
               saveStoredExpenses(parsed.expenses);
+            }
+
+            if (parsed.events && Array.isArray(parsed.events)) {
+              setEvents(parsed.events);
+              saveStoredEvents(parsed.events);
             }
             
             showNotification('Backup ripristinato con successo!');
@@ -378,9 +477,10 @@ export default function App() {
     setIsFormOpen(true);
   };
 
-  // Filtraggio turni del mese corrente
+  // Filtraggio turni, spese ed eventi del mese corrente
   const currentMonthShifts = shifts.filter((s) => s.dataGrezza.startsWith(currentMonthKey));
   const currentMonthExpenses = expenses.filter((e) => e.data.startsWith(currentMonthKey));
+  const currentMonthEvents = events.filter((e) => e.data.startsWith(currentMonthKey));
 
   // Formattazione titolo mese per stampa/export
   const [yStr, mStr] = currentMonthKey.split('-');
@@ -405,6 +505,8 @@ export default function App() {
         currentMonthKey={currentMonthKey}
         onMonthChange={handleMonthChange}
         onOpenAddShift={() => handleOpenAddShift()}
+        onOpenAddEvent={() => handleOpenAddEvent()}
+        calendarContentMode={calendarContentMode}
         onOpenConfig={() => setIsConfigOpen(true)}
         onOpenCloudSync={() => setIsCloudSyncOpen(true)}
         onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
@@ -412,7 +514,7 @@ export default function App() {
         onExportCsv={() => exportShiftsToCsv(currentMonthShifts, formattedMonthTitle)}
         onPrintReport={() => printMonthlyReport(currentMonthShifts, config, formattedMonthTitle)}
         onExportGoogleCalendar={() => exportShiftsToGoogleCalendar(currentMonthShifts, formattedMonthTitle)}
-        onExportJson={() => exportDataToJson(config, shifts, expenses)}
+        onExportJson={() => exportDataToJson(config, shifts, expenses, events)}
         onImportJson={handleImportJson}
         onGenerateSampleData={handleGenerateSampleData}
         hasShifts={shifts.length > 0}
@@ -429,11 +531,11 @@ export default function App() {
         
         {/* SEO Hidden H1 */}
         <h1 className="sr-only">
-          Calcolo Stipendio Netto e Gestione Turni Lavorativi - Work & Salary Tracker
+          Calcolo Stipendio Netto, Gestione Turni Lavorativi e Calendario Eventi - Work & Salary Tracker
         </h1>
 
         {/* Banner Benvenuto / Setup rapido se prima volta */}
-        {shifts.length === 0 && (
+        {shifts.length === 0 && events.length === 0 && (
           <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 rounded-2xl p-5 sm:p-6 text-white shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 border border-slate-800">
             <div className="space-y-3 max-w-2xl">
               <div>
@@ -441,7 +543,7 @@ export default function App() {
                   <span>👋</span> Benvenuto su Salary Tracker!
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
-                  Monitora i tuoi turni e calcola la tua busta paga in tempo reale.
+                  Monitora i tuoi turni, organizza i tuoi eventi e calcola la tua busta paga in tempo reale.
                 </p>
               </div>
 
@@ -453,15 +555,15 @@ export default function App() {
                   </span>
                 </p>
                 <p className="flex items-start gap-2">
-                  <span className="shrink-0 text-sm">⏱️</span>
+                  <span className="shrink-0 text-sm">📅</span>
                   <span>
-                    <strong className="text-white">Straordinari su misura:</strong> Conteggio automatico delle ore extra in base al tuo contratto settimanale.
+                    <strong className="text-white">Calendario bi-funzione:</strong> Passa dai turni di lavoro alla gestione dei tuoi eventi e impegni personali con un click.
                   </span>
                 </p>
                 <p className="flex items-start gap-2">
-                  <span className="shrink-0 text-sm">⚡</span>
+                  <span className="shrink-0 text-sm">⏱️</span>
                   <span>
-                    <strong className="text-white">Inserimento rapido:</strong> Crea e salva i tuoi turni tipo nella scheda Tariffe per registrarli con un click.
+                    <strong className="text-white">Straordinari su misura:</strong> Conteggio automatico delle ore extra in base al tuo contratto settimanale.
                   </span>
                 </p>
               </div>
@@ -484,19 +586,19 @@ export default function App() {
               </button>
               
               <button
+                onClick={() => handleOpenAddEvent()}
+                className="flex-1 lg:flex-initial px-4 py-2.5 bg-purple-600 text-white hover:bg-purple-700 rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-purple-200" />
+                Aggiungi Primo Evento
+              </button>
+
+              <button
                 onClick={() => setIsConfigOpen(true)}
                 className="flex-1 lg:flex-initial px-4 py-2.5 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sliders className="w-4 h-4 text-blue-400" />
                 Tariffe & Preset Orari
-              </button>
-
-              <button
-                onClick={() => setIsHelpModalOpen(true)}
-                className="flex-1 lg:flex-initial px-4 py-2.5 bg-indigo-600/30 text-indigo-200 hover:bg-indigo-600/50 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/30 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <HelpCircle className="w-4 h-4 text-indigo-400" />
-                Guida & Aiuto
               </button>
 
               <button
@@ -509,17 +611,32 @@ export default function App() {
           </div>
         )}
 
-        {/* Card Sintesi del Mese */}
-        <MonthSummaryCard
-          shifts={currentMonthShifts}
-          allShifts={shifts}
-          config={config}
-          monthTitle={formattedMonthTitle}
-          currentMonthKey={currentMonthKey}
-          expenses={currentMonthExpenses}
-        />
+        {/* Card Sintesi del Mese / Box Eventi:
+            Sostituzione dinamica del riepilogo in base alla modalità attiva (Turni vs Eventi) come richiesto dall'utente */}
+        {((activeTab === 'calendar' && calendarContentMode === 'events') || activeTab === 'events') ? (
+          <EventsSummaryCard
+            events={events}
+            monthTitle={formattedMonthTitle}
+            currentMonthKey={currentMonthKey}
+            onOpenAddEvent={handleOpenAddEvent}
+            onEditEvent={handleOpenEditEvent}
+            onSwitchToShiftsView={() => {
+              setCalendarContentMode('shifts');
+              if (activeTab === 'events') setActiveTab('calendar');
+            }}
+          />
+        ) : (
+          <MonthSummaryCard
+            shifts={currentMonthShifts}
+            allShifts={shifts}
+            config={config}
+            monthTitle={formattedMonthTitle}
+            currentMonthKey={currentMonthKey}
+            expenses={currentMonthExpenses}
+          />
+        )}
 
-        {/* Tab Navigation: Calendario / Elenco Turni / Spese / Grafici */}
+        {/* Tab Navigation: Calendario / Elenco Turni / Eventi / Spese / Grafici */}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
           <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-900 p-1.5 rounded-xl overflow-x-auto w-full sm:w-auto">
             <button
@@ -535,7 +652,10 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('list')}
+              onClick={() => {
+                setActiveTab('list');
+                setCalendarContentMode('shifts');
+              }}
               className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'list'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
@@ -544,6 +664,21 @@ export default function App() {
             >
               <List className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               Turni ({currentMonthShifts.length})
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('events');
+                setCalendarContentMode('events');
+              }}
+              className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'events'
+                  ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-xs'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <CalendarCheck2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+              Eventi ({currentMonthEvents.length})
             </button>
 
             <button
@@ -593,10 +728,15 @@ export default function App() {
             monthChangeTrigger={monthChangeTrigger}
             shifts={shifts}
             expenses={expenses}
+            events={events}
+            calendarContentMode={calendarContentMode}
+            onToggleCalendarContentMode={setCalendarContentMode}
             onSelectDate={(dateIso) => handleOpenAddShift(dateIso)}
+            onSelectDateForEvent={(dateIso) => handleOpenAddEvent(dateIso)}
             onAddExpense={(dateIso) => handleOpenAddExpense(dateIso)}
             onEditShift={handleOpenEditShift}
             onEditExpense={handleOpenEditExpense}
+            onEditEvent={handleOpenEditEvent}
             onMonthChange={handleMonthChange}
           />
         )}
@@ -608,6 +748,17 @@ export default function App() {
             onDeleteShift={handleDeleteShift}
             onOpenAddShift={() => handleOpenAddShift()}
             monthTitle={formattedMonthTitle}
+          />
+        )}
+
+        {activeTab === 'events' && (
+          <EventsList
+            events={events}
+            onEditEvent={handleOpenEditEvent}
+            onDeleteEvent={handleDeleteEvent}
+            onOpenAddEvent={handleOpenAddEvent}
+            monthTitle={formattedMonthTitle}
+            currentMonthKey={currentMonthKey}
           />
         )}
 
@@ -659,7 +810,7 @@ export default function App() {
               const creds = getSyncCredentials();
               if (creds.autoSync && creds.workerUrl && creds.userKey && creds.passcode) {
                 const currentConfig = getStoredConfig();
-                pushToCloud(creds, { config: currentConfig, shifts, templates: newTemplates, expenses }).catch(() => {});
+                pushToCloud(creds, { config: currentConfig, shifts, templates: newTemplates, expenses, events }).catch(() => {});
               }
             }}
           />
@@ -676,6 +827,17 @@ export default function App() {
             onSaveShift={handleSaveShift}
             onDeleteShift={handleDeleteShift}
             initialDate={initialDateForShift}
+          />
+        )}
+
+        {isEventFormOpen && (
+          <EventFormModal
+            isOpen={isEventFormOpen}
+            onClose={() => setIsEventFormOpen(false)}
+            onSave={handleSaveEvent}
+            onDelete={handleDeleteEvent}
+            eventToEdit={eventToEdit}
+            initialDate={initialDateForEvent}
           />
         )}
 
@@ -706,6 +868,8 @@ export default function App() {
             config={config}
             shifts={shifts}
             templates={templates}
+            expenses={expenses}
+            events={events}
             onApplyCloudData={handleApplyCloudData}
             onShowNotification={showNotification}
             onOpenPrivacyModal={() => setIsPrivacyModalOpen(true)}
@@ -745,7 +909,7 @@ export default function App() {
             </div>
             <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
               <strong className="text-slate-800 dark:text-slate-200 block mb-0.5">🔒 Privacy & Storage Flessibile:</strong>
-              Di default i dati risiedono solo nel browser (LocalStorage). Se attivi la sincronizzazione cloud inserendo le tue credenziali, i dati vengono salvati sul tuo Worker Cloudflare KV privato per sincronizzarli tra i tuoi dispositivi.
+              Di default i dati risiedono solo nel browser (LocalStorage). Se attivi la sincronizzazione cloud inserendo le tue credenziali, i dati vengono salvati sul tuo database Cloudflare D1 / Worker privato per sincronizzarli tra i tuoi dispositivi.
             </div>
           </div>
 

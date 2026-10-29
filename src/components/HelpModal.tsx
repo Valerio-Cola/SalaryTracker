@@ -194,6 +194,24 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   </ul>
                 </div>
               </div>
+
+              {/* Calendario Bi-Funzione e Gestione Eventi */}
+              <div className="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/60 rounded-xl space-y-2">
+                <div className="font-bold text-purple-950 dark:text-purple-200 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <span>🎯 Calendario Bi-Funzione: Turni & Eventi</span>
+                </div>
+                <p className="text-[11px] text-purple-900 dark:text-purple-300 leading-relaxed">
+                  Il calendario ti permette di passare in ogni momento dalla visualizzazione <strong>&quot;Turni di lavoro&quot;</strong> alla visualizzazione <strong>&quot;Eventi&quot;</strong> (sia in vista Mensile che Settimanale):
+                </p>
+                <div className="p-2.5 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-purple-200 dark:border-purple-800 text-[11px] space-y-1 text-slate-700 dark:text-slate-300">
+                  <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
+                    <li><strong>Box Prossimo Evento & Countdown:</strong> Quando attivi la vista Eventi, il riepilogo superiore si trasforma nell&apos;Agenda con il countdown in tempo reale (<em>&quot;Oggi!&quot;</em>, <em>&quot;Domani&quot;</em>, <em>&quot;Fra X giorni&quot;</em>).</li>
+                    <li><strong>Categorie & Colori:</strong> Assegna categorie (Lavoro, Personale, Scadenza, Salute, Svago, Commissioni) ed etichette colorate.</li>
+                    <li><strong>Incrocio Turni/Eventi:</strong> In vista Eventi vedrai comunque un promemoria discreto con il tuo turno di lavoro, così da organizzare appuntamenti senza sovrapposizioni.</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
 
@@ -499,7 +517,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     1. Clicca sull&apos;icona della <strong>Nuvola (Cloud)</strong> in alto a destra.<br />
                     2. Inserisci il tuo <strong>Nome Utente</strong> e la tua <strong>Password</strong> personale rilasciati dall&apos;amministratore.<br />
                     3. Supera la rapida verifica di sicurezza e clicca su <strong>&quot;Accedi e Sincronizza&quot;</strong>.<br />
-                    4. Da quel momento, ad ogni modifica (nuovo turno, spesa o cambio tariffe), l&apos;app salverà i tuoi dati in tempo reale sul cloud protetto!
+                    4. Da quel momento, ad ogni modifica (nuovo turno, spesa, evento o cambio tariffe), l&apos;app salverà i tuoi dati in tempo reale sul cloud protetto con database Cloudflare D1!
                   </p>
                 </div>
 

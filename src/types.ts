@@ -111,6 +111,29 @@ export interface Expense {
   descrizione?: string;
 }
 
+export type EventCategory =
+  | 'lavoro'
+  | 'personale'
+  | 'scadenza'
+  | 'salute'
+  | 'svago'
+  | 'commissione'
+  | 'famiglia'
+  | 'altro';
+
+export interface AppEvent {
+  id: string;
+  titolo: string;
+  data: string; // YYYY-MM-DD
+  oraInizio?: string; // HH:mm (es. "15:30")
+  oraFine?: string; // HH:mm (es. "17:00")
+  tuttoIlGiorno?: boolean;
+  categoria: EventCategory;
+  colore?: 'blue' | 'emerald' | 'amber' | 'purple' | 'rose' | 'indigo' | 'cyan' | 'slate';
+  luogo?: string;
+  note?: string;
+}
+
 export interface MonthlyStats {
   annoMese: string; // YYYY-MM
   nomeMeseAnno: string; // "Agosto 2026"

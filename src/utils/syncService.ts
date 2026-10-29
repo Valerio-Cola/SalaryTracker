@@ -1,4 +1,4 @@
-import { ContractConfig, Shift, QuickTemplate, Expense } from '../types';
+import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent } from '../types';
 
 export interface SyncCredentials {
   workerUrl: string;
@@ -53,6 +53,7 @@ export interface CloudPayload {
   shifts: Shift[];
   templates: QuickTemplate[];
   expenses?: Expense[];
+  events?: AppEvent[];
   updatedAt: number;
 }
 
@@ -162,7 +163,13 @@ function extractErrorMessage(errText: string, status: number, fallback: string):
  */
 export async function pushToCloud(
   creds: SyncCredentials,
-  data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[]; expenses?: Expense[] },
+  data: {
+    config: ContractConfig;
+    shifts: Shift[];
+    templates: QuickTemplate[];
+    expenses?: Expense[];
+    events?: AppEvent[];
+  },
   turnstileToken?: string
 ): Promise<{ success: boolean; message: string; updatedAt?: number }> {
   const cleanUrl = (creds.workerUrl || DEFAULT_WORKER_URL).trim();
@@ -174,6 +181,7 @@ export async function pushToCloud(
   const payload: CloudPayload = {
     ...data,
     expenses: data.expenses || [],
+    events: data.events || [],
     updatedAt: Date.now(),
   };
 

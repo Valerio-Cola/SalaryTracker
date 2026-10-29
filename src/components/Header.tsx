@@ -20,6 +20,8 @@ interface HeaderProps {
   currentMonthKey: string; // YYYY-MM
   onMonthChange: (monthKey: string) => void;
   onOpenAddShift: () => void;
+  onOpenAddEvent?: () => void;
+  calendarContentMode?: 'shifts' | 'events';
   onOpenConfig: () => void;
   onOpenCloudSync?: () => void;
   onOpenPrivacy?: () => void;
@@ -40,6 +42,8 @@ export const Header: React.FC<HeaderProps> = ({
   currentMonthKey,
   onMonthChange,
   onOpenAddShift,
+  onOpenAddEvent,
+  calendarContentMode = 'shifts',
   onOpenConfig,
   onOpenCloudSync,
   onOpenHelp,
@@ -268,11 +272,16 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             <button
-              onClick={onOpenAddShift}
-              className="flex-1 sm:flex-none px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] sm:text-sm font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-colors shadow-xs shadow-blue-500/20 whitespace-nowrap shrink-0 cursor-pointer"
+              onClick={calendarContentMode === 'events' && onOpenAddEvent ? onOpenAddEvent : onOpenAddShift}
+              className={`flex-1 sm:flex-none px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-white rounded-xl text-[11px] sm:text-sm font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                calendarContentMode === 'events'
+                  ? 'bg-purple-600 hover:bg-purple-700 shadow-xs shadow-purple-500/20'
+                  : 'bg-blue-600 hover:bg-blue-700 shadow-xs shadow-blue-500/20'
+              }`}
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="hidden min-[360px]:inline">Nuovo </span>Turno
+              <span className="hidden min-[360px]:inline">Nuovo </span>
+              {calendarContentMode === 'events' ? 'Evento' : 'Turno'}
             </button>
           </div>
         </div>

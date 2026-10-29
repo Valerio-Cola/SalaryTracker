@@ -207,10 +207,10 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
 
                     <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 space-y-1">
                       <strong className="text-slate-800 dark:text-slate-200 block font-semibold">
-                        ☁️ Con Sincronizzazione Cloud (Cloudflare Worker / KV):
+                        ☁️ Con Sincronizzazione Cloud (Cloudflare Worker / Database D1):
                       </strong>
                       <p className="leading-relaxed">
-                        Quando i dati (anche se associati a uno pseudonimo o a una chiave utente) risiedono sul database KV, la gestione tecnica dei dati transita sui server cloud.
+                        Quando i dati (anche se associati a uno pseudonimo o a una chiave utente) risiedono sul database relazionale D1, la gestione tecnica dei dati transita sui server cloud protetti di Cloudflare.
                       </p>
                       <p className="leading-relaxed pt-1 font-medium text-slate-700 dark:text-slate-300">
                         <strong>Contatto Gestore Infrastruttura / Amministratore:</strong> Valerio Cola — Email per adempimenti privacy e gestione infrastruttura: <a href="mailto:valeriocola2003@gmail.com" className="text-blue-600 dark:text-blue-400 underline font-semibold">valeriocola2003@gmail.com</a>.
@@ -258,7 +258,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                     <li><strong>Diritto alla Cancellazione &amp; Oblio (Art. 17 GDPR):</strong>
                       <ul className="list-circle pl-5 mt-1 space-y-1 text-[11px]">
                         <li><strong>In Locale:</strong> Cliccando su &quot;Disconnetti&quot; o cancellando la cronologia del browser, l&apos;applicazione elimina istantaneamente tutti i dati memorizzati sul dispositivo.</li>
-                        <li><strong>Nel Cloud:</strong> Tramite la funzione autonoma &quot;Elimina Account&quot; disponibile nel pannello Cloud, l&apos;utente può distruggere per sempre e in tempo reale tutti i propri dati (turni, tariffe, spese) e le credenziali di autenticazione archiviati nel database Cloudflare KV, senza bisogno di inviare richieste manuali.</li>
+                        <li><strong>Nel Cloud:</strong> Tramite la funzione autonoma &quot;Elimina Account&quot; disponibile nel pannello Cloud, l&apos;utente può distruggere per sempre e in tempo reale tutti i propri dati (turni, tariffe, spese, eventi) e le credenziali di autenticazione archiviati nel database Cloudflare D1, senza bisogno di inviare richieste manuali.</li>
                       </ul>
                     </li>
                   </ul>
@@ -331,10 +331,10 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <strong className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Database className="w-4 h-4 text-purple-500" />
-                    Isolamento dei Dati nel Cloud Storage (KV Storage)
+                    Isolamento dei Dati nel Database Cloud (Cloudflare D1)
                   </strong>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    I dati del calendario, delle spese e delle tariffe vengono memorizzati nello spazio <strong>Cloudflare Key-Value (KV) Storage</strong> del Worker associato univocamente al proprio Username. Nessun altro utente o terza parte può accedere al vostro archivio turni dedicato.
+                    I dati del calendario, delle spese e delle tariffe vengono memorizzati nello spazio <strong>Cloudflare D1 Database</strong> con forte consistenza e isolamento relazionale per ciascun account autorizzato. Nessun altro utente o terza parte può accedere al vostro archivio turni dedicato.
                   </p>
                 </div>
               </div>

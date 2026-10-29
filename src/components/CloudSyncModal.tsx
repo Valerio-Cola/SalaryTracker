@@ -31,7 +31,7 @@ import {
   deleteAccountFromCloud,
 } from '../utils/syncService';
 import { DEFAULT_CONFIG, DEFAULT_TEMPLATES } from '../utils/storage';
-import { ContractConfig, Shift, QuickTemplate } from '../types';
+import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent } from '../types';
 import { TurnstileWidget, TurnstileWidgetRef } from './TurnstileWidget';
 
 export interface PasswordStrength {
@@ -148,7 +148,9 @@ interface CloudSyncModalProps {
   config: ContractConfig;
   shifts: Shift[];
   templates: QuickTemplate[];
-  onApplyCloudData: (data: { config: ContractConfig; shifts: Shift[]; templates: QuickTemplate[] }) => void;
+  expenses?: Expense[];
+  events?: AppEvent[];
+  onApplyCloudData: (data: { config?: ContractConfig; shifts?: Shift[]; templates?: QuickTemplate[]; expenses?: Expense[]; events?: AppEvent[] }) => void;
   onShowNotification: (msg: string) => void;
   onOpenPrivacyModal?: () => void;
 }
@@ -159,6 +161,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   config,
   shifts,
   templates,
+  expenses = [],
+  events = [],
   onApplyCloudData,
   onShowNotification,
   onOpenPrivacyModal,
@@ -340,11 +344,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     if (res.success) {
       if (res.data) {
         // Se il cloud ha già dati per questo utente, applicali
-        onApplyCloudData({
-          config: res.data.config,
-          shifts: res.data.shifts,
-          templates: res.data.templates,
-        });
+        onApplyCloudData(res.data);
         const finalCreds = { ...credsToTest, lastSyncedAt: res.data?.updatedAt };
         saveSyncCredentials(finalCreds);
         setCreds(finalCreds);
@@ -362,7 +362,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         );
       } else {
         // Se l'utente non ha ancora dati salvati nel cloud, carica quelli locali attuali
-        const pushRes = await pushToCloud(credsToTest, { config, shifts, templates });
+        const pushRes = await pushToCloud(credsToTest, { config, shifts, templates, expenses, events });
         if (pushRes.success) {
           const finalCreds = { ...credsToTest, lastSyncedAt: pushRes.updatedAt };
           saveSyncCredentials(finalCreds);
@@ -400,18 +400,14 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
     const res = await pullFromCloud(creds);
     if (res.success && res.data) {
-      onApplyCloudData({
-        config: res.data.config,
-        shifts: res.data.shifts,
-        templates: res.data.templates,
-      });
+      onApplyCloudData(res.data);
       const updatedCreds = { ...creds, lastSyncedAt: res.data.updatedAt };
       saveSyncCredentials(updatedCreds);
       setCreds(updatedCreds);
       setStatusMessage({ type: 'success', text: 'Sincronizzazione completata! Dati aggiornati dal cloud.' });
       onShowNotification('Dati sincronizzati dal cloud!');
     } else if (res.success) {
-      const pushRes = await pushToCloud(creds, { config, shifts, templates });
+      const pushRes = await pushToCloud(creds, { config, shifts, templates, expenses, events });
       if (pushRes.success) {
         const updatedCreds = { ...creds, lastSyncedAt: pushRes.updatedAt };
         saveSyncCredentials(updatedCreds);

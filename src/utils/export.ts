@@ -1,15 +1,21 @@
-import { ContractConfig, Shift, Expense } from '../types';
+import { ContractConfig, Shift, Expense, AppEvent } from '../types';
 
 /**
  * Esporta tutti i dati dell'applicazione in un file JSON scaricabile
  */
-export function exportDataToJson(config: ContractConfig, shifts: Shift[], expenses: Expense[] = []) {
+export function exportDataToJson(
+  config: ContractConfig,
+  shifts: Shift[],
+  expenses: Expense[] = [],
+  events: AppEvent[] = []
+) {
   const exportPayload = {
-    version: '2.0',
+    version: '2.1',
     exportDate: new Date().toISOString(),
     config,
     shifts,
     expenses,
+    events,
   };
 
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
