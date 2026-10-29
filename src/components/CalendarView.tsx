@@ -527,7 +527,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         : 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/50 ring-2 ring-blue-400/30 shadow-xs'
                       : isHoliday
                       ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 hover:border-rose-300'
-                      : (activeContentMode === 'events' ? hasEvents : hasShifts || hasExpenses)
+                      : activeContentMode === 'events' && hasEvents
                       ? 'border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 hover:border-purple-400'
                       : isSunday
                       ? 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
@@ -852,7 +852,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           : 'border-blue-500 bg-blue-50/40 dark:bg-blue-950/50 ring-2 ring-blue-400/30'
                         : isHoliday
                         ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 hover:border-rose-300 dark:hover:border-rose-700'
-                        : (activeContentMode === 'events' ? hasEvents : hasShifts || hasExpenses)
+                        : activeContentMode === 'events' && hasEvents
                         ? 'border-purple-200 dark:border-purple-900/60 bg-purple-50/20 dark:bg-purple-950/20 hover:border-purple-300 dark:hover:border-purple-700'
                         : isSunday
                         ? 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
