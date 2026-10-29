@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppEvent, EventCategory } from '../types';
+import { AppEvent, EventCategory, CustomEventCategory } from '../types';
 import {
   Calendar,
   Clock,
@@ -17,12 +17,15 @@ import {
   SlidersHorizontal,
   Flame,
   CalendarCheck2,
+  TrendingUp,
 } from 'lucide-react';
+import { resolveEventColor, resolveCategoryInfo } from '../utils/eventTheme';
 
 interface EventsSummaryCardProps {
   events: AppEvent[]; // All events
   monthTitle: string;
   currentMonthKey: string; // YYYY-MM
+  customCategories?: CustomEventCategory[];
   onOpenAddEvent: (dateIso?: string) => void;
   onEditEvent: (event: AppEvent) => void;
   onSwitchToShiftsView?: () => void;
@@ -196,6 +199,7 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
   events,
   monthTitle,
   currentMonthKey,
+  customCategories = [],
   onOpenAddEvent,
   onEditEvent,
   onSwitchToShiftsView,
@@ -246,9 +250,6 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white capitalize">
             {monthTitle}
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Gestisci impegni, scadenze, riunioni e appuntamenti personali o di lavoro
-          </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -262,14 +263,6 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
               <span>Vedi Stipendio</span>
             </button>
           )}
-
-          <button
-            onClick={() => onOpenAddEvent(`${currentMonthKey}-01`)}
-            className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nuovo Evento</span>
-          </button>
         </div>
       </div>
 
@@ -324,11 +317,6 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
               </div>
             )}
           </div>
-
-          <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-800 text-[11px] font-bold text-purple-700 dark:text-purple-400 flex items-center justify-between">
-            <span>{nextEvent ? 'Tocca per dettagli o modifica' : 'Nessun promemoria attivo'}</span>
-            {nextEvent && <ChevronRight className="w-3.5 h-3.5" />}
-          </div>
         </div>
 
         {/* Box 2: Eventi nel Mese Selezionato */}
@@ -361,10 +349,6 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
               )}
             </div>
           </div>
-
-          <div className="mt-3 pt-2 border-t border-slate-200/80 dark:border-slate-700/80 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            Mese attivo: <strong className="text-slate-700 dark:text-slate-300 capitalize">{monthTitle}</strong>
-          </div>
         </div>
 
         {/* Box 3: Prossimi 7 Giorni (Lookahead) */}
@@ -372,27 +356,11 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
           <div>
             <div className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center justify-between">
               <span>Prossimi 7 Giorni</span>
-              <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
               {eventsInNext7Days.length} <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">in arrivo</span>
             </div>
-
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-              {eventsInNext7Days.length > 0
-                ? `Hai ${eventsInNext7Days.length} impegno/i programmati nell'arco della prossima settimana.`
-                : 'Settimana libera da impegni registrati. Ottimo per riposare o pianificare nuovi turni!'}
-            </p>
-          </div>
-
-          <div className="mt-3 pt-2 border-t border-slate-200/80 dark:border-slate-700/80 text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center justify-between">
-            <span>Oggi: {formatItalianDateShort(todayIso)}</span>
-            <button
-              onClick={() => onOpenAddEvent(todayIso)}
-              className="text-purple-600 dark:text-purple-400 hover:underline font-bold cursor-pointer"
-            >
-              + Aggiungi per oggi
-            </button>
           </div>
         </div>
       </div>
@@ -414,13 +382,14 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
             {upcomingEvents.slice(0, 4).map((ev) => {
               const daysDiff = getDaysDifference(ev.data, todayIso);
               const countdown = getCountdownText(daysDiff);
-              const colorTheme = COLOR_CLASSES[ev.colore || 'blue'] || COLOR_CLASSES.blue;
-              const Icon = CATEGORY_ICON_MAP[ev.categoria] || Bookmark;
+              const colorTheme = resolveEventColor(ev.colore);
+              const catInfo = resolveCategoryInfo(ev.categoria, customCategories, ev.emoji);
 
               return (
                 <div
                   key={ev.id}
                   onClick={() => onEditEvent(ev)}
+                  style={colorTheme.style}
                   className={`p-3 rounded-xl border transition-all cursor-pointer ${colorTheme.bg} ${colorTheme.border} hover:scale-[1.01] hover:shadow-2xs`}
                 >
                   <div className="flex items-center justify-between gap-1 mb-1.5">
@@ -436,10 +405,13 @@ export const EventsSummaryCard: React.FC<EventsSummaryCardProps> = ({
                     {ev.titolo}
                   </div>
 
-                  <div className="flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-300 mt-1">
-                    <Icon className="w-3 h-3 shrink-0" />
-                    <span className="truncate">
-                      {ev.tuttoIlGiorno ? 'Tutto il giorno' : ev.oraInizio || 'Orario non specificato'}
+                  <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300 mt-1">
+                    <span className="flex items-center gap-1 truncate">
+                      <span>{catInfo.emoji}</span>
+                      <span className="truncate">{catInfo.label}</span>
+                    </span>
+                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                      {ev.tuttoIlGiorno ? 'Tutto il gg' : ev.oraInizio || ''}
                     </span>
                   </div>
                 </div>

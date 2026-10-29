@@ -111,15 +111,20 @@ export interface Expense {
   descrizione?: string;
 }
 
-export type EventCategory =
+export type BuiltInEventCategory =
   | 'lavoro'
   | 'personale'
-  | 'scadenza'
-  | 'salute'
-  | 'svago'
-  | 'commissione'
-  | 'famiglia'
-  | 'altro';
+  | 'scadenza';
+
+export type EventCategory = BuiltInEventCategory | string;
+
+export interface CustomEventCategory {
+  id: string; // Es. "cat_sport" o "cat_173000..."
+  label: string; // Es. "Palestra & Sport"
+  emoji: string; // Simbolo emoji, es. "🏋️"
+  colore?: string; // Colore associato (preset name o HEX custom es. "#10b981")
+  createdAt?: number;
+}
 
 export interface AppEvent {
   id: string;
@@ -129,7 +134,8 @@ export interface AppEvent {
   oraFine?: string; // HH:mm (es. "17:00")
   tuttoIlGiorno?: boolean;
   categoria: EventCategory;
-  colore?: 'blue' | 'emerald' | 'amber' | 'purple' | 'rose' | 'indigo' | 'cyan' | 'slate';
+  emoji?: string; // Emoji personalizzata o associata alla categoria
+  colore?: string; // Preset ('blue', 'purple', etc.) o qualsiasi HEX ('#ec4899')
   luogo?: string;
   note?: string;
 }

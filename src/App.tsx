@@ -542,9 +542,6 @@ export default function App() {
                 <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
                   <span>👋</span> Benvenuto su Salary Tracker!
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
-                  Monitora i tuoi turni, organizza i tuoi eventi e calcola la tua busta paga in tempo reale.
-                </p>
               </div>
 
               <div className="space-y-2 pt-1 text-xs text-slate-300 leading-relaxed">
@@ -584,7 +581,7 @@ export default function App() {
                 <Plus className="w-4 h-4 text-blue-200" />
                 Aggiungi Primo Turno
               </button>
-              
+
               <button
                 onClick={() => handleOpenAddEvent()}
                 className="flex-1 lg:flex-initial px-4 py-2.5 bg-purple-600 text-white hover:bg-purple-700 rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"

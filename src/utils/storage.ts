@@ -1,4 +1,4 @@
-import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent } from '../types';
+import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent, CustomEventCategory } from '../types';
 import { computeShiftData } from './calculator';
 
 const CONFIG_KEY = 'bk_config_v2';
@@ -6,6 +6,7 @@ const SHIFTS_KEY = 'bk_storico_v2';
 const TEMPLATES_KEY = 'bk_templates_v2';
 const EXPENSES_KEY = 'bk_expenses_v2';
 const EVENTS_KEY = 'bk_events_v2';
+const CUSTOM_CATEGORIES_KEY = 'bk_custom_categories_v2';
 
 export const DEFAULT_CONFIG: ContractConfig = {
   oreSettimanali: 0,
@@ -303,3 +304,48 @@ export function generateSampleEvents(): AppEvent[] {
     },
   ];
 }
+
+export const DEFAULT_CUSTOM_CATEGORIES: CustomEventCategory[] = [
+  {
+    id: 'cat_sport',
+    label: 'Sport & Palestra',
+    emoji: '🏋️',
+    colore: '#10b981',
+    createdAt: 1700000000000,
+  },
+  {
+    id: 'cat_studio',
+    label: 'Studio & Corsi',
+    emoji: '📚',
+    colore: '#6366f1',
+    createdAt: 1700000001000,
+  },
+  {
+    id: 'cat_viaggi',
+    label: 'Viaggi & Weekend',
+    emoji: '✈️',
+    colore: '#06b6d4',
+    createdAt: 1700000002000,
+  },
+];
+
+export function getStoredCustomCategories(): CustomEventCategory[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+    if (!raw) return DEFAULT_CUSTOM_CATEGORIES;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : DEFAULT_CUSTOM_CATEGORIES;
+  } catch (e) {
+    console.error('Error reading custom categories from localStorage', e);
+    return DEFAULT_CUSTOM_CATEGORIES;
+  }
+}
+
+export function saveStoredCustomCategories(categories: CustomEventCategory[]): void {
+  try {
+    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(categories));
+  } catch (e) {
+    console.error('Error saving custom categories to localStorage', e);
+  }
+}
+

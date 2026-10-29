@@ -1,4 +1,4 @@
-import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent } from '../types';
+import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent, CustomEventCategory } from '../types';
 
 export interface SyncCredentials {
   workerUrl: string;
@@ -54,6 +54,7 @@ export interface CloudPayload {
   templates: QuickTemplate[];
   expenses?: Expense[];
   events?: AppEvent[];
+  customCategories?: CustomEventCategory[];
   updatedAt: number;
 }
 
@@ -169,6 +170,7 @@ export async function pushToCloud(
     templates: QuickTemplate[];
     expenses?: Expense[];
     events?: AppEvent[];
+    customCategories?: CustomEventCategory[];
   },
   turnstileToken?: string
 ): Promise<{ success: boolean; message: string; updatedAt?: number }> {
@@ -182,6 +184,7 @@ export async function pushToCloud(
     ...data,
     expenses: data.expenses || [],
     events: data.events || [],
+    customCategories: data.customCategories || [],
     updatedAt: Date.now(),
   };
 

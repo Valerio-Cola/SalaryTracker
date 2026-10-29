@@ -346,7 +346,10 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
         {/* Paga Base (inclusa quota ferie) */}
         <div className="p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">Paga Base Oraria</div>
+          <div className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <Coins className="w-4 h-4 text-slate-400" />
+            Paga Base Oraria
+          </div>
           <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
             € {totalBase.toFixed(2)}
           </div>
@@ -386,7 +389,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
         </div>
 
         {/* Bonus Straordinario */}
-        <div className="p-3 sm:p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-100 dark:border-emerald-900/60">
+        <div className="p-3 sm:p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-100 dark:border-emerald-900/60 relative">
           <div className="text-xs sm:text-sm font-bold text-emerald-950 dark:text-emerald-200 flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" /> Straordinari
@@ -395,7 +398,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           <div className="text-lg sm:text-xl font-black text-emerald-950 dark:text-emerald-100 mt-0.5">
             + € {totalSuppExtra.toFixed(2)}
           </div>
-          <div className="text-sm font-bold text-emerald-900 dark:text-emerald-300 mt-1 text-right">
+          <div className="text-sm font-bold text-emerald-900 dark:text-emerald-300 absolute bottom-3 right-3">
             {totalSupplementari.toFixed(1)}h
           </div>
         </div>

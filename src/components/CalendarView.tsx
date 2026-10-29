@@ -14,9 +14,11 @@ import {
   Sparkles,
   MapPin,
   Tag,
+  Coins,
 } from 'lucide-react';
 import { checkDayTypeInfo } from '../utils/holidays';
 import { COLOR_CLASSES } from './EventsSummaryCard';
+import { resolveCategoryInfo, resolveEventColor } from '../utils/eventTheme';
 
 interface CalendarViewProps {
   currentMonthKey: string; // YYYY-MM
@@ -346,13 +348,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               {activeContentMode === 'events' ? 'Calendario Eventi & Impegni' : 'Calendario Turni di Lavoro'}
-              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-                ({viewMode === 'month' ? 'Vista Mese' : 'Vista Settimana'})
-              </span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               {activeContentMode === 'events'
-                ? 'Tocca un giorno per inserire o gestire appuntamenti ed eventi personali/lavorativi'
+                ? 'Tocca un giorno per inserire o gestire appuntamenti ed eventi personali o di lavoro'
                 : 'Tocca un giorno per registrare un turno di lavoro o ferie'}
             </p>
           </div>
@@ -385,9 +384,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             >
               <CalendarIcon className="w-3.5 h-3.5" />
               <span>Eventi</span>
-              {events.length > 0 && (
-                <span className="w-2 h-2 rounded-full bg-purple-500" />
-              )}
             </button>
           </div>
 
@@ -528,7 +524,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       : isHoliday
                       ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 hover:border-rose-300'
                       : activeContentMode === 'events' && hasEvents
-                      ? 'border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 hover:border-purple-400'
+                      ? 'border-purple-200 dark:border-purple-900/60 bg-purple-50/20 dark:bg-purple-950/20 hover:border-purple-300'
+                      : activeContentMode === 'shifts' && hasShifts
+                      ? 'border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-blue-950/20 hover:border-blue-300'
                       : isSunday
                       ? 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
                       : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
@@ -619,7 +617,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <div className="space-y-1.5 min-h-[50px]">
                         {/* Eventi del Giorno */}
                         {day.dayEvents.map((ev) => {
-                          const colorTheme = COLOR_CLASSES[ev.colore || 'blue'] || COLOR_CLASSES.blue;
+                          const colorTheme = resolveEventColor(ev.colore);
+                          const catInfo = resolveCategoryInfo(ev.categoria, [], ev.emoji);
+                          const eventTimeStr = ev.tuttoIlGiorno
+                            ? ''
+                            : ev.oraInizio
+                            ? ev.oraFine
+                              ? `${ev.oraInizio}-${ev.oraFine}`
+                              : ev.oraInizio
+                            : '';
+
                           return (
                             <div
                               key={ev.id}
@@ -627,53 +634,53 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 e.stopPropagation();
                                 if (onEditEvent) onEditEvent(ev);
                               }}
-                              className={`p-2 rounded-xl border shadow-2xs transition-all text-left cursor-pointer ${colorTheme.bg} ${colorTheme.border} hover:border-purple-400`}
+                              className={`p-1.5 sm:p-2 rounded-xl border shadow-2xs transition-colors text-left min-w-0 cursor-pointer ${
+                                colorTheme.isHex
+                                  ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                                  : `${colorTheme.bg} ${colorTheme.border}`
+                              } hover:border-purple-400`}
+                              style={colorTheme.isHex ? colorTheme.style : undefined}
                             >
-                              <div className="flex items-center justify-between gap-1 mb-0.5">
-                                <span className={`px-1.5 py-0.2 rounded text-[9px] uppercase font-black tracking-wide ${colorTheme.badge}`}>
-                                  {ev.categoria}
-                                </span>
-                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                                  {ev.tuttoIlGiorno ? 'Tutto il gg' : ev.oraInizio || ''}
-                                </span>
-                              </div>
-
-                              <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                              <div className="text-xs sm:text-sm font-bold leading-tight text-slate-900 dark:text-slate-100 truncate">
                                 {ev.titolo}
                               </div>
 
-                              {ev.luogo && (
-                                <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate">
-                                  <MapPin className="w-2.5 h-2.5 shrink-0" />
-                                  <span className="truncate">{ev.luogo}</span>
+                              <div className="mt-1 flex flex-col gap-1 text-xs">
+                                {eventTimeStr && (
+                                  <div className="text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                                    {ev.oraInizio && ev.oraFine ? (
+                                      <div className="flex flex-col">
+                                        <span>{ev.oraInizio}-</span>
+                                        <span>{ev.oraFine}</span>
+                                      </div>
+                                    ) : (
+                                      <span>{eventTimeStr}</span>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1 max-w-full truncate ${colorTheme.badge}`}
+                                    style={colorTheme.isHex ? colorTheme.badgeStyle : undefined}
+                                  >
+                                    <span>{catInfo.emoji}</span>
+                                    <span className="truncate">{catInfo.label}</span>
+                                  </span>
+
+                                  {ev.luogo && (
+                                    <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 font-semibold text-[10px] sm:text-xs flex items-center gap-1 truncate max-w-[120px]">
+                                      <MapPin className="w-2.5 h-2.5 shrink-0" />
+                                      <span className="truncate">{ev.luogo}</span>
+                                    </span>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
                           );
                         })}
 
-                        {/* Riferimento silenzioso ai turni di lavoro in visualizzazione eventi */}
-                        {day.dayShifts.map((s) => (
-                          <div
-                            key={s.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditShift(s);
-                            }}
-                            className="p-1 rounded-lg bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/50 text-[10px] font-semibold text-blue-900 dark:text-blue-200 flex items-center justify-between gap-1 cursor-pointer hover:border-blue-400"
-                            title="Tocca per vedere il turno lavorativo"
-                          >
-                            <span className="flex items-center gap-1 truncate">
-                              <Briefcase className="w-3 h-3 text-blue-600 shrink-0" />
-                              <span className="truncate">{s.orarioInizio}-{s.orarioFine}</span>
-                            </span>
-                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                              +€{Math.round(s.guadagnoTotaleLordo)}
-                            </span>
-                          </div>
-                        ))}
-
-                        {!hasEvents && !hasShifts && (
+                        {!hasEvents && (
                           <div className="py-3 text-center text-[11px] font-medium text-slate-400 dark:text-slate-600">
                             Nessun impegno
                           </div>
@@ -728,31 +735,27 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 )}
                               </div>
                               <div className="mt-1 flex flex-col gap-1 text-xs">
-                                <span className="text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm">
+                                <span className="text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm self-end">
                                   +€{Math.round(s.guadagnoTotaleLordo)}
                                 </span>
 
                                 <div className="flex flex-wrap items-center gap-1 mt-0.5">
                                   {!isFerie && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 font-semibold text-[10px] sm:text-xs">
-                                      {s.oreTotali}h
+                                    <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 font-semibold text-[10px] sm:text-xs flex items-center gap-0.5">
+                                      <Coins className="w-2.5 h-2.5" /> {s.oreTotali}h
                                     </span>
                                   )}
                                   {s.oreSupplementari > 0 && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold text-[10px] sm:text-xs">
-                                      {s.oreSupplementari}h straord.
+                                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
+                                      <TrendingUp className="w-2.5 h-2.5" /> {s.oreSupplementari}h
                                     </span>
                                   )}
                                   {s.oreNotturne > 0 && (
                                     <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/90 text-indigo-900 dark:text-indigo-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
-                                      <Moon className="w-2.5 h-2.5" /> {s.oreNotturne}h notte
+                                      <Moon className="w-2.5 h-2.5" /> {s.oreNotturne}h
                                     </span>
                                   )}
-                                  {(s.tipoGiorno === 'domenica' || (isSunday && !isFerie)) && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/90 text-blue-950 dark:text-blue-200 font-bold text-[10px] sm:text-xs">
-                                      Dom
-                                    </span>
-                                  )}
+
                                   {(s.tipoGiorno === 'festivo' || (isHoliday && !isFerie)) && (
                                     <span className="px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/90 text-rose-950 dark:text-rose-200 font-bold text-[10px] sm:text-xs">
                                       Festivo
@@ -854,6 +857,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 hover:border-rose-300 dark:hover:border-rose-700'
                         : activeContentMode === 'events' && hasEvents
                         ? 'border-purple-200 dark:border-purple-900/60 bg-purple-50/20 dark:bg-purple-950/20 hover:border-purple-300 dark:hover:border-purple-700'
+                        : activeContentMode === 'shifts' && hasShifts
+                        ? 'border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-blue-950/20 hover:border-blue-300 dark:hover:border-blue-700'
                         : isSunday
                         ? 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
                         : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60'
@@ -937,7 +942,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     {activeContentMode === 'events' ? (
                       <div className="space-y-1.5 mt-1">
                         {cell.dayEvents?.map((ev) => {
-                          const colorTheme = COLOR_CLASSES[ev.colore || 'blue'] || COLOR_CLASSES.blue;
+                          const colorTheme = resolveEventColor(ev.colore);
+                          const catInfo = resolveCategoryInfo(ev.categoria, [], ev.emoji);
+                          const eventTimeStr = ev.tuttoIlGiorno
+                            ? ''
+                            : ev.oraInizio
+                            ? ev.oraFine
+                              ? `${ev.oraInizio}-${ev.oraFine}`
+                              : ev.oraInizio
+                            : '';
+
                           return (
                             <div
                               key={ev.id}
@@ -945,42 +959,53 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 e.stopPropagation();
                                 if (onEditEvent) onEditEvent(ev);
                               }}
-                              className={`p-1.5 rounded-lg border shadow-2xs transition-colors text-left min-w-0 cursor-pointer ${colorTheme.bg} ${colorTheme.border} hover:border-purple-400`}
+                              className={`p-1.5 sm:p-2 rounded-xl border shadow-2xs transition-colors text-left min-w-0 cursor-pointer ${
+                                colorTheme.isHex
+                                  ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                                  : `${colorTheme.bg} ${colorTheme.border}`
+                              } hover:border-purple-400`}
+                              style={colorTheme.isHex ? colorTheme.style : undefined}
                             >
-                              <div className="flex items-center justify-between gap-1 text-[10px] font-bold">
-                                <span className={`px-1 py-0.2 rounded text-[9px] uppercase font-black ${colorTheme.badge}`}>
-                                  {ev.categoria}
-                                </span>
-                                <span className="text-slate-500 dark:text-slate-400 truncate">
-                                  {ev.tuttoIlGiorno ? 'Tutto il gg' : ev.oraInizio || ''}
-                                </span>
-                              </div>
-                              <div className="text-xs font-bold text-slate-900 dark:text-white truncate mt-0.5">
+                              <div className="text-xs sm:text-sm font-bold leading-tight text-slate-900 dark:text-slate-100 truncate">
                                 {ev.titolo}
+                              </div>
+
+                              <div className="mt-1 flex flex-col gap-1 text-xs">
+                                {eventTimeStr && (
+                                  <div className="text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                                    {ev.oraInizio && ev.oraFine ? (
+                                      <div className="flex flex-col">
+                                        <span>{ev.oraInizio}-</span>
+                                        <span>{ev.oraFine}</span>
+                                      </div>
+                                    ) : (
+                                      <span>{eventTimeStr}</span>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1 max-w-full truncate ${colorTheme.badge}`}
+                                    style={colorTheme.isHex ? colorTheme.badgeStyle : undefined}
+                                  >
+                                    <span>{catInfo.emoji}</span>
+                                    <span className="truncate">{catInfo.label}</span>
+                                  </span>
+
+                                  {ev.luogo && (
+                                    <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 font-semibold text-[10px] sm:text-xs flex items-center gap-1 truncate max-w-[120px]">
+                                      <MapPin className="w-2.5 h-2.5 shrink-0" />
+                                      <span className="truncate">{ev.luogo}</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           );
                         })}
 
-                        {/* Riferimento visivo discreto al turno di lavoro */}
-                        {cell.dayShifts && cell.dayShifts.length > 0 && (
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditShift(cell.dayShifts![0]);
-                            }}
-                            className="p-1 rounded-md bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/40 text-[10px] font-semibold text-blue-900 dark:text-blue-300 flex items-center justify-between gap-1 cursor-pointer hover:border-blue-400 truncate"
-                            title="Tocca per vedere i dettagli del turno"
-                          >
-                            <span className="flex items-center gap-1 truncate">
-                              <Briefcase className="w-3 h-3 text-blue-600 shrink-0" />
-                              <span className="truncate">{cell.dayShifts[0].orarioInizio}-{cell.dayShifts[0].orarioFine}</span>
-                            </span>
-                            <span className="text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
-                              +€{Math.round(cell.dayShifts[0].guadagnoTotaleLordo)}
-                            </span>
-                          </div>
-                        )}
+
                       </div>
                     ) : (
                       /* CORPO CELLA: Modalità TURNI DI LAVORO */
@@ -1039,31 +1064,27 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               </div>
 
                               <div className="mt-1 flex flex-col gap-1 text-xs">
-                                <span className="text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm">
+                                <span className="text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm self-end">
                                   +€{Math.round(s.guadagnoTotaleLordo)}
                                 </span>
 
                                 <div className="flex flex-wrap items-center gap-1 mt-0.5">
                                   {!isFerie && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 font-semibold text-[10px] sm:text-xs">
-                                      {s.oreTotali}h
+                                    <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 font-semibold text-[10px] sm:text-xs flex items-center gap-0.5">
+                                      <Coins className="w-2.5 h-2.5" /> {s.oreTotali}h
                                     </span>
                                   )}
                                   {s.oreSupplementari > 0 && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold text-[10px] sm:text-xs">
-                                      {s.oreSupplementari}h straord.
+                                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
+                                      <TrendingUp className="w-2.5 h-2.5" /> {s.oreSupplementari}h
                                     </span>
                                   )}
                                   {s.oreNotturne > 0 && (
                                     <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/90 text-indigo-900 dark:text-indigo-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
-                                      <Moon className="w-2.5 h-2.5" /> {s.oreNotturne}h notte
+                                      <Moon className="w-2.5 h-2.5" /> {s.oreNotturne}h
                                     </span>
                                   )}
-                                  {s.tipoGiorno === 'domenica' && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/90 text-blue-950 dark:text-blue-200 font-bold text-[10px] sm:text-xs">
-                                      Dom
-                                    </span>
-                                  )}
+
                                   {s.tipoGiorno === 'festivo' && (
                                     <span className="px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/90 text-rose-950 dark:text-rose-200 font-bold text-[10px] sm:text-xs">
                                       Festivo

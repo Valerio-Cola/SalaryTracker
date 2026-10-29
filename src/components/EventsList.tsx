@@ -20,6 +20,7 @@ import {
   Bookmark,
 } from 'lucide-react';
 import { COLOR_CLASSES } from './EventsSummaryCard';
+import { resolveEventColor, resolveCategoryInfo } from '../utils/eventTheme';
 
 interface EventsListProps {
   events: AppEvent[];
@@ -200,7 +201,8 @@ export const EventsList: React.FC<EventsListProps> = ({
       ) : (
         <div className="space-y-2.5">
           {filteredEvents.map((ev) => {
-            const colorTheme = COLOR_CLASSES[ev.colore || 'blue'] || COLOR_CLASSES.blue;
+            const colorTheme = resolveEventColor(ev.colore);
+            const catInfo = resolveCategoryInfo(ev.categoria, [], ev.emoji);
             const diffInfo = getDaysDiffText(ev.data);
             const [y, m, d] = ev.data.split('-').map(Number);
             const dateObj = new Date(Date.UTC(y, m - 1, d));
@@ -211,7 +213,12 @@ export const EventsList: React.FC<EventsListProps> = ({
               <div
                 key={ev.id}
                 onClick={() => onEditEvent(ev)}
-                className={`p-3.5 sm:p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer group ${colorTheme.bg} ${colorTheme.border} hover:shadow-xs hover:border-purple-400`}
+                style={colorTheme.isHex ? colorTheme.style : undefined}
+                className={`p-3.5 sm:p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer group ${
+                  colorTheme.isHex
+                    ? 'bg-slate-50/90 dark:bg-slate-900/90 border-slate-300 dark:border-slate-700'
+                    : `${colorTheme.bg} ${colorTheme.border}`
+                } hover:shadow-xs hover:border-purple-400`}
               >
                 {/* Data e Dettagli */}
                 <div className="flex items-start sm:items-center gap-3 min-w-0">
@@ -234,8 +241,12 @@ export const EventsList: React.FC<EventsListProps> = ({
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                         {ev.titolo}
                       </h4>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider ${colorTheme.badge}`}>
-                        {ev.categoria}
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 ${colorTheme.badge}`}
+                        style={colorTheme.isHex ? colorTheme.badgeStyle : undefined}
+                      >
+                        <span>{catInfo.emoji}</span>
+                        <span>{catInfo.label}</span>
                       </span>
                       <span className={`px-2 py-0.5 rounded-md text-[10px] ${diffInfo.className}`}>
                         {diffInfo.text}
