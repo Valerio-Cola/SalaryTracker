@@ -353,7 +353,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
           <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
             € {totalBase.toFixed(2)}
           </div>
-          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-semibold text-right">
+          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-bold text-right">
             {totalOre.toFixed(1)}h {totalOreFerie > 0 ? `(incluso ${totalOreFerie.toFixed(1)}h ferie)` : ''} × €{config.pagaBaseOraria.toFixed(2)}/h
           </div>
         </div>

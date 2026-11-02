@@ -391,6 +391,29 @@ export default function App() {
     }
   };
 
+  // Reset solo eventi personali
+  const handleResetEventsOnly = () => {
+    if (confirm('Vuoi davvero cancellare TUTTI gli eventi e gli impegni personali registrati?')) {
+      setEvents([]);
+      saveStoredEvents([]);
+      setIsConfigOpen(false);
+      showNotification('Registro eventi svuotato.');
+      checkAndAutoSync(config, shifts, expenses, []);
+    }
+  };
+
+  // Cancellazione immediata turni ed eventi registrati su richiesta dell'utente per la preview
+  useEffect(() => {
+    const clearKey = 'cleared_preview_user_request_2026_11_02';
+    if (!localStorage.getItem(clearKey)) {
+      setShifts([]);
+      saveStoredShifts([]);
+      setEvents([]);
+      saveStoredEvents([]);
+      localStorage.setItem(clearKey, 'true');
+    }
+  }, []);
+
   // Elimina turni in un intervallo di date
   const handleDeleteShiftsInRange = (fromDate: string, toDate: string) => {
     const toDeleteCount = shifts.filter((s) => s.dataGrezza >= fromDate && s.dataGrezza <= toDate).length;
@@ -540,7 +563,7 @@ export default function App() {
             <div className="space-y-3 max-w-2xl">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
-                  <span>👋</span> Benvenuto su Salary Tracker!
+                  <span>👋</span> Benvenuto/a su Salary Tracker!
                 </h2>
               </div>
 
@@ -797,8 +820,10 @@ export default function App() {
             onClose={() => setIsConfigOpen(false)}
             config={config}
             shifts={shifts}
+            events={events}
             onSave={handleSaveConfig}
             onResetShiftsOnly={handleResetShiftsOnly}
+            onResetEventsOnly={handleResetEventsOnly}
             onDeleteShiftsInRange={handleDeleteShiftsInRange}
             templates={templates}
             onSaveTemplates={(newTemplates) => {

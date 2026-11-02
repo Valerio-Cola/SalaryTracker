@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   ShieldAlert,
 } from 'lucide-react';
+import { useDraggableScroll } from '../utils/useDraggableScroll';
 
 interface PrivacyLegalModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ type TabType = 'disclaimer' | 'gdpr' | 'sync' | 'cookies' | 'terms';
 
 export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>('disclaimer');
+  const { scrollProps, isGrabbing } = useDraggableScroll();
 
   if (!isOpen) return null;
 
@@ -54,65 +56,70 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3 pt-2 overflow-x-auto shrink-0">
+        {/* Tab Navigation Scorrevole con Rotella, Drag & Drop e Scrollbar visibile */}
+        <div
+          {...scrollProps}
+          className={`flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3 pt-2.5 pb-1 gap-1.5 overflow-x-auto shrink-0 select-none ${
+            isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
+          } scrollbar-thin [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.6)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-slate-200/50 dark:[&::-webkit-scrollbar-track]:bg-slate-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/80 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500/80 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-blue-500`}
+        >
           <button
             onClick={() => setActiveTab('disclaimer')}
-            className={`px-3 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 text-xs sm:text-[13px] font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'disclaimer'
                 ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 border-amber-500 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <AlertTriangle className="w-3.5 h-3.5" />
+            <AlertTriangle className="w-4 h-4" />
             1. Disclaimer Legale
           </button>
 
           <button
             onClick={() => setActiveTab('gdpr')}
-            className={`px-3 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 text-xs sm:text-[13px] font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'gdpr'
                 ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-blue-500 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Scale className="w-3.5 h-3.5" />
+            <Scale className="w-4 h-4" />
             2. Privacy Policy (GDPR)
           </button>
 
           <button
             onClick={() => setActiveTab('sync')}
-            className={`px-3 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 text-xs sm:text-[13px] font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'sync'
                 ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 border-purple-500 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Server className="w-3.5 h-3.5" />
+            <Server className="w-4 h-4" />
             3. Cloud Sync & Sicurezza
           </button>
 
           <button
             onClick={() => setActiveTab('cookies')}
-            className={`px-3 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 text-xs sm:text-[13px] font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'cookies'
                 ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 border-emerald-500 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Cookie className="w-3.5 h-3.5" />
+            <Cookie className="w-4 h-4" />
             4. Cookie & Storage
           </button>
 
           <button
             onClick={() => setActiveTab('terms')}
-            className={`px-3 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 text-xs sm:text-[13px] font-bold rounded-t-xl transition-all border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'terms'
                 ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-700 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="w-4 h-4" />
             5. Licenza & Diritti
           </button>
         </div>
@@ -230,6 +237,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                   <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
                     <li><strong>Dati Contrattuali e Retributivi:</strong> Parametri di tariffa oraria, stipendio lordo/netto teorico, monte ore settimanale, percentuali di maggiorazione oraria, ratei 13ª/14ª, bonus Legge 207/2024 e voci personalizzate.</li>
                     <li><strong>Dati di Turnistica e Presenza:</strong> Date dei turni, orari di entrata/uscita, pause non retribuite, giornate di ferie/permessi retribuiti e note personali di lavoro.</li>
+                    <li><strong>Dati di Eventi, Impegni e Promemoria:</strong> Titoli, orari, date, luoghi, categorie con emoji ed etichette colore degli impegni personali inseriti nel calendario bi-funzione.</li>
                     <li><strong>Gestione Spese e Rimborsi:</strong> Titoli delle spese, importi in euro, categorie e date (memorizzati unicamente per il bilancio personale dell&apos;utente).</li>
                     <li><strong>Dati di Autenticazione Sync (opzionali):</strong> Identificativo Utente e Password personale (memorizzata nel database cloud esclusivamente in formato crittografato e irreversibile tramite algoritmo di hashing, senza conservazione del testo in chiaro).</li>
                   </ul>
@@ -376,9 +384,12 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
                   <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
                     <li><code>bk_config_v2</code>: Configurazione contrattuale, tariffe, maggiorazioni e bonus.</li>
                     <li><code>bk_storico_v2</code>: Registro completo dei turni lavorativi e ferie.</li>
+                    <li><code>bk_events_v2</code>: Registro completo degli eventi e impegni personali del calendario.</li>
+                    <li><code>bk_custom_categories_v2</code>: Categorie personalizzate create dall&apos;utente con relative emoji.</li>
                     <li><code>bk_expenses_v2</code>: Registro spese personali e rimborsi del mese.</li>
                     <li><code>bk_templates_v2</code>: Modelli rapidi preimpostati per inserimento turni veloci.</li>
                     <li><code>bk_sync_creds</code>: Credenziali di sincronizzazione per il cloud (se attivate).</li>
+                    <li><code>calendar_view_mode</code>: Preferenza visuale attiva (vista mensile vs vista settimanale).</li>
                     <li><code>app_theme</code>: Preferenza visiva modalità Notte / Giorno.</li>
                   </ul>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed pt-1">
@@ -467,7 +478,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>Versione Informativa: 2.2 • Ultimo aggiornamento: Ottobre 2026</span>
+            <span>Versione Informativa: 2.3 • Ultimo aggiornamento: Novembre 2026</span>
           </div>
           <button
             onClick={onClose}

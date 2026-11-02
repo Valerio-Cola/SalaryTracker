@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ContractConfig, CustomAllowance, CustomHourlySurcharge, QuickTemplate, Shift } from '../types';
+import { ContractConfig, CustomAllowance, CustomHourlySurcharge, QuickTemplate, Shift, AppEvent } from '../types';
 import { DEFAULT_TEMPLATES } from '../utils/storage';
 import {
   X,
@@ -87,8 +87,10 @@ interface ContractSetupModalProps {
   onClose: () => void;
   config: ContractConfig;
   shifts?: Shift[];
+  events?: AppEvent[];
   onSave: (newConfig: ContractConfig, newTemplates?: QuickTemplate[]) => void;
   onResetShiftsOnly: () => void;
+  onResetEventsOnly?: () => void;
   onDeleteShiftsInRange?: (fromDate: string, toDate: string) => void;
   templates: QuickTemplate[];
   onSaveTemplates: (newTemplates: QuickTemplate[]) => void;
@@ -99,8 +101,10 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
   onClose,
   config,
   shifts = [],
+  events = [],
   onSave,
   onResetShiftsOnly,
+  onResetEventsOnly,
   onDeleteShiftsInRange,
   templates,
   onSaveTemplates,
@@ -150,6 +154,22 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
       activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
   }, [activeSection]);
+
+  // Supporto rotellina del mouse per lo scorrimento orizzontale dell'indice
+  useEffect(() => {
+    const el = indexBarRef.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0 && Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   // Stato per nuova voce personalizzata cedolino
   const [newVoceNome, setNewVoceNome] = useState('');
@@ -517,16 +537,16 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
         {/* Indice Navigazione Cliccabile - Sticky con ScrollSpy automatico */}
         <div
           ref={indexBarRef}
-          className="shrink-0 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-xs border-b border-slate-200 dark:border-slate-700/80 px-3 py-2 overflow-x-auto no-scrollbar flex items-center gap-1.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300"
+          className="shrink-0 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-xs border-b border-slate-200 dark:border-slate-700/80 px-3 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300"
         >
-          <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider pr-1 shrink-0">
+          <span className="text-[9.5px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider pr-0.5 shrink-0">
             Indice:
           </span>
           <button
             type="button"
             data-section="sec-generale"
             onClick={() => scrollToSection('sec-generale')}
-            className={`px-2 py-0.5 rounded-md transition-all text-[10px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+            className={`px-2.5 py-0.5 rounded-md transition-all text-[11px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
               activeSection === 'sec-generale'
                 ? 'bg-blue-600 text-white shadow-xs font-bold'
                 : 'bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/60'
@@ -539,7 +559,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
             type="button"
             data-section="sec-maggiorazioni"
             onClick={() => scrollToSection('sec-maggiorazioni')}
-            className={`px-2 py-0.5 rounded-md transition-all text-[10px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+            className={`px-2.5 py-0.5 rounded-md transition-all text-[11px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
               activeSection === 'sec-maggiorazioni'
                 ? 'bg-purple-600 text-white shadow-xs font-bold'
                 : 'bg-purple-50/80 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200/60 dark:border-purple-800/60'
@@ -552,7 +572,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
             type="button"
             data-section="sec-ratei"
             onClick={() => scrollToSection('sec-ratei')}
-            className={`px-2 py-0.5 rounded-md transition-all text-[10px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+            className={`px-2.5 py-0.5 rounded-md transition-all text-[11px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
               activeSection === 'sec-ratei'
                 ? 'bg-emerald-600 text-white shadow-xs font-bold'
                 : 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/60 dark:border-emerald-800/60'
@@ -565,7 +585,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
             type="button"
             data-section="sec-ferie"
             onClick={() => scrollToSection('sec-ferie')}
-            className={`px-2 py-0.5 rounded-md transition-all text-[10px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+            className={`px-2.5 py-0.5 rounded-md transition-all text-[11px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
               activeSection === 'sec-ferie'
                 ? 'bg-amber-500 text-white shadow-xs font-bold'
                 : 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200/60 dark:border-amber-800/60'
@@ -578,7 +598,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
             type="button"
             data-section="sec-voci"
             onClick={() => scrollToSection('sec-voci')}
-            className={`px-2 py-0.5 rounded-md transition-all text-[10px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+            className={`px-2.5 py-0.5 rounded-md transition-all text-[11px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
               activeSection === 'sec-voci'
                 ? 'bg-sky-600 text-white shadow-xs font-bold'
                 : 'bg-sky-50/80 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200/60 dark:border-sky-800/60'
@@ -591,7 +611,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
             type="button"
             data-section="sec-preset"
             onClick={() => scrollToSection('sec-preset')}
-            className={`px-2 py-0.5 rounded-md transition-all text-[10px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+            className={`px-2.5 py-0.5 rounded-md transition-all text-[11px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
               activeSection === 'sec-preset'
                 ? 'bg-indigo-600 text-white shadow-xs font-bold'
                 : 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60'
@@ -604,7 +624,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
             type="button"
             data-section="sec-reset"
             onClick={() => scrollToSection('sec-reset')}
-            className={`px-2 py-0.5 rounded-md transition-all text-[10px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+            className={`px-2.5 py-0.5 rounded-md transition-all text-[11px] whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
               activeSection === 'sec-reset'
                 ? 'bg-rose-600 text-white shadow-xs font-bold'
                 : 'bg-rose-50/80 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200/60 dark:border-rose-800/60'
@@ -1906,7 +1926,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
                   </div>
                 </div>
 
-                {/* Blocco 2: Reset Completo */}
+                {/* Blocco 2: Reset Completo Turni */}
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs">
                   <span className="text-slate-600 dark:text-slate-400">
                     Oppure cancella <strong>TUTTI i {shifts.length} turni</strong> presenti nello storico:
@@ -1916,9 +1936,25 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
                     onClick={onResetShiftsOnly}
                     className="px-3 py-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg font-bold flex items-center gap-1 transition-colors border border-rose-200 dark:border-rose-900/60 cursor-pointer self-start sm:self-auto shrink-0"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" /> Svuota Tutto lo Storico
+                    <RotateCcw className="w-3.5 h-3.5" /> Svuota Turni
                   </button>
                 </div>
+
+                {/* Blocco 3: Reset Eventi */}
+                {onResetEventsOnly && (
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs">
+                    <span className="text-slate-600 dark:text-slate-400">
+                      Oppure cancella <strong>TUTTI i {events.length} eventi</strong> e impegni personali:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={onResetEventsOnly}
+                      className="px-3 py-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/50 rounded-lg font-bold flex items-center gap-1 transition-colors border border-purple-200 dark:border-purple-900/60 cursor-pointer self-start sm:self-auto shrink-0"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Svuota Eventi
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

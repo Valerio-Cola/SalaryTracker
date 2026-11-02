@@ -18,17 +18,23 @@ import {
   FileCode2,
   Download,
   Upload,
+  TrendingUp,
+  MapPin,
+  CalendarDays,
+  Target,
 } from 'lucide-react';
+import { useDraggableScroll } from '../utils/useDraggableScroll';
 
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type TabType = 'turni' | 'tariffe' | 'bonus' | 'ferie' | 'export' | 'cloud';
+type TabType = 'turni' | 'eventi' | 'spese' | 'bonus' | 'ferie' | 'tariffe' | 'export' | 'cloud';
 
 export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>('turni');
+  const { scrollProps, isGrabbing } = useDraggableScroll();
 
   if (!isOpen) return null;
 
@@ -44,7 +50,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div>
               <h2 className="text-lg font-bold text-white">Guida & Aiuto Salary Tracker</h2>
               <p className="text-xs text-slate-300">
-                Tutto quello che c'è da sapere per calcolare stipendio, turni, ferie ed esportazioni
+                Tutto quello che c'è da sapere per gestire turni, stipendio, eventi, ferie e stampe
               </p>
             </div>
           </div>
@@ -56,165 +62,310 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 overflow-x-auto no-scrollbar shrink-0 px-2 pt-2 gap-1 text-xs font-semibold">
+        {/* Tab Navigation Scorrevole con Rotella, Drag & Drop e Scrollbar visibile */}
+        <div
+          {...scrollProps}
+          className={`flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 overflow-x-auto shrink-0 px-3 pt-2.5 pb-1 gap-1.5 text-xs sm:text-[13px] font-semibold select-none ${
+            isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
+          } scrollbar-thin [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.6)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-slate-200/50 dark:[&::-webkit-scrollbar-track]:bg-slate-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/80 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500/80 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-blue-500`}
+        >
           <button
             onClick={() => setActiveTab('turni')}
-            className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'turni'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Clock className="w-3.5 h-3.5" />
+            <Clock className="w-4 h-4" />
             Turni & Orari
           </button>
 
           <button
-            onClick={() => setActiveTab('bonus')}
-            className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'bonus'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs'
+            onClick={() => setActiveTab('eventi')}
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
+              activeTab === 'eventi'
+                ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Coins className="w-3.5 h-3.5" />
+            <Calendar className="w-4 h-4" />
+            Eventi & Agenda
+          </button>
+
+          <button
+            onClick={() => setActiveTab('spese')}
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
+              activeTab === 'spese'
+                ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            Spese & Bilancio
+          </button>
+
+          <button
+            onClick={() => setActiveTab('bonus')}
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
+              activeTab === 'bonus'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Coins className="w-4 h-4" />
             Bonus & Busta Paga
           </button>
 
           <button
             onClick={() => setActiveTab('ferie')}
-            className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'ferie'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Palmtree className="w-3.5 h-3.5" />
+            <Palmtree className="w-4 h-4" />
             Ferie & Saldo
           </button>
 
           <button
             onClick={() => setActiveTab('tariffe')}
-            className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'tariffe'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <FileText className="w-3.5 h-3.5" />
-            Tariffe & Bonus
+            <FileText className="w-4 h-4" />
+            Tariffe & Contratto
           </button>
 
           <button
             onClick={() => setActiveTab('export')}
-            className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'export'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Printer className="w-3.5 h-3.5" />
-            Stampa, Calendar & Backup
+            <Printer className="w-4 h-4" />
+            Stampa & Backup
           </button>
 
           <button
             onClick={() => setActiveTab('cloud')}
-            className={`px-3 py-2 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-t-xl transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'cloud'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-t border-x border-slate-200 dark:border-slate-700 shadow-xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Cloud className="w-3.5 h-3.5" />
+            <Cloud className="w-4 h-4" />
             Cloud & Sync
           </button>
         </div>
 
         {/* Content Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+          {/* TAB 1: TURNI & ORARI */}
           {activeTab === 'turni' && (
             <div className="space-y-4">
               <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl space-y-1">
                 <h3 className="font-bold text-sm text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  Come inserire un turno
+                  Come registrare un turno di lavoro
                 </h3>
                 <p>
-                  Per inserire un turno ti basta cliccare su un qualsiasi giorno del <strong>Calendario</strong> o sul pulsante <strong>"Nuovo Turno"</strong>.
-                  Inserisci l'orario di entrata, l'orario di uscita e gli eventuali minuti di pausa (es. 15 o 30 minuti).
+                  Per inserire un turno ti basta cliccare su un qualsiasi giorno del <strong>Calendario</strong> o sul pulsante rapido <strong>&quot;Nuovo Turno&quot;</strong>.
+                  Inserisci l&apos;orario di entrata, l&apos;orario di uscita e gli eventuali minuti di pausa (es. 15 o 30 minuti).
                 </p>
               </div>
 
+              {/* Box Calcolo Obiettivo Contrattuale (~104h per 24h/settimana) */}
+              <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-xl space-y-2">
+                <div className="font-bold text-sm text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5">
+                  <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>🎯 Perché con 24h settimanali l&apos;obiettivo mensile è di ~104h?</span>
+                </div>
+                <p className="text-[11.5px] text-emerald-900 dark:text-emerald-300 leading-relaxed">
+                  Nei contratti di lavoro e nei CCNL italiani, un mese non è mai formato da 4 settimane esatte (4 settimane corrispondono a soli 28 giorni, mentre i mesi hanno 30 o 31 giorni).
+                </p>
+                <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-emerald-200/80 dark:border-emerald-800 text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300">
+                  <p className="font-semibold text-slate-900 dark:text-white">
+                    La formula contrattuale standard applicata anche dai consulenti del lavoro:
+                  </p>
+                  <code className="block p-1.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[11px] text-emerald-700 dark:text-emerald-300 font-bold">
+                    52 settimane all&apos;anno / 12 mesi = 4,333 settimane al mese
+                  </code>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Moltiplicando le ore settimanali del tuo contratto per il coefficiente mensile:
+                    <br />
+                    • <strong>24 ore/settimana × 4,333 = 103,99 ore</strong> (arrotondato a <strong>~104h</strong>).
+                    <br />
+                    • <strong>40 ore/settimana × 4,333 = 173,33 ore</strong> (arrotondato a <strong>~173h</strong>).
+                  </p>
+                </div>
+              </div>
+
+              {/* Box Vista Settimanale vs Mensile */}
+              <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl space-y-1.5">
+                <div className="font-bold text-sm text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
+                  <CalendarDays className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span>🗓️ Vista Mensile e Nuova Vista Settimanale</span>
+                </div>
+                <p className="text-[11.5px] text-indigo-900 dark:text-indigo-300 leading-relaxed">
+                  In cima al calendario puoi scegliere tra visualizzazione <strong>Mese</strong> o <strong>Settimana</strong>:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-400 text-[11px]">
+                  <li><strong>Vista Settimanale:</strong> Mostra le singole giornate in colonne dedicate e calcola in tempo reale la <em>barra dei totali settimanali</em>: ore lavorate, straordinari, ore notturne e guadagno lordo maturato in quella specifica settimana.</li>
+                  <li><strong>Targhette compatte e intuitive:</strong> Gli orari di lavoro vanno a capo automaticamente sul trattino (<code>-</code>) per non occupare spazio; le ore totali hanno l&apos;icona delle monete, gli straordinari mostrano solo il simbolo <code>📈</code> e le ore (es. <em>📈 2h</em>), le ore notturne mostrano solo il simbolo <code>🌙</code> e le ore (es. <em>🌙 2h</em>), mentre il guadagno in euro è allineato a destra.</li>
+                </ul>
+              </div>
+
+              {/* Straordinari e Notte */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
                     🌙 <span>Turni Notturni Automatici</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    L'app rileva e conteggia automaticamente i minuti notturni esatti applicando la maggiorazione prevista. Nella scheda <strong>Tariffe</strong> puoi personalizzare la fascia oraria notturna inserendo l'orario esatto di inizio e di fine notte stabilito dal tuo CCNL aziendale.
+                    L&apos;app rileva e conteggia automaticamente i minuti notturni esatti applicando la maggiorazione. Nella scheda <strong>Tariffe</strong> puoi personalizzare l&apos;orario di inizio e di fine notte stabilito dal tuo CCNL (es. 22:00-06:00).
                   </p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                    📈 <span>Straordinari Settimanali</span>
+                    📈 <span>Straordinari &amp; Settimana a Cavallo</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Ogni ora lavorata oltre il monte ore settimanale (es. 24h a settimana) viene riconosciuta come lavoro supplementare/straordinario con la relativa tariffa extra.
+                    Ogni ora eccedente il monte ore settimanale (es. 24h) viene riconosciuta come straordinario. Se la settimana è a cavallo di due mesi, il calcolo attribuisce gli straordinari al cedolino corretto.
                   </p>
                 </div>
               </div>
 
-              <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl space-y-1">
-                <div className="font-bold text-emerald-950 dark:text-emerald-200 flex items-center gap-1">
-                  ⚡ <span>Settimana a cavallo di due mesi</span>
+              {/* Preset Rapidi */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>⏰ Preset di Orario Preimpostati</span>
                 </div>
-                <p className="text-[11px] text-emerald-900 dark:text-emerald-300">
-                  Se una settimana inizia in un mese (es. Lunedì-Martedì 30-31 Agosto) e termina nel mese successivo (Mercoledì-Domenica a Settembre), il sistema conteggia le ore di tutta la settimana e <strong>attribuisce correttamente gli straordinari alla busta paga del nuovo mese</strong>, proprio come fa il consulente del lavoro!
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Nella finestra del turno puoi cliccare direttamente sui tuoi <strong>preset rapidi</strong> (es. <em>Apertura</em>, <em>Turno Pranzo</em>, <em>Chiusura Notte</em>) per compilare all&apos;istante tutti i campi. Puoi crearne di nuovi dalla scheda <strong>Tariffe &gt; Preset Orari</strong>.
                 </p>
               </div>
+            </div>
+          )}
 
-              <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl space-y-2">
-                <div className="font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span>⏰ Preset di Orari Rapidi & Personalizzabili</span>
-                </div>
-                <p className="text-[11px] text-indigo-900 dark:text-indigo-300 leading-relaxed">
-                  Fai spesso gli stessi orari (es. <em>Apertura</em>, <em>Turno Pranzo</em>, <em>Chiusura Notte</em>)?
-                  Nella finestra del turno puoi cliccare direttamente sui tuoi <strong>preset rapidi</strong> per compilare all&apos;istante orario di entrata, orario di uscita, pausa e note, senza doverli digitare ogni volta.
-                </p>
-                <div className="p-2.5 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-indigo-200 dark:border-indigo-800 text-[11px] space-y-1 text-slate-700 dark:text-slate-300">
-                  <strong className="block text-indigo-950 dark:text-indigo-200 font-semibold">Come creare i tuoi preset su misura:</strong>
-                  <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
-                    <li>Apri il menu <strong>&quot;Tariffe&quot;</strong> nella barra superiore e clicca su <strong>&quot;Preset Orari&quot;</strong> nell&apos;indice.</li>
-                    <li>Digita il nome del modello (es. <em>&quot;Apertura Bar&quot;</em>, <em>&quot;Turno Spezzato&quot;</em>), seleziona gli orari e la pausa.</li>
-                    <li>Clicca su <strong>&quot;Salva Preset&quot;</strong>: il tuo nuovo orario comparirà subito fra i pulsanti di scelta rapida!</li>
-                    <li>Puoi gestire, eliminare o ripristinare i modelli predefiniti in qualsiasi momento.</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Calendario Bi-Funzione e Gestione Eventi */}
-              <div className="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/60 rounded-xl space-y-2">
-                <div className="font-bold text-purple-950 dark:text-purple-200 flex items-center gap-1.5">
+          {/* TAB 2: EVENTI & AGENDINA (NUOVA SCHEDA COMPLETA) */}
+          {activeTab === 'eventi' && (
+            <div className="space-y-4">
+              <div className="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/60 rounded-xl space-y-1">
+                <h3 className="font-bold text-sm text-purple-950 dark:text-purple-200 flex items-center gap-1.5">
                   <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <span>🎯 Calendario Bi-Funzione: Turni & Eventi</span>
-                </div>
-                <p className="text-[11px] text-purple-900 dark:text-purple-300 leading-relaxed">
-                  Il calendario ti permette di passare in ogni momento dalla visualizzazione <strong>&quot;Turni di lavoro&quot;</strong> alla visualizzazione <strong>&quot;Eventi&quot;</strong> (sia in vista Mensile che Settimanale):
+                  Calendario Bi-Funzione: Gestione Eventi &amp; Impegni
+                </h3>
+                <p>
+                  Salary Tracker include un calendario integrato per appuntamenti personali, scadenze, visite mediche o impegni di lavoro, permettendoti di avere tutta la tua vita organizzata in un unico posto.
                 </p>
-                <div className="p-2.5 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-purple-200 dark:border-purple-800 text-[11px] space-y-1 text-slate-700 dark:text-slate-300">
-                  <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
-                    <li><strong>Box Prossimo Evento & Countdown:</strong> Quando attivi la vista Eventi, il riepilogo superiore si trasforma nell&apos;Agenda con il countdown in tempo reale (<em>&quot;Oggi!&quot;</em>, <em>&quot;Domani&quot;</em>, <em>&quot;Fra X giorni&quot;</em>).</li>
-                    <li><strong>Categorie & Colori:</strong> Assegna categorie (Lavoro, Personale, Scadenza, Salute, Svago, Commissioni) ed etichette colorate.</li>
-                    <li><strong>Incrocio Turni/Eventi:</strong> In vista Eventi vedrai comunque un promemoria discreto con il tuo turno di lavoro, così da organizzare appuntamenti senza sovrapposizioni.</li>
-                  </ul>
+              </div>
+
+              <div className="space-y-3">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-purple-500" />
+                    <span>1. Come passare da Turni a Eventi</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Sopra al calendario trovi il selettore bi-funzione: premi <strong>&quot;Eventi&quot;</strong> per visualizzare i tuoi impegni. In questa modalità, ogni giorno mostra gli eventi con la loro etichetta colorata, orario e luogo. Inoltre, se quel giorno lavori, vedrai un promemoria discreto con il tuo turno per evitare doppie prenotazioni.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-purple-500" />
+                    <span>2. Creazione Evento, Orari e Tutto il Giorno</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Cliccando su un giorno o su <em>&quot;Nuovo Evento&quot;</em> puoi specificare un orario di inizio e fine, oppure attivare la spunta <strong>&quot;Tutto il giorno&quot;</strong> per compleanni o ricorrenze. Gli orari nel calendario vanno a capo automaticamente dopo il trattino (<code>-</code>) per non essere mai tagliati.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>3. Categorie con Emoji e Colori Personalizzati</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Puoi classificare gli eventi con categorie pronte (<em>Lavoro</em>, <em>Personale</em>, <em>Scadenza</em>, <em>Salute</em>, <em>Svago</em>, <em>Commissioni</em>) o <strong>creare le tue categorie personalizzate</strong> scegliendo emoji e colori. È disponibile sia una palette di colori pastello sia un selettore di colore esadecimale (HEX) libero.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Target className="w-4 h-4 text-blue-500" />
+                    <span>4. Scheda Agenda &amp; Countdown in tempo reale</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Quando la modalità Eventi è attiva, il riassunto superiore del calendario si trasforma nella card <strong>Agenda</strong>: mette in primo piano il prossimo evento imminente con badge dinamico (<em>&quot;Oggi!&quot;</em>, <em>&quot;Domani&quot;</em>, <em>&quot;Fra X giorni&quot;</em>) e consente di filtrare gli impegni per categoria.
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
+          {/* TAB 3: SPESE & BILANCIO (NUOVA SCHEDA COMPLETA) */}
+          {activeTab === 'spese' && (
+            <div className="space-y-4">
+              <div className="p-3.5 bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl space-y-1">
+                <h3 className="font-bold text-sm text-rose-950 dark:text-rose-200 flex items-center gap-1.5">
+                  <Receipt className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                  Gestione Spese, Uscite e Bilancio Reale
+                </h3>
+                <p>
+                  Oltre a calcolare lo stipendio guadagnato, l&apos;app ti consente di registrare le tue uscite quotidiane per sapere esattamente quanto denaro ti rimane a fine mese.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Receipt className="w-4 h-4 text-rose-500" />
+                    <span>1. Come inserire una spesa</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Puoi toccare l&apos;icona dello scontrino <strong>🧾 (Ricevuta)</strong> presente in hover su ogni casella del calendario, oppure premere il pulsante <strong>&quot;Aggiungi Spesa&quot;</strong> nella barra superiore o nella sezione Spese.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Coins className="w-4 h-4 text-emerald-500" />
+                    <span>2. Calcolo del Saldo Netto Reale</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Nel riepilogo mensile in cima alla pagina, il terzo box indica il totale delle <strong>Uscite Registrate</strong> e calcola automaticamente:
+                    <br />
+                    <code className="inline-block mt-1 p-1 bg-slate-200 dark:bg-slate-700 rounded text-slate-900 dark:text-white font-mono text-[11px]">
+                      Saldo Netto Disponibile = Stipendio Netto Stimato - Totale Spese del Mese
+                    </code>
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <FileSpreadsheet className="w-4 h-4 text-blue-500" />
+                    <span>3. Categorie ed Esportazione</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Le spese sono suddivise per categoria (<em>Cibo</em>, <em>Trasporti</em>, <em>Utenze</em>, <em>Salute</em>, <em>Svago</em>, <em>Altro</em>) e vengono incluse nel backup JSON e nei report mensili esportati.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: BONUS & BUSTA PAGA */}
           {activeTab === 'bonus' && (
             <div className="space-y-4">
               <div className="p-3.5 bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/60 rounded-xl space-y-1">
@@ -231,10 +382,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl space-y-2">
                 <div className="font-bold text-sm text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  Voce "SOMMA ART.1 C.4 L.207/24" (Legge di Bilancio 2025)
+                  Voce &quot;SOMMA ART.1 C.4 L.207/24&quot; (Legge di Bilancio 2025)
                 </div>
                 <p className="text-[11px] text-amber-900 dark:text-amber-300">
-                  È il nuovo bonus introdotto dalla Legge di Bilancio 2025 che sostituisce il precedente "taglio del cuneo fiscale". 
+                  È il nuovo bonus introdotto dalla Legge di Bilancio 2025 che sostituisce il precedente &quot;taglio del cuneo fiscale&quot;. 
                   È <strong>totalmente esente da contributi e imposte</strong> (non fa cumulo con il reddito).
                 </p>
                 <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-amber-200/80 dark:border-amber-800 text-[11px] space-y-1">
@@ -257,22 +408,23 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <span>Trattamento Integrativo (Bonus Renzi ~€98,63)</span>
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                  È un credito d'imposta netto riconosciuto dallo Stato. Se abilitato nelle Tariffe, viene aggiunto interamente al tuo netto mensile senza subire trattenute.
+                  È un credito d&apos;imposta netto riconosciuto dallo Stato. Se abilitato nelle Tariffe, viene aggiunto interamente al tuo netto mensile senza subire trattenute.
                 </p>
               </div>
 
               {/* Voci personalizzate */}
               <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                 <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <span>Voci & Bonus Personalizzabili in Busta</span>
+                  <span>Voci &amp; Bonus Personalizzabili in Busta</span>
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                  Hai indennità particolari come "Indennità Cassa", "Buoni Pasto / Ticket Restaurant", "Premio Presenza" o rimborsi spese? Nella sezione <strong>Tariffe &gt; Bonus</strong> puoi aggiungerle impostando un <strong>accredito mensile fisso</strong> oppure a cadenza periodica (<strong>ogni tot mesi</strong>, es. bimestrale, trimestrale o semestrale) con anteprima automatica dei mesi di paga!
+                  Hai indennità particolari come &quot;Indennità Cassa&quot;, &quot;Buoni Pasto / Ticket Restaurant&quot;, &quot;Premio Presenza&quot; o rimborsi spese? Nella sezione <strong>Tariffe &gt; Bonus</strong> puoi aggiungerle impostando un <strong>accredito mensile fisso</strong> oppure a cadenza periodica (<strong>ogni tot mesi</strong>, es. bimestrale, trimestrale o semestrale) con anteprima automatica dei mesi di paga!
                 </p>
               </div>
             </div>
           )}
 
+          {/* TAB 5: FERIE & SALDO */}
           {activeTab === 'ferie' && (
             <div className="space-y-4">
               <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl space-y-1">
@@ -281,7 +433,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   Calcolo e Gestione delle Ferie
                 </h3>
                 <p>
-                  L'app monitora costantemente i giorni di ferie che hai accumulato e quelli che hai già utilizzato.
+                  L&apos;app monitora costantemente i giorni di ferie che hai accumulato e quelli che hai già utilizzato.
                 </p>
               </div>
 
@@ -300,7 +452,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     2. Come registrare un giorno di ferie?
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Quando ti assenti per ferie, apri la finestra di inserimento turno e seleziona il pulsante <strong>"Ferie / Permesso"</strong> (icona spiaggia 🏖️). Il giorno verrà segnato sul calendario e contato automaticamente tra le ferie godute.
+                    Quando ti assenti per ferie, apri la finestra di inserimento turno e seleziona il pulsante <strong>&quot;Ferie / Permesso&quot;</strong> (icona spiaggia 🏖️). Il giorno verrà segnato sul calendario e contato automaticamente tra le ferie godute con la relativa quota economica.
                   </p>
                 </div>
 
@@ -320,15 +472,16 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
+          {/* TAB 6: TARIFFE & CONTRATTO */}
           {activeTab === 'tariffe' && (
             <div className="space-y-4">
               <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl space-y-1">
                 <h3 className="font-bold text-sm text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
                   <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  Tariffe, Contratto e Mensilità Aggiuntive
+                  Tariffe, CCNL e Maggiorazioni Orarie
                 </h3>
                 <p>
-                  Puoi personalizzare ogni singolo parametro cliccando sul pulsante <strong>"Tariffe"</strong> nella barra superiore.
+                  Puoi personalizzare ogni singolo parametro cliccando sul pulsante <strong>&quot;Tariffe&quot;</strong> nella barra superiore.
                 </p>
               </div>
 
@@ -338,28 +491,36 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <span>📑 Indice Cliccabile Rapido</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    In cima alla schermata delle Tariffe trovi un comodo <strong>indice cliccabile</strong> (Paga Base, Maggiorazioni, 13ª/14ª, Ferie, Voci Extra, Preset Orari e Reset) che ti consente di saltare istantaneamente alla sezione che ti interessa con un tocco, senza dover scorrere tutta la schermata.
+                    In cima alla schermata delle Tariffe trovi un comodo <strong>indice cliccabile</strong> (Paga Base, Maggiorazioni, Maggiorazioni Orarie Personalizzate, 13ª/14ª, Ferie, Voci Extra, Preset Orari e Reset) per saltare istantaneamente alla sezione che ti interessa con un tocco.
                   </p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <span>⏰ Gestione dei Preset di Orario</span>
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>⚡ Maggiorazioni Orarie Personalizzate</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Nella sezione <strong>&quot;Preset Orari&quot;</strong> delle Tariffe puoi visualizzare i modelli già attivi, eliminare quelli obsoleti e aggiungerne di nuovi impostando orario di inizio, orario di fine, minuti di pausa e mansione/note. L&apos;anteprima calcola subito la durata effettiva e le ore notturne comprese.
+                    Il tuo contratto prevede un extra all&apos;ora per mansioni particolari (es. <em>Turno Spezzato +€1,50/h</em>, <em>Indennità Reperibilità +€2,00/h</em>, <em>Lavoro Pomeridiano</em>)? Nelle Tariffe puoi creare maggiorazioni orarie libere (in percentuale o importo fisso) e decidere se applicarle a tutti i turni o spuntarle singolarmente.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-indigo-500" />
+                    <span>🌙 Fascia Notturna Personalizzata</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Puoi impostare l&apos;orario esatto di inizio e di fine della notte previsto dal tuo CCNL (es. 22:00-06:00, 23:00-07:00 o 20:00-04:00). L&apos;algoritmo calcolerà i minuti notturni esatti anche a cavallo di mezzanotte.
                   </p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-white">
-                    Tredicesima e Quattordicesima: Come le ricevi?
+                    Tredicesima e Quattordicesima: Ratei Mensili vs Soluzione Unica
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Molti lavoratori prendono la 13ª e la 14ª a <strong>rate mensili</strong> (1/12 ogni mese in busta paga), mentre altri le ricevono in <strong>unica soluzione annuale</strong> (a Dicembre per la 13ª e a Giugno/Luglio per la 14ª).
-                  </p>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Nelle Tariffe puoi scegliere l&apos;opzione che corrisponde al tuo contratto: se scegli l&apos;unica soluzione, l'importo non gonfierà il netto dei mesi ordinari ma verrà conteggiato esattamente nel mese di accredito!
+                    Puoi scegliere se ricevere 13ª e 14ª a <strong>rate mensili</strong> (1/12 ogni mese in busta paga), oppure in <strong>unica soluzione annuale</strong> (a Dicembre per la 13ª e a Giugno/Luglio per la 14ª) così da rispecchiare fedelmente il tuo cedolino paga effettivo.
                   </p>
                 </div>
 
@@ -368,20 +529,20 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     Giorni Festivi Nazionali Italiani
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Nel calendario, tutti i <strong>giorni festivi del calendario italiano</strong> (Capodanno, Epifania, Pasqua, Pasquetta, 25 Aprile, 1 Maggio, 2 Giugno, Ferragosto, Ognissanti, 8 Dicembre, Natale, Santo Stefano) sono evidenziati con il <strong>numero rosso</strong> e la relativa etichetta. Se lavori in uno di questi giorni, viene applicata la maggiorazione per giorno festivo!
+                    Nel calendario, tutti i <strong>giorni festivi nazionali</strong> (Capodanno, Epifania, Pasqua, Pasquetta, 25 Aprile, 1 Maggio, 2 Giugno, Ferragosto, Ognissanti, 8 Dicembre, Natale, Santo Stefano) sono evidenziati con il <strong>numero rosso</strong> e la relativa maggiorazione economica festiva.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
+          {/* TAB 7: STAMPA & BACKUP */}
           {activeTab === 'export' && (
             <div className="space-y-4">
-              {/* Header Sezione */}
               <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl space-y-1">
                 <h3 className="font-bold text-sm text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
                   <Printer className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  Stampa, Google Calendar, CSV & Backup JSON
+                  Stampa, Google Calendar, CSV &amp; Backup JSON
                 </h3>
                 <p>
                   Dalla barra in alto, toccando l&apos;icona della <strong>Stampante (Stampa ed Esporta)</strong> puoi scaricare i tuoi turni in diversi formati o creare un backup di sicurezza.
@@ -395,8 +556,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs sm:text-sm">Come importare i turni su Google Calendar</h4>
-                    <span className="text-[10px] text-blue-700 dark:text-blue-300 font-medium">Sincronizzazione orari su PC, Mac, Android e iPhone</span>
+                    <h4 className="font-bold text-xs sm:text-sm">Come importare i turni su Google Calendar &amp; Apple</h4>
+                    <span className="text-[10px] text-blue-700 dark:text-blue-300 font-medium">Sincronizzazione su PC, Mac, Android e iPhone</span>
                   </div>
                 </div>
 
@@ -406,13 +567,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                       💻 Procedura da Computer (Web):
                     </strong>
                     <ol className="list-decimal pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
-                      <li>Tocca il pulsante <strong>Stampa</strong> nella barra superiore e seleziona <strong>&quot;Google Calendar (File .ics)&quot;</strong>.</li>
-                      <li>Verrà scaricato un file <code>.ics</code> contenente tutti i tuoi turni del mese con orari precisi.</li>
-                      <li>Apri <strong>Google Calendar</strong> nel browser (calendar.google.com).</li>
-                      <li>Clicca sull&apos;icona ingranaggio ⚙️ in alto a destra &gt; seleziona <strong>&quot;Impostazioni&quot;</strong>.</li>
-                      <li>Nel menu laterale sinistro, clicca su <strong>&quot;Importazione ed esportazione&quot;</strong>.</li>
-                      <li>Clicca su <em>&quot;Seleziona il file dal computer&quot;</em>, scegli il file <code>.ics</code> appena scaricato e premi <strong>&quot;Importa&quot;</strong>.</li>
-                      <li>I turni appariranno subito sul tuo calendario con l&apos;orario di entrata, uscita e pause!</li>
+                      <li>Tocca <strong>Stampa</strong> nella barra in alto e seleziona <strong>&quot;Google Calendar (File .ics)&quot;</strong>.</li>
+                      <li>Verrà scaricato un file <code>.ics</code> con tutti i tuoi turni ed orari del mese.</li>
+                      <li>Apri <strong>Google Calendar</strong> (calendar.google.com) &gt; Ingranaggio ⚙️ &gt; <strong>&quot;Impostazioni&quot;</strong>.</li>
+                      <li>Nel menu a sinistra premi <strong>&quot;Importazione ed esportazione&quot;</strong>, scegli il file <code>.ics</code> e clicca su <strong>&quot;Importa&quot;</strong>.</li>
                     </ol>
                   </div>
 
@@ -420,17 +578,14 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <strong className="block text-slate-900 dark:text-white font-semibold flex items-center gap-1">
                       📱 Procedura da Smartphone (Android &amp; iPhone):
                     </strong>
-                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
-                      <li>Tocca il pulsante <strong>Stampa</strong> in alto e premi <strong>&quot;Google Calendar (File .ics)&quot;</strong>.</li>
-                      <li>Appena terminato il download, tocca la notifica di download o apri il file dall&apos;app <strong>File / Download</strong> del telefono.</li>
-                      <li>Il sistema operativo ti chiederà automaticamente con quale applicazione aprirlo (Google Calendar o Calendario Apple).</li>
-                      <li>Seleziona <strong>&quot;Aggiungi tutti gli eventi&quot;</strong> per salvarli nel tuo calendario con promemoria e notifiche integrate.</li>
-                    </ol>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Scarica il file <code>.ics</code>, tocca la notifica di download o apri il file: il telefono ti chiederà automaticamente di aprirlo con l&apos;app Calendario (Google o Apple) inserendo tutti i turni con relativi orari e promemoria!
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Box 2: Come Salvare e Ripristinare il Backup JSON */}
+              {/* Box 2: Backup JSON */}
               <div className="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/60 rounded-xl space-y-2.5">
                 <div className="flex items-center gap-2 text-purple-950 dark:text-purple-200">
                   <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
@@ -438,33 +593,17 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   </div>
                   <div>
                     <h4 className="font-bold text-xs sm:text-sm">Come eseguire e ripristinare il Backup JSON</h4>
-                    <span className="text-[10px] text-purple-700 dark:text-purple-300 font-medium">Backup sicuro di turni, tariffe, spese e preset</span>
+                    <span className="text-[10px] text-purple-700 dark:text-purple-300 font-medium">Backup completo di turni, eventi, spese, tariffe e preset</span>
                   </div>
                 </div>
 
                 <div className="space-y-2 text-[11px] text-slate-700 dark:text-slate-300">
                   <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-purple-200/80 dark:border-purple-900/50 space-y-1">
                     <strong className="block text-slate-900 dark:text-white font-semibold flex items-center gap-1">
-                      💾 Come Scaricare la Copia di Backup (Download):
+                      💾 Salvataggio e Ripristino:
                     </strong>
                     <p className="text-slate-600 dark:text-slate-400">
-                      Clicca sull&apos;icona <strong>Stampa</strong> nella barra in alto e seleziona <strong>&quot;Backup Completo (JSON)&quot;</strong>.
-                      Verrà generato e salvato un file <code>.json</code> contenente tutti i tuoi turni registrati di ogni mese, le tue spese, le tariffe personalizzate e i preset di orario.
-                    </p>
-                  </div>
-
-                  <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-purple-200/80 dark:border-purple-900/50 space-y-1">
-                    <strong className="block text-slate-900 dark:text-white font-semibold flex items-center gap-1">
-                      🔄 Come Ripristinare i Dati (Restore):
-                    </strong>
-                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
-                      <li>Apri la finestra <strong>Stampa</strong> (icona stampante in alto).</li>
-                      <li>Tocca la voce <strong>&quot;Ripristina Backup da file JSON&quot;</strong>.</li>
-                      <li>Seleziona il file <code>.json</code> precedentemente salvato dal tuo smartphone o computer.</li>
-                      <li>L&apos;app ricaricherà immediatamente tutti i turni, le spese e le impostazioni del contratto senza alcuna perdita di dati.</li>
-                    </ol>
-                    <p className="text-[10px] text-purple-800 dark:text-purple-300 pt-0.5 italic">
-                      💡 Consiglio: esegui un backup JSON prima di pulire i dati del browser o quando cambi telefono per trasferire tutto in un secondo!
+                      Da <strong>Stampa &gt; &quot;Backup Completo (JSON)&quot;</strong> puoi salvare un file con l&apos;intero archivio. Per ripristinarlo su un nuovo dispositivo o browser, premi <strong>&quot;Ripristina Backup da file JSON&quot;</strong>.
                     </p>
                   </div>
                 </div>
@@ -478,7 +617,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <span>Stampa o Salva PDF</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Genera un documento A4 pulito con riepilogo ore lavorate, totali notturni/festivi, straordinari e stima netto, pronto per essere stampato o salvato come file PDF.
+                    Genera un documento A4 pulito con riepilogo ore lavorate, totali notturni/festivi, straordinari e stima netto, pronto per la stampa o l&apos;archiviazione.
                   </p>
                 </div>
 
@@ -488,13 +627,14 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <span>File CSV per Excel</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Esporta tutti i dati in formato tabellare compatibile con Microsoft Excel, Google Fogli, LibreOffice Calc o Apple Numbers per analisi approfondite.
+                    Esporta tutti i dati in formato tabellare compatibile con Microsoft Excel, Google Fogli o Apple Numbers.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
+          {/* TAB 8: CLOUD & SYNC */}
           {activeTab === 'cloud' && (
             <div className="space-y-4">
               <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl space-y-1">
@@ -503,7 +643,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   Sincronizzazione Cloud Multi-Dispositivo
                 </h3>
                 <p>
-                  Non rischiare di perdere i tuoi dati e consulta i turni su qualunque dispositivo (smartphone, tablet o PC).
+                  Non rischiare di perdere i tuoi dati e consulta i turni e gli impegni su qualunque dispositivo (smartphone, tablet o PC).
                 </p>
               </div>
 
