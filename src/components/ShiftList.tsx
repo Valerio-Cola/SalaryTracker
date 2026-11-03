@@ -212,7 +212,15 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                           <Moon className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> Ore Notte
                         </span>
                         <div className="font-bold text-indigo-950 dark:text-indigo-100 text-sm sm:text-base mt-0.5">
-                          {s.oreNotturne.toFixed(2)} h (+€{s.guadagnoNotturno.toFixed(2)})
+                          {s.oreNotturne > 0 ? (
+                            `${s.oreNotturne.toFixed(2)} h (+€${s.guadagnoNotturno.toFixed(2)})`
+                          ) : (s.oreNotturneDifferite ?? 0) > 0 ? (
+                            <span className="text-slate-600 dark:text-slate-300 text-xs font-semibold" title="Liquidate nel mese successivo">
+                              {s.oreNotturneDifferite?.toFixed(2)} h (liquidate mese succ.)
+                            </span>
+                          ) : (
+                            '0.00 h'
+                          )}
                         </div>
                       </div>
 
@@ -230,7 +238,15 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                           <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Straordinario
                         </span>
                         <div className="font-bold text-emerald-950 dark:text-emerald-100 text-sm sm:text-base mt-0.5">
-                          {s.oreSupplementari.toFixed(2)} h (+€{s.guadagnoSupplementare.toFixed(2)})
+                          {s.oreSupplementari > 0 ? (
+                            `${s.oreSupplementari.toFixed(2)} h (+€${s.guadagnoSupplementare.toFixed(2)})`
+                          ) : (s.oreSupplementariDifferite ?? 0) > 0 ? (
+                            <span className="text-slate-600 dark:text-slate-300 text-xs font-semibold" title="Liquidati nel mese successivo">
+                              {s.oreSupplementariDifferite?.toFixed(2)} h (liquidati mese succ.)
+                            </span>
+                          ) : (
+                            '0.00 h'
+                          )}
                         </div>
                       </div>
 

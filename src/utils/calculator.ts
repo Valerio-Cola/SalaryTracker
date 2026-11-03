@@ -264,8 +264,14 @@ export function computeShiftData(
   // Se la settimana scavalca tra due mesi ed esistono turni nel secondo mese,
   // i giorni nel primo mese non maturano né straordinari né maggiorazioni notturne in questo mese
   // (vengono liquidati nel mese successivo in cui termina la settimana)
+  let oreNotturneDifferite: number | undefined = undefined;
+  let oreSupplementariDifferite: number | undefined = undefined;
+
   if (isCrossMonthWeek && currentShiftMonth === monthOfMonday && hasShiftsInNextMonth) {
-    oreNotturne = 0;
+    if (oreNotturne > 0) {
+      oreNotturneDifferite = oreNotturne;
+      oreNotturne = 0;
+    }
   }
 
   let oreGiaLavorateSettimana = 0;
@@ -287,6 +293,15 @@ export function computeShiftData(
   } else if (isCrossMonthWeek && currentShiftMonth === monthOfMonday) {
     // Settimana a cavallo tra 2 mesi: i giorni che ricadono nel primo mese NON maturano straordinari in questo mese;
     // gli straordinari dell'intera settimana vengono conteggiati ed attribuiti al secondo mese!
+    if (hasShiftsInNextMonth) {
+      if (oreGiaLavorateSettimana >= sogliaSettimanale) {
+        oreSupplementariDifferite = oreTotali;
+      } else if (oreGiaLavorateSettimana + oreTotali > sogliaSettimanale) {
+        oreSupplementariDifferite = Number(
+          (oreGiaLavorateSettimana + oreTotali - sogliaSettimanale).toFixed(2)
+        );
+      }
+    }
     oreSupplementari = 0;
   } else {
     // Settimana nello stesso mese, oppure giorni nel secondo mese della settimana a cavallo:
@@ -356,6 +371,8 @@ export function computeShiftData(
     oreTotali,
     oreNotturne,
     oreSupplementari,
+    oreNotturneDifferite,
+    oreSupplementariDifferite,
     guadagnoBase,
     guadagnoNotturno,
     guadagnoFestivoDomenicale,
@@ -504,11 +521,18 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
       // CASO 1: Settimana interamente all'interno dello stesso mese
       if (totalWeekOvertime <= 0) {
         // Nessuno straordinario nella settimana, le ore notturne rimangono quelle dei singoli turni
+        for (const s of processedWeekShifts) {
+          s.oreNotturneDifferite = undefined;
+          s.oreSupplementariDifferite = undefined;
+        }
         finalShifts.push(...processedWeekShifts);
         continue;
       }
       let accumulatedHours = 0;
       for (const s of processedWeekShifts) {
+        s.oreNotturneDifferite = undefined;
+        s.oreSupplementariDifferite = undefined;
+
         let shiftOvertime = 0;
         if (!s.isFerie) {
           if (accumulatedHours >= sogliaSettimanale) {
@@ -532,13 +556,36 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
       const month1Shifts = processedWeekShifts.filter((s) => s.dataGrezza.startsWith(month1));
       const month2Shifts = processedWeekShifts.filter((s) => s.dataGrezza.startsWith(month2));
 
+      // Calcoliamo lo straordinario naturale progressivo della settimana per ciascun turno
+      let accumulatedHoursWeek = 0;
+      const naturalOvertimePerShift = new Map<string, number>();
+      for (const s of processedWeekShifts) {
+        let naturalOt = 0;
+        if (!s.isFerie) {
+          if (accumulatedHoursWeek >= sogliaSettimanale) {
+            naturalOt = s.oreTotali;
+          } else if (accumulatedHoursWeek + s.oreTotali > sogliaSettimanale) {
+            naturalOt = Number((accumulatedHoursWeek + s.oreTotali - sogliaSettimanale).toFixed(2));
+          }
+        }
+        accumulatedHoursWeek += s.oreTotali;
+        naturalOvertimePerShift.set(s.id, naturalOt);
+      }
+
       // Totale ore notturne lavorate nell'intera settimana
       const totalWeekNightHours = Number(processedWeekShifts.reduce((acc, s) => acc + (s.isFerie ? 0 : s.oreNotturne), 0).toFixed(2));
       const nightHoursMonth1 = Number(month1Shifts.reduce((acc, s) => acc + (s.isFerie ? 0 : s.oreNotturne), 0).toFixed(2));
 
       if (month2Shifts.length > 0) {
         // I turni del primo mese ricevono 0 straordinario e 0 notturno (vengono spostati al secondo mese)
+        // ma conservano le targhette in grigio come quelle della paga base per chiarezza
         for (const s of month1Shifts) {
+          const naturalNight = s.oreNotturne;
+          const naturalOt = naturalOvertimePerShift.get(s.id) || 0;
+
+          s.oreNotturneDifferite = naturalNight > 0 ? naturalNight : undefined;
+          s.oreSupplementariDifferite = naturalOt > 0 ? naturalOt : undefined;
+
           s.oreSupplementari = 0;
           s.guadagnoSupplementare = 0;
           s.oreNotturne = 0;
@@ -558,6 +605,9 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
 
         for (let i = 0; i < month2Shifts.length; i++) {
           const s = month2Shifts[i];
+          s.oreNotturneDifferite = undefined;
+          s.oreSupplementariDifferite = undefined;
+
           let shiftOvertime = 0;
           let shiftNight = s.oreNotturne;
 
@@ -604,6 +654,8 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
         // assegniamo gli straordinari e manteniamo i notturni nei turni del primo mese per non perdere i dati
         let accumulatedHours = 0;
         for (const s of month1Shifts) {
+          s.oreNotturneDifferite = undefined;
+          s.oreSupplementariDifferite = undefined;
           let shiftOvertime = 0;
           if (!s.isFerie) {
             if (accumulatedHours >= sogliaSettimanale) {

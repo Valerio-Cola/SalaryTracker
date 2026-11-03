@@ -594,14 +594,22 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                   Ore Notte{config.oraInizioNotte && config.oraFineNotte ? ` (${config.oraInizioNotte}-${config.oraFineNotte})` : ''}
                 </div>
                 <div className="text-sm font-bold text-indigo-300">
-                  {previewShift.oreNotturne.toFixed(2)} h
+                  {previewShift.oreNotturne > 0
+                    ? `${previewShift.oreNotturne.toFixed(2)} h`
+                    : (previewShift.oreNotturneDifferite ?? 0) > 0
+                    ? `${previewShift.oreNotturneDifferite?.toFixed(2)} h (mese succ.)`
+                    : '0.00 h'}
                 </div>
               </div>
 
               <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700/50">
                 <div className="text-[10px] text-slate-400">Straordinario</div>
                 <div className="text-sm font-bold text-emerald-300">
-                  {previewShift.oreSupplementari.toFixed(2)} h
+                  {previewShift.oreSupplementari > 0
+                    ? `${previewShift.oreSupplementari.toFixed(2)} h`
+                    : (previewShift.oreSupplementariDifferite ?? 0) > 0
+                    ? `${previewShift.oreSupplementariDifferite?.toFixed(2)} h (mese succ.)`
+                    : '0.00 h'}
                 </div>
               </div>
 

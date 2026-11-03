@@ -758,16 +758,31 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                       <Coins className="w-2.5 h-2.5" /> {s.oreTotali}h
                                     </span>
                                   )}
-                                  {s.oreSupplementari > 0 && (
+                                  {s.oreSupplementari > 0 ? (
                                     <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
                                       <TrendingUp className="w-2.5 h-2.5" /> {s.oreSupplementari}h
                                     </span>
-                                  )}
-                                  {s.oreNotturne > 0 && (
+                                  ) : (s.oreSupplementariDifferite ?? 0) > 0 ? (
+                                    <span
+                                      className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 font-semibold text-[10px] sm:text-xs flex items-center gap-0.5"
+                                      title={`${s.oreSupplementariDifferite}h straordinario differite (liquidate nel mese successivo)`}
+                                    >
+                                      <TrendingUp className="w-2.5 h-2.5 text-slate-500 dark:text-slate-400" /> {s.oreSupplementariDifferite}h
+                                    </span>
+                                  ) : null}
+
+                                  {s.oreNotturne > 0 ? (
                                     <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/90 text-indigo-900 dark:text-indigo-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
                                       <Moon className="w-2.5 h-2.5" /> {s.oreNotturne}h
                                     </span>
-                                  )}
+                                  ) : (s.oreNotturneDifferite ?? 0) > 0 ? (
+                                    <span
+                                      className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 font-semibold text-[10px] sm:text-xs flex items-center gap-0.5"
+                                      title={`${s.oreNotturneDifferite}h notturne differite (liquidate nel mese successivo)`}
+                                    >
+                                      <Moon className="w-2.5 h-2.5 text-slate-500 dark:text-slate-400" /> {s.oreNotturneDifferite}h
+                                    </span>
+                                  ) : null}
 
                                   {(s.tipoGiorno === 'festivo' || (isHoliday && !isFerie)) && (
                                     <span className="px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/90 text-rose-950 dark:text-rose-200 font-bold text-[10px] sm:text-xs">
@@ -1087,16 +1102,31 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                       <Coins className="w-2.5 h-2.5" /> {s.oreTotali}h
                                     </span>
                                   )}
-                                  {s.oreSupplementari > 0 && (
+                                  {s.oreSupplementari > 0 ? (
                                     <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/90 text-emerald-900 dark:text-emerald-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
                                       <TrendingUp className="w-2.5 h-2.5" /> {s.oreSupplementari}h
                                     </span>
-                                  )}
-                                  {s.oreNotturne > 0 && (
+                                  ) : (s.oreSupplementariDifferite ?? 0) > 0 ? (
+                                    <span
+                                      className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 font-semibold text-[10px] sm:text-xs flex items-center gap-0.5"
+                                      title={`${s.oreSupplementariDifferite}h straordinario differite (liquidate nel mese successivo)`}
+                                    >
+                                      <TrendingUp className="w-2.5 h-2.5 text-slate-500 dark:text-slate-400" /> {s.oreSupplementariDifferite}h
+                                    </span>
+                                  ) : null}
+
+                                  {s.oreNotturne > 0 ? (
                                     <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/90 text-indigo-900 dark:text-indigo-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs">
                                       <Moon className="w-2.5 h-2.5" /> {s.oreNotturne}h
                                     </span>
-                                  )}
+                                  ) : (s.oreNotturneDifferite ?? 0) > 0 ? (
+                                    <span
+                                      className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 font-semibold text-[10px] sm:text-xs flex items-center gap-0.5"
+                                      title={`${s.oreNotturneDifferite}h notturne differite (liquidate nel mese successivo)`}
+                                    >
+                                      <Moon className="w-2.5 h-2.5 text-slate-500 dark:text-slate-400" /> {s.oreNotturneDifferite}h
+                                    </span>
+                                  ) : null}
 
                                   {s.tipoGiorno === 'festivo' && (
                                     <span className="px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/90 text-rose-950 dark:text-rose-200 font-bold text-[10px] sm:text-xs">
