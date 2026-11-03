@@ -15,6 +15,7 @@ import {
   MapPin,
   Tag,
   Coins,
+  Info,
 } from 'lucide-react';
 import { checkDayTypeInfo } from '../utils/holidays';
 import { COLOR_CLASSES } from './EventsSummaryCard';
@@ -483,6 +484,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               </div>
             )}
           </div>
+
+          {/* Avviso Settimana a cavallo di 2 mesi per straordinari e notturni */}
+          {activeContentMode === 'shifts' &&
+            weekDaysList.length === 7 &&
+            weekDaysList[0].dateIso.slice(0, 7) !== weekDaysList[6].dateIso.slice(0, 7) && (
+              <div className="flex items-center gap-2 text-xs bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 px-3 py-2 rounded-xl mb-3">
+                <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span className="leading-snug">
+                  <strong>Settimana a cavallo tra due mesi:</strong> per prassi contrattuale CCNL, se lavori in entrambi i mesi, sia gli straordinari sia le maggiorazioni notturne maturate in tutta questa settimana vengono conteggiati ed erogati nel cedolino del mese successivo.
+                </span>
+              </div>
+          )}
 
           {/* Intestazione Giorni della Settimana a Nuvoletta (stile vista mensile, solo desktop) */}
           <div className="hidden md:grid grid-cols-7 gap-3 sm:gap-2 mb-3 text-center">

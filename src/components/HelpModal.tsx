@@ -236,11 +236,33 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                    📈 <span>Straordinari &amp; Settimana a Cavallo</span>
+                    📈 <span>Straordinari Contrattuali</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Ogni ora eccedente il monte ore settimanale (es. 24h) viene riconosciuta come straordinario. Se la settimana è a cavallo di due mesi, il calcolo attribuisce gli straordinari al cedolino corretto.
+                    Ogni ora eccedente il monte ore contrattuale settimanale (es. 24h) viene riconosciuta e maggiorata con la percentuale prevista dal tuo contratto.
                   </p>
+                </div>
+              </div>
+
+              {/* Box Dedicato: Perché a fine mese potrei vedere meno straordinari o notturni? (Settimana a cavallo) */}
+              <div className="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl space-y-2">
+                <div className="font-bold text-sm text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
+                  <HelpCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span>💡 Perché nel cedolino mensile potrei vedere meno straordinari o notturni? (Settimana a cavallo)</span>
+                </div>
+                <p className="text-[11.5px] text-amber-900 dark:text-amber-300 leading-relaxed">
+                  Se a fine mese noti che le ore di straordinario o di notturno del mese sono inferiori a quelle che ti aspettavi, <strong>è dovuto alla settimana spezzata tra due mesi</strong>.
+                </p>
+                <div className="bg-white/90 dark:bg-slate-900/90 p-2.5 rounded-lg border border-amber-200/80 dark:border-amber-800 text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300">
+                  <p className="font-semibold text-slate-900 dark:text-white">
+                    Come funziona la regola contrattuale (CCNL e software paghe):
+                  </p>
+                  <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <li>La settimana lavorativa contrattuale va rigorosamente <strong>da Lunedì a Domenica</strong>.</li>
+                    <li>Quando l&apos;ultima settimana del mese scavalca nel mese successivo e <strong>lavori almeno un giorno anche nel secondo mese</strong>, l&apos;intero computo degli straordinari e delle maggiorazioni notturne settimanali viene attribuito al <strong>cedolino del mese successivo</strong>, mese in cui la settimana giunge a conclusione.</li>
+                    <li><strong>Nessuna ora va persa:</strong> nel mese attuale le ore lavorate a fine mese vengono comunque liquidate per intero come retribuzione ordinaria base; il supplemento di maggiorazione per straordinario e per lavoro notturno ti verrà accreditato nella busta paga successiva.</li>
+                    <li><strong>Se invece non svolgi alcun turno nel mese successivo</strong> durante la stessa settimana a cavallo, sia gli straordinari sia le ore notturne restano accreditati nel mese corrente.</li>
+                  </ul>
                 </div>
               </div>
 
