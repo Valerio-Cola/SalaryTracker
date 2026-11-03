@@ -19,10 +19,6 @@ import {
 import {
   calculateMonthlyCompensation,
   calculateFerieBalance,
-  getMondayIso,
-  getSundayIso,
-  calculateNightHours,
-  timeToMinutes,
 } from '../utils/calculator';
 
 interface MonthSummaryCardProps {
@@ -44,68 +40,8 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
 }) => {
   const [showCalculationDetails, setShowCalculationDetails] = useState(false);
   const [showOvertimeInfo, setShowOvertimeInfo] = useState(false);
-  const [dismissedCrossNotice, setDismissedCrossNotice] = useState(false);
 
-  // Rilevamento intelligente settimana a cavallo tra fine mese corrente e inizio mese successivo
   const monthKey = currentMonthKey || (shifts.length > 0 ? shifts[0].dataGrezza.slice(0, 7) : '2026-09');
-
-  const crossMonthEndInfo = useMemo(() => {
-    if (!monthKey || shifts.length === 0) return null;
-    const [yStr, mStr] = monthKey.split('-');
-    const y = parseInt(yStr, 10);
-    const m = parseInt(mStr, 10);
-    if (isNaN(y) || isNaN(m)) return null;
-
-    const lastDayOfMonth = new Date(y, m, 0).getDate();
-    const lastDateIso = `${monthKey}-${String(lastDayOfMonth).padStart(2, '0')}`;
-    const mondayOfLastWeek = getMondayIso(lastDateIso);
-    const sundayOfLastWeek = getSundayIso(lastDateIso);
-
-    // Controlla se la settimana scavalca nel mese successivo
-    const isSplit = mondayOfLastWeek.slice(0, 7) !== sundayOfLastWeek.slice(0, 7);
-    if (!isSplit) return null;
-
-    // Turni lavorati nell'ultima settimana ricadenti in questo mese
-    const shiftsInSplitWeekThisMonth = shifts.filter(
-      (s) => getMondayIso(s.dataGrezza) === mondayOfLastWeek && !s.isFerie && s.tipoGiorno !== 'ferie'
-    );
-    const hoursThisMonth = shiftsInSplitWeekThisMonth.reduce((acc, curr) => acc + curr.oreTotali, 0);
-    if (hoursThisMonth === 0) return null;
-
-    // Calcolo ore notturne svolte nei turni di questo mese nella settimana a cavallo
-    const nightHoursThisMonth = shiftsInSplitWeekThisMonth.reduce((acc, s) => {
-      const sMin = timeToMinutes(s.orarioInizio);
-      let eMin = timeToMinutes(s.orarioFine);
-      if (eMin <= sMin) eMin += 24 * 60;
-      return acc + calculateNightHours(sMin, eMin, s.pausaMinuti || 0, config.oraInizioNotte || '22:00', config.oraFineNotte || '06:00');
-    }, 0);
-
-    // Controlla se ci sono turni registrati nel mese successivo per quella stessa settimana
-    const nextMonthKey = sundayOfLastWeek.slice(0, 7);
-    const shiftsInSplitWeekNextMonth = allShifts.filter(
-      (s) => getMondayIso(s.dataGrezza) === mondayOfLastWeek && s.dataGrezza.startsWith(nextMonthKey) && !s.isFerie
-    );
-    const hoursNextMonth = shiftsInSplitWeekNextMonth.reduce((acc, curr) => acc + curr.oreTotali, 0);
-
-    const nextMonthDate = new Date(y, m, 1);
-    const nextMonthName = nextMonthDate.toLocaleDateString('it-IT', { month: 'long' });
-
-    const formatShort = (iso: string) => {
-      const parts = iso.split('-');
-      return `${parts[2]}/${parts[1]}`;
-    };
-
-    return {
-      mondayOfLastWeek,
-      sundayOfLastWeek,
-      rangeFormatted: `${formatShort(mondayOfLastWeek)} – ${formatShort(sundayOfLastWeek)}`,
-      hoursThisMonth,
-      nightHoursThisMonth,
-      hoursNextMonth,
-      hasShiftsNextMonth: shiftsInSplitWeekNextMonth.length > 0,
-      nextMonthName,
-    };
-  }, [monthKey, shifts, allShifts, config.oraInizioNotte, config.oraFineNotte]);
 
   // Ore mese corrente
   const totalOre = shifts.reduce((acc, curr) => acc + curr.oreTotali, 0);
@@ -117,8 +53,13 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
     .reduce((acc, curr) => acc + curr.oreTotali, 0);
   const totalFerieCountMese = shifts.filter((s) => s.tipoGiorno === 'ferie' || s.isFerie).length;
 
-  const totalNotturne = shifts.reduce((acc, curr) => acc + curr.oreNotturne, 0);
-  const totalSupplementari = shifts.reduce((acc, curr) => acc + curr.oreSupplementari, 0);
+  const oreNotturneMese = shifts.reduce((acc, curr) => acc + curr.oreNotturne, 0);
+  const oreNotturneRiportate = shifts.reduce((acc, curr) => acc + (curr.oreNotturneRiportate || 0), 0);
+  const totalNotturne = Number((oreNotturneMese + oreNotturneRiportate).toFixed(2));
+
+  const oreSupplementariMese = shifts.reduce((acc, curr) => acc + curr.oreSupplementari, 0);
+  const oreSupplementariRiportate = shifts.reduce((acc, curr) => acc + (curr.oreSupplementariRiportate || 0), 0);
+  const totalSupplementari = Number((oreSupplementariMese + oreSupplementariRiportate).toFixed(2));
   const totalFestivoOre = shifts
     .filter((s) => (s.tipoGiorno === 'domenica' || s.tipoGiorno === 'festivo') && s.tipoGiorno !== 'ferie' && !s.isFerie)
     .reduce((acc, curr) => acc + curr.oreTotali, 0);
@@ -174,50 +115,7 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
         </div>
       </div>
 
-      {/* Avviso proattivo settimana a cavallo di fine mese per gli straordinari e notturni */}
-      {crossMonthEndInfo && !dismissedCrossNotice && (
-        <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
-          <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-bold text-amber-950 dark:text-amber-100 text-xs sm:text-sm">
-                Nota Straordinari &amp; Notturni: Ultima settimana a cavallo ({crossMonthEndInfo.rangeFormatted})
-              </span>
-              <button
-                type="button"
-                onClick={() => setDismissedCrossNotice(true)}
-                className="text-amber-700/80 hover:text-amber-950 dark:text-amber-300 dark:hover:text-amber-100 p-0.5 rounded cursor-pointer"
-                title="Nascondi avviso"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <p className="leading-relaxed">
-              Hai svolto <strong>{crossMonthEndInfo.hoursThisMonth.toFixed(1)}h</strong>
-              {crossMonthEndInfo.nightHoursThisMonth > 0 ? (
-                <> (di cui <strong>{crossMonthEndInfo.nightHoursThisMonth.toFixed(1)}h notturne</strong>) </>
-              ) : (
-                ' '
-              )}
-              nei giorni finali del mese appartenenti a questa settimana.
-              {crossMonthEndInfo.hasShiftsNextMonth ? (
-                <> Avendo lavorato anche nei primi giorni di <strong>{crossMonthEndInfo.nextMonthName}</strong> ({crossMonthEndInfo.hoursNextMonth.toFixed(1)}h), per regola contrattuale CCNL e prassi paghe <strong>sia gli straordinari sia le maggiorazioni notturne maturate in tutta la settimana vengono conteggiati ed erogati nel cedolino di {crossMonthEndInfo.nextMonthName}</strong>.</>
-              ) : (
-                <> Se lavorerai anche nei giorni di inizio <strong>{crossMonthEndInfo.nextMonthName}</strong>, gli straordinari e le maggiorazioni notturne dell&apos;intera settimana verranno liquidati nel cedolino di <strong>{crossMonthEndInfo.nextMonthName}</strong>.</>
-              )}
-            </p>
-            <div className="pt-0.5">
-              <button
-                type="button"
-                onClick={() => setShowOvertimeInfo(!showOvertimeInfo)}
-                className="font-bold underline text-amber-950 dark:text-amber-100 hover:text-amber-800 cursor-pointer"
-              >
-                {showOvertimeInfo ? 'Nascondi dettagli regola CCNL' : 'Come funziona la regola della settimana a cavallo per straordinari e notturni?'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* 3 Main KPI Boxes: Busta Paga Lorda | Saldo Ferie | Uscite */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -483,7 +381,13 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             € {totalNotteExtra.toFixed(2)}
           </div>
           <div className="text-sm font-bold text-indigo-900 dark:text-indigo-300 mt-1 text-right">
-            {totalNotturne.toFixed(1)}h
+            {oreNotturneRiportate > 0 ? (
+              <span>
+                {oreNotturneMese.toFixed(1)}h + {oreNotturneRiportate.toFixed(1)}h (Mese scorso)
+              </span>
+            ) : (
+              `${totalNotturne.toFixed(1)}h`
+            )}
           </div>
         </div>
 
@@ -511,7 +415,13 @@ export const MonthSummaryCard: React.FC<MonthSummaryCardProps> = ({
             € {totalSuppExtra.toFixed(2)}
           </div>
           <div className="text-sm font-bold text-emerald-900 dark:text-emerald-300 absolute bottom-3 right-3">
-            {totalSupplementari.toFixed(1)}h
+            {oreSupplementariRiportate > 0 ? (
+              <span>
+                {oreSupplementariMese.toFixed(1)}h + {oreSupplementariRiportate.toFixed(1)}h (Mese scorso)
+              </span>
+            ) : (
+              `${totalSupplementari.toFixed(1)}h`
+            )}
           </div>
         </div>
 

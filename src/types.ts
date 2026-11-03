@@ -88,6 +88,8 @@ export interface Shift {
   oreSupplementari: number;
   oreNotturneDifferite?: number; // Ore notturne svolte in questo turno ma liquidate nel cedolino del mese successivo (settimana a cavallo)
   oreSupplementariDifferite?: number; // Ore straordinarie svolte in questo turno ma liquidate nel cedolino del mese successivo (settimana a cavallo)
+  oreNotturneRiportate?: number; // Ore notturne ricevute dal mese precedente liquidate in questo turno (settimana a cavallo)
+  oreSupplementariRiportate?: number; // Ore straordinarie ricevute dal mese precedente liquidate in questo turno (settimana a cavallo)
   guadagnoBase: number;
   guadagnoNotturno: number;
   guadagnoFestivoDomenicale: number;

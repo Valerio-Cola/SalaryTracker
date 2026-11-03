@@ -316,9 +316,31 @@ export function computeShiftData(
     }
   }
 
+  let oreNotturneRiportate: number | undefined = undefined;
+  let oreSupplementariRiportate: number | undefined = undefined;
+
+  if (isCrossMonthWeek && currentShiftMonth === monthOfSunday) {
+    const month1ShiftsInWeek = existingShifts.filter(
+      (s) => s.id !== id && getMondayIso(s.dataGrezza) === mondayOfWeek && s.dataGrezza.startsWith(monthOfMonday)
+    );
+    if (month1ShiftsInWeek.length > 0) {
+      const isFirstInMonth2 = !existingShifts.some(
+        (s) => s.id !== id && getMondayIso(s.dataGrezza) === mondayOfWeek && s.dataGrezza.startsWith(monthOfSunday) && s.dataGrezza < dataGrezza
+      );
+      if (isFirstInMonth2) {
+        const deferredNight = month1ShiftsInWeek.reduce((acc, s) => acc + (s.oreNotturneDifferite ?? (s.oreNotturne || 0)), 0);
+        const deferredOt = month1ShiftsInWeek.reduce((acc, s) => acc + (s.oreSupplementariDifferite || 0), 0);
+        if (deferredNight > 0) oreNotturneRiportate = deferredNight;
+        if (deferredOt > 0) oreSupplementariRiportate = deferredOt;
+      }
+    }
+  }
+
   // Calcolo guadagni lordi
   const guadagnoBase = Number((oreTotali * config.pagaBaseOraria).toFixed(2));
-  const guadagnoNotturno = isFerie ? 0 : Number((oreNotturne * config.bonusNotturno).toFixed(2));
+  const guadagnoNotturno = isFerie
+    ? 0
+    : Number(((oreNotturne + (oreNotturneRiportate || 0)) * config.bonusNotturno).toFixed(2));
 
   let guadagnoFestivoDomenicale = 0;
   if (!isFerie) {
@@ -338,7 +360,7 @@ export function computeShiftData(
   const guadagnoMaggiorazioniOrarie = customSurchargesResult.totalLordo;
 
   const guadagnoSupplementare = Number(
-    (oreSupplementari * config.bonusSupplementare).toFixed(2)
+    ((oreSupplementari + (oreSupplementariRiportate || 0)) * config.bonusSupplementare).toFixed(2)
   );
 
   const guadagnoTotaleLordo = Number(
@@ -373,6 +395,8 @@ export function computeShiftData(
     oreSupplementari,
     oreNotturneDifferite,
     oreSupplementariDifferite,
+    oreNotturneRiportate,
+    oreSupplementariRiportate,
     guadagnoBase,
     guadagnoNotturno,
     guadagnoFestivoDomenicale,
@@ -579,12 +603,16 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
       if (month2Shifts.length > 0) {
         // I turni del primo mese ricevono 0 straordinario e 0 notturno (vengono spostati al secondo mese)
         // ma conservano le targhette in grigio come quelle della paga base per chiarezza
+        let overtimeMonth1Total = 0;
         for (const s of month1Shifts) {
           const naturalNight = s.oreNotturne;
           const naturalOt = naturalOvertimePerShift.get(s.id) || 0;
+          overtimeMonth1Total += naturalOt;
 
           s.oreNotturneDifferite = naturalNight > 0 ? naturalNight : undefined;
           s.oreSupplementariDifferite = naturalOt > 0 ? naturalOt : undefined;
+          s.oreNotturneRiportate = undefined;
+          s.oreSupplementariRiportate = undefined;
 
           s.oreSupplementari = 0;
           s.guadagnoSupplementare = 0;
@@ -595,55 +623,37 @@ export function recalculateAllShifts(shifts: Shift[], config: ContractConfig): S
           finalShifts.push(s);
         }
 
-        // Se ci sono turni nel secondo mese, attribuiamo a questi tutti gli straordinari e tutte le ore notturne dell'intera settimana
-        let remainingOvertimeToAssign = totalWeekOvertime;
-        let remainingNightToAssign = totalWeekNightHours;
-
-        // Preferiamo assegnare straordinari e notturni ai turni lavorati (non ferie)
+        // Nel secondo mese, ciascun turno mantiene SOLO le proprie ore naturali (notturne e straordinarie) per le sue etichette,
+        // così la targhetta del turno mostra solo le sue ore (es. 3.5h anziché 7h), senza sommare quelle del mese prima.
+        // Le ore del mese prima vengono salvate in oreNotturneRiportate e oreSupplementariRiportate sul primo turno utile del secondo mese
+        // e vengono regolarmente liquidate nei totali lordi/netti del mese.
         const targetShifts = month2Shifts.filter((s) => !s.isFerie);
-        const shiftsToUse = targetShifts.length > 0 ? targetShifts : month2Shifts;
+        const shiftToReceive = targetShifts.length > 0 ? targetShifts[0] : month2Shifts[0];
 
         for (let i = 0; i < month2Shifts.length; i++) {
           const s = month2Shifts[i];
           s.oreNotturneDifferite = undefined;
           s.oreSupplementariDifferite = undefined;
 
-          let shiftOvertime = 0;
-          let shiftNight = s.oreNotturne;
+          // Straordinari propri del turno (senza sommare quelli del mese prima)
+          const naturalOt = naturalOvertimePerShift.get(s.id) || 0;
+          s.oreSupplementari = naturalOt;
 
-          if (shiftsToUse.includes(s)) {
-            const isLast = s === shiftsToUse[shiftsToUse.length - 1];
+          // s.oreNotturne conserva le ore notturne naturali di questo turno (già calcolate in processedWeekShifts)
 
-            // Straordinari
-            if (isLast) {
-              shiftOvertime = Number(remainingOvertimeToAssign.toFixed(2));
-              remainingOvertimeToAssign = 0;
-            } else {
-              shiftOvertime = Math.min(s.oreTotali, remainingOvertimeToAssign);
-              shiftOvertime = Number(shiftOvertime.toFixed(2));
-              remainingOvertimeToAssign = Number((remainingOvertimeToAssign - shiftOvertime).toFixed(2));
-            }
-
-            // Ore Notturne: se ci sono ore notturne trasferite dal primo mese, riallochiamo per garantire il totale esatto
-            if (nightHoursMonth1 > 0) {
-              if (isLast) {
-                shiftNight = Number(remainingNightToAssign.toFixed(2));
-                remainingNightToAssign = 0;
-              } else {
-                const naturalNight = s.oreNotturne;
-                const extraRoom = Math.max(0, s.oreTotali - naturalNight);
-                const extraNightToTake = Math.min(extraRoom, remainingNightToAssign - naturalNight);
-                shiftNight = Number((naturalNight + Math.max(0, extraNightToTake)).toFixed(2));
-                remainingNightToAssign = Number((remainingNightToAssign - shiftNight).toFixed(2));
-              }
-            }
+          if (s === shiftToReceive) {
+            s.oreNotturneRiportate = nightHoursMonth1 > 0 ? nightHoursMonth1 : undefined;
+            s.oreSupplementariRiportate = overtimeMonth1Total > 0 ? Number(overtimeMonth1Total.toFixed(2)) : undefined;
+          } else {
+            s.oreNotturneRiportate = undefined;
+            s.oreSupplementariRiportate = undefined;
           }
 
-          s.oreSupplementari = shiftOvertime;
-          s.guadagnoSupplementare = Number((shiftOvertime * config.bonusSupplementare).toFixed(2));
+          const extraNight = s.oreNotturneRiportate || 0;
+          const extraSupp = s.oreSupplementariRiportate || 0;
 
-          s.oreNotturne = shiftNight;
-          s.guadagnoNotturno = s.isFerie ? 0 : Number((shiftNight * config.bonusNotturno).toFixed(2));
+          s.guadagnoSupplementare = Number(((s.oreSupplementari + extraSupp) * config.bonusSupplementare).toFixed(2));
+          s.guadagnoNotturno = s.isFerie ? 0 : Number(((s.oreNotturne + extraNight) * config.bonusNotturno).toFixed(2));
 
           s.guadagnoTotaleLordo = Number((s.guadagnoBase + s.guadagnoNotturno + s.guadagnoFestivoDomenicale + s.guadagnoSupplementare + (s.guadagnoMaggiorazioniOrarie || 0)).toFixed(2));
           s.guadagnoTotaleNettoStimato = Number((s.guadagnoTotaleLordo * (1 - aliquotaNetto / 100)).toFixed(2));

@@ -114,8 +114,8 @@ export function printMonthlyReport(
   );
 
   const totalOre = sortedShifts.reduce((acc, curr) => acc + curr.oreTotali, 0);
-  const totalNotte = sortedShifts.reduce((acc, curr) => acc + curr.oreNotturne, 0);
-  const totalExtra = sortedShifts.reduce((acc, curr) => acc + curr.oreSupplementari, 0);
+  const totalNotte = sortedShifts.reduce((acc, curr) => acc + curr.oreNotturne + (curr.oreNotturneRiportate || 0), 0);
+  const totalExtra = sortedShifts.reduce((acc, curr) => acc + curr.oreSupplementari + (curr.oreSupplementariRiportate || 0), 0);
   const totalShiftsLordo = sortedShifts.reduce((acc, curr) => acc + curr.guadagnoTotaleLordo, 0);
   const totalShiftsNetto = sortedShifts.reduce((acc, curr) => acc + curr.guadagnoTotaleNettoStimato, 0);
 
