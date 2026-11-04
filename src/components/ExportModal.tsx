@@ -7,6 +7,7 @@ import {
   FileCode2,
   Sparkles,
 } from 'lucide-react';
+import { useModalAnimation } from '../utils/useModalAnimation';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -31,12 +32,27 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const { backdropClasses, cardAnimationClasses, triggerClose } = useModalAnimation({
+    isOpen,
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in overflow-hidden">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[88vh] transition-all overflow-hidden">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden overscroll-contain">
+      {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
+      <div 
+        className={backdropClasses}
+        aria-hidden="true"
+        onClick={triggerClose}
+      />
+
+      <div 
+        className={`relative bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[88vh] overflow-hidden ${cardAnimationClasses}`}
+      >
         {/* Header Modal - Compatto e fisso in cima */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-5 flex items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2.5">
@@ -53,7 +69,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
             title="Chiudi"
           >
@@ -217,7 +233,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end shrink-0">
           <button
             type="button"
-            onClick={onClose}
+            onClick={triggerClose}
             className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
           >
             Chiudi

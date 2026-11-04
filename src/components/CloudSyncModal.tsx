@@ -33,6 +33,7 @@ import {
 import { DEFAULT_CONFIG, DEFAULT_TEMPLATES } from '../utils/storage';
 import { ContractConfig, Shift, QuickTemplate, Expense, AppEvent } from '../types';
 import { TurnstileWidget, TurnstileWidgetRef } from './TurnstileWidget';
+import { useModalAnimation } from '../utils/useModalAnimation';
 
 export interface PasswordStrength {
   score: number; // 0..4
@@ -228,6 +229,14 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       scrollToErrorBanner();
     }
   }, [statusMessage]);
+
+  // Animazione fluida e blocco dello scroll del documento
+  const { backdropClasses, cardAnimationClasses, triggerClose } = useModalAnimation({
+    isOpen,
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -511,8 +520,17 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg my-6 max-h-[90vh] flex flex-col overflow-hidden transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+      {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
+      <div 
+        className={backdropClasses}
+        aria-hidden="true"
+        onClick={triggerClose}
+      />
+
+      <div 
+        className={`relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg my-auto sm:my-6 max-h-[90vh] flex flex-col overflow-hidden ${cardAnimationClasses}`}
+      >
         {/* Header Modale - Gradiente Elegante */}
         <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-800 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shrink-0">
           <div className="flex items-center gap-2.5">
@@ -526,7 +544,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -534,7 +552,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         </div>
 
         {/* Corpo Modale */}
-        <div ref={modalBodyRef} className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex-1 overflow-y-auto">
+        <div ref={modalBodyRef} className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex-1 overflow-y-auto overscroll-contain">
           {/* Banner Stato e Condizioni di Accesso al Servizio */}
           <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-[11px] text-blue-950 dark:text-blue-200 space-y-1.5">
             <div className="p-2 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-lg text-[10px] text-amber-900 dark:text-amber-200 space-y-1">
@@ -1093,7 +1111,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         {/* Footer */}
         <div className="shrink-0 px-4 sm:px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex justify-end">
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-lg text-xs font-bold transition-colors cursor-pointer"
           >
             Chiudi

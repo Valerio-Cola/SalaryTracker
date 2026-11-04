@@ -598,30 +598,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             <Plus className="w-3.5 h-3.5 text-purple-600" />
                           </button>
                         ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectDate(day.dateIso);
-                              }}
-                              className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
-                              title="Aggiungi turno"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onAddExpense(day.dateIso);
-                              }}
-                              className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
-                              title="Aggiungi spesa"
-                            >
-                              <Receipt className="w-3.5 h-3.5" />
-                            </button>
-                          </>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectDate(day.dateIso);
+                            }}
+                            className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="Aggiungi turno o spesa"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
                         )}
                       </div>
                     </div>
@@ -959,30 +946,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
                           </button>
                         ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectDate(cell.dateIso!);
-                              }}
-                              className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors block cursor-pointer"
-                              title="Aggiungi turno"
-                            >
-                              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onAddExpense(cell.dateIso!);
-                              }}
-                              className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-                              title="Aggiungi spesa"
-                            >
-                              <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                          </>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectDate(cell.dateIso!);
+                            }}
+                            className="p-1 sm:p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-slate-800 rounded-lg transition-colors block cursor-pointer"
+                            title="Aggiungi turno o spesa"
+                          >
+                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </button>
                         )}
                       </div>
                     </div>

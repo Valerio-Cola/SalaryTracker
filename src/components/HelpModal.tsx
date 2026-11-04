@@ -24,6 +24,7 @@ import {
   Target,
 } from 'lucide-react';
 import { useDraggableScroll } from '../utils/useDraggableScroll';
+import { useModalAnimation } from '../utils/useModalAnimation';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -36,11 +37,27 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>('turni');
   const { scrollProps, isGrabbing } = useDraggableScroll();
 
+  const { triggerClose, backdropClasses, cardAnimationClasses } = useModalAnimation({
+    isOpen,
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6 transition-colors flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+      {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
+      <div 
+        className={backdropClasses}
+        aria-hidden="true"
+        onClick={triggerClose}
+      />
+
+      <div 
+        className={`relative bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto sm:my-6 flex flex-col max-h-[85vh] ${cardAnimationClasses}`}
+      >
         {/* Header Modal - Stesso gradiente elegante */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
           <div className="flex items-center gap-3">
@@ -55,7 +72,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -167,7 +184,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+        <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
           {/* TAB 1: TURNI & ORARI */}
           {activeTab === 'turni' && (
             <div className="space-y-4">
@@ -705,7 +722,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             Salary Tracker SK • Assistenza e Guida Rapida
           </span>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             Ho capito, chiudi

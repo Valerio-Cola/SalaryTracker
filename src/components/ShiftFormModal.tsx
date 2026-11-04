@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shift, ContractConfig, DayType, QuickTemplate } from '../types';
+import { Shift, ContractConfig, DayType, QuickTemplate, Expense } from '../types';
 import { checkDayTypeInfo } from '../utils/holidays';
 import { computeShiftData, checkShiftOverlap } from '../utils/calculator';
 import {
@@ -15,8 +15,10 @@ import {
   Palmtree,
   Briefcase,
   Sparkles,
+  Receipt,
 } from 'lucide-react';
 import { SurchargeIcon } from '../utils/surchargeIcons';
+import { useModalAnimation } from '../utils/useModalAnimation';
 
 interface ShiftFormModalProps {
   isOpen: boolean;
@@ -26,6 +28,7 @@ interface ShiftFormModalProps {
   allShifts: Shift[];
   templates: QuickTemplate[];
   onSaveShift: (shift: Shift) => void;
+  onSaveExpense?: (expense: Expense) => void;
   onDeleteShift?: (shiftId: string) => void;
   initialDate?: string;
 }
@@ -38,6 +41,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
   allShifts,
   templates,
   onSaveShift,
+  onSaveExpense,
   onDeleteShift,
   initialDate,
 }) => {
@@ -51,7 +55,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
 
   const standardDailyHours = Number(((config.oreSettimanali || 24) / 5).toFixed(2));
 
-  const [entryMode, setEntryMode] = useState<'turno' | 'ferie'>(
+  const [entryMode, setEntryMode] = useState<'turno' | 'ferie' | 'spesa'>(
     shiftToEdit?.tipoGiorno === 'ferie' || shiftToEdit?.isFerie ? 'ferie' : 'turno'
   );
 
@@ -82,6 +86,11 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
   const [maggiorazioniAttive, setMaggiorazioniAttive] = useState<string[]>(
     shiftToEdit?.maggiorazioniOrarieAttive || []
   );
+
+  // Stato per la modalità Spesa
+  const [importoSpesa, setImportoSpesa] = useState<string>('');
+  const [categoriaSpesa, setCategoriaSpesa] = useState<string>('Spesa');
+  const [descrizioneSpesa, setDescrizioneSpesa] = useState<string>('');
 
   // Aggiorna data/stato all'apertura o modifica
   useEffect(() => {
@@ -151,9 +160,11 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
     }
   };
 
-  const handleModeChange = (mode: 'turno' | 'ferie') => {
+  const handleModeChange = (mode: 'turno' | 'ferie' | 'spesa') => {
     setEntryMode(mode);
-    if (mode === 'ferie') {
+    if (mode === 'spesa') {
+      if (!categoriaSpesa) setCategoriaSpesa('Spesa');
+    } else if (mode === 'ferie') {
       setTipoGiorno('ferie');
       setNomeFestivita('');
       setOrarioInizio('09:00');
@@ -214,8 +225,36 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
     allShifts
   );
 
+  // Animazione fluida e blocco dello scroll del documento
+  const { backdropClasses, cardAnimationClasses, triggerClose } = useModalAnimation({
+    isOpen,
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
+
+  if (!isOpen) return null;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (entryMode === 'spesa') {
+      const importoNum = parseFloat(importoSpesa);
+      if (isNaN(importoNum) || importoNum <= 0) return;
+
+      if (onSaveExpense) {
+        onSaveExpense({
+          id: `exp_${Date.now()}`,
+          data: dataGrezza,
+          importo: importoNum,
+          categoria: categoriaSpesa.trim() || 'Spesa',
+          descrizione: descrizioneSpesa.trim(),
+        });
+      }
+      triggerClose();
+      return;
+    }
+
     if (entryMode === 'turno' && (!orarioInizio || !orarioFine)) {
       return;
     }
@@ -229,20 +268,35 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
       }
     }
     onSaveShift(previewShift);
-    onClose();
+    triggerClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6 flex flex-col max-h-[90vh] transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+      {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
+      <div 
+        className={backdropClasses}
+        aria-hidden="true"
+        onClick={triggerClose}
+      />
+
+      <div 
+        className={`relative bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto sm:my-6 flex flex-col max-h-[90vh] ${cardAnimationClasses}`}
+      >
         
         {/* Header Modal - Sticky con Gradiente Elegante */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
           <div className="flex items-center gap-2.5">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-              entryMode === 'ferie' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+              entryMode === 'spesa'
+                ? 'bg-rose-500/20 text-rose-400'
+                : entryMode === 'ferie'
+                ? 'bg-amber-500/20 text-amber-400'
+                : 'bg-blue-500/20 text-blue-400'
             }`}>
-              {entryMode === 'ferie' ? (
+              {entryMode === 'spesa' ? (
+                <Receipt className="w-5 h-5 text-rose-400" />
+              ) : entryMode === 'ferie' ? (
                 <Palmtree className="w-5 h-5 text-amber-400" />
               ) : (
                 <Clock className="w-5 h-5 text-blue-400" />
@@ -250,19 +304,23 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
             </div>
             <div>
               <h2 className="text-base sm:text-xl font-black">
-                {shiftToEdit
+                {entryMode === 'spesa'
+                  ? 'Registra Nuova Spesa'
+                  : shiftToEdit
                   ? entryMode === 'ferie' ? 'Modifica Giorno di Ferie' : 'Modifica Turno'
                   : entryMode === 'ferie' ? 'Registra Ferie / Permesso' : 'Aggiungi Nuovo Turno'}
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 font-medium">
-                {entryMode === 'ferie'
+                {entryMode === 'spesa'
+                  ? 'Inserisci importo, categoria e descrizione della spesa'
+                  : entryMode === 'ferie'
                   ? 'Le ore di ferie contano nel monte ore settimanale contrattuale'
                   : 'Orari, pause e calcolo istantaneo di maggiorazioni'}
               </p>
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             title="Chiudi"
           >
@@ -270,33 +328,46 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
           </button>
         </div>
 
-        {/* Tab Selezione Modalità: Turno vs Ferie - Sticky */}
+        {/* Tab Selezione Modalità: Turno vs Ferie vs Spesa - Sticky */}
         <div className="p-3 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 shrink-0">
-          <div className="grid grid-cols-2 gap-2 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
             <button
               type="button"
               onClick={() => handleModeChange('turno')}
-              className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-1.5 sm:px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                 entryMode === 'turno'
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Briefcase className="w-4 h-4" />
-              <span>Turno di Lavoro</span>
+              <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Turno</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleModeChange('ferie')}
-              className={`py-2 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-1.5 sm:px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                 entryMode === 'ferie'
                   ? 'bg-amber-600 text-white shadow-xs'
                   : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Palmtree className="w-4 h-4" />
-              <span>Ferie / Permesso</span>
+              <Palmtree className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Ferie</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleModeChange('spesa')}
+              className={`py-2 px-1.5 sm:px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
+                entryMode === 'spesa'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Spesa (€)</span>
             </button>
           </div>
         </div>
@@ -305,42 +376,102 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
         <form
           id="shift-form"
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-white dark:bg-slate-900 transition-colors"
+          className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 bg-white dark:bg-slate-900 transition-colors"
         >
-          {/* Data */}
-          <div>
-            <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1">
-              <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Data Turno
-            </label>
-            <input
-              type="date"
-              required
-              value={dataGrezza}
-              onChange={(e) => handleDateChange(e.target.value)}
-              className="w-full p-2.5 sm:p-3 text-sm sm:text-base font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-            />
-            {/* Badge Rilevamento automatico Tipo Giorno per Turno */}
-            {entryMode === 'turno' && (
-              <div className="mt-1.5 text-xs sm:text-sm rounded-xl p-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-1.5 transition-all">
-                {tipoGiorno === 'festivo' ? (
-                  <div className="text-rose-900 dark:text-rose-200 flex items-center gap-1.5 font-bold">
-                    <Info className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                    <span>Rilevata autonomamente: <strong>Festività Rossa ({nomeFestivita || 'Festivo'})</strong> (+Bonus Festivo)</span>
-                  </div>
-                ) : tipoGiorno === 'domenica' ? (
-                  <div className="text-blue-900 dark:text-blue-200 flex items-center gap-1.5 font-bold">
-                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                    <span>Rilevata autonomamente: <strong>Domenica</strong> (+Bonus Domenicale)</span>
-                  </div>
-                ) : (
-                  <div className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
-                    <Info className="w-4 h-4 text-slate-500 shrink-0" />
-                    <span>Rilevato autonomamente: <strong>Giorno Feriale</strong> (Lun - Sab)</span>
+          {entryMode === 'spesa' ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Data Spesa
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={dataGrezza}
+                  onChange={(e) => setDataGrezza(e.target.value)}
+                  className="w-full p-2.5 sm:p-3 text-sm sm:text-base font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                  <Receipt className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Categoria Spesa
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Es. Spesa, Pranzo, Trasporti, Materiale..."
+                  value={categoriaSpesa}
+                  onChange={(e) => setCategoriaSpesa(e.target.value)}
+                  className="w-full p-2.5 sm:p-3 text-sm sm:text-base font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                  <Receipt className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Importo Speso (€)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={importoSpesa}
+                  onChange={(e) => setImportoSpesa(e.target.value)}
+                  className="w-full p-2.5 sm:p-3 text-base sm:text-lg font-black border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Descrizione / Note (Opzionale)
+                </label>
+                <textarea
+                  placeholder="Dettagli aggiuntivi sulla spesa sostenuta..."
+                  value={descrizioneSpesa}
+                  onChange={(e) => setDescrizioneSpesa(e.target.value)}
+                  rows={2}
+                  className="w-full p-2.5 sm:p-3 text-sm sm:text-base font-medium border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Data */}
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1">
+                  <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Data Turno
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={dataGrezza}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  className="w-full p-2.5 sm:p-3 text-sm sm:text-base font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                />
+                {/* Badge Rilevamento automatico Tipo Giorno per Turno */}
+                {entryMode === 'turno' && (
+                  <div className="mt-1.5 text-xs sm:text-sm rounded-xl p-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-1.5 transition-all">
+                    {tipoGiorno === 'festivo' ? (
+                      <div className="text-rose-900 dark:text-rose-200 flex items-center gap-1.5 font-bold">
+                        <Info className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                        <span>Rilevata autonomamente: <strong>Festività Rossa ({nomeFestivita || 'Festivo'})</strong> (+Bonus Festivo)</span>
+                      </div>
+                    ) : tipoGiorno === 'domenica' ? (
+                      <div className="text-blue-900 dark:text-blue-200 flex items-center gap-1.5 font-bold">
+                        <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span>Rilevata autonomamente: <strong>Domenica</strong> (+Bonus Domenicale)</span>
+                      </div>
+                    ) : (
+                      <div className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
+                        <Info className="w-4 h-4 text-slate-500 shrink-0" />
+                        <span>Rilevato autonomamente: <strong>Giorno Feriale</strong> (Lun - Sab)</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
           {/* Sezione SPECIFICA per FERIE */}
           {entryMode === 'ferie' ? (
@@ -638,7 +769,9 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
               </div>
             </div>
           </div>
-        </form>
+        </div>
+      )}
+    </form>
 
         {/* Footer Actions - Sticky & Responsive */}
         <div className="shrink-0 p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between gap-2.5">
@@ -648,7 +781,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
               onClick={() => {
                 if (confirm('Sei sicuro di voler eliminare questa registrazione?')) {
                   onDeleteShift(shiftToEdit.id);
-                  onClose();
+                  triggerClose();
                 }
               }}
               className="px-3.5 py-2.5 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
@@ -661,7 +794,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={triggerClose}
               className="px-4 py-2.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Annulla
@@ -670,13 +803,17 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
               type="submit"
               form="shift-form"
               className={`px-5 py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
-                entryMode === 'ferie'
+                entryMode === 'spesa'
+                  ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/10'
+                  : entryMode === 'ferie'
                   ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/10'
                   : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10'
               }`}
             >
               <Check className="w-4 h-4" />
-              {shiftToEdit
+              {entryMode === 'spesa'
+                ? 'Registra Spesa'
+                : shiftToEdit
                 ? 'Salva Modifiche'
                 : entryMode === 'ferie'
                 ? 'Registra Ferie'

@@ -857,6 +857,7 @@ export default function App() {
             allShifts={shifts}
             templates={templates}
             onSaveShift={handleSaveShift}
+            onSaveExpense={handleSaveExpense}
             onDeleteShift={handleDeleteShift}
             initialDate={initialDateForShift}
           />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Expense } from '../types';
 import { Receipt, Calendar as CalendarIcon, Tag, AlignLeft, Trash2 } from 'lucide-react';
+import { useModalAnimation } from '../utils/useModalAnimation';
 
 interface ExpenseFormModalProps {
   expense?: Expense | null;
@@ -21,6 +22,12 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
   const [importoStr, setImportoStr] = useState('');
   const [categoria, setCategoria] = useState('');
   const [descrizione, setDescrizione] = useState('');
+
+  const { triggerClose, backdropClasses, cardAnimationClasses } = useModalAnimation({
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
 
   useEffect(() => {
     if (expense) {
@@ -47,26 +54,35 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
     };
 
     onSave(newExpense);
-    onClose();
+    triggerClose();
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+      {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
+      <div 
+        className={backdropClasses}
+        aria-hidden="true"
+        onClick={triggerClose}
+      />
+
+      <div 
+        className={`relative bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] overscroll-contain ${cardAnimationClasses}`}
+      >
         <div className="px-6 py-4 border-b border-slate-800 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between shrink-0">
           <h3 className="font-black text-lg text-white flex items-center gap-2">
             <Receipt className="w-5 h-5 text-rose-400" />
             {expense ? 'Modifica Spesa' : 'Nuova Spesa'}
           </h3>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
           >
             ✕
           </button>
         </div>
         
-        <form onSubmit={handleSave} className="p-6 overflow-y-auto space-y-4">
+        <form onSubmit={handleSave} className="p-6 overflow-y-auto overscroll-contain space-y-4">
           <div>
             <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
               <CalendarIcon className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Data
@@ -129,7 +145,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
                 type="button"
                 onClick={() => {
                   onDelete(expense.id);
-                  onClose();
+                  triggerClose();
                 }}
                 className="py-3 px-4 text-rose-700 dark:text-rose-300 font-bold bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-xl transition-colors flex items-center justify-center gap-1.5 border border-rose-200 dark:border-rose-800 text-sm sm:text-base cursor-pointer"
               >
@@ -139,7 +155,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
             )}
             <button
               type="button"
-              onClick={onClose}
+              onClick={triggerClose}
               className="flex-1 py-3 text-slate-700 dark:text-slate-200 font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors text-sm sm:text-base cursor-pointer"
             >
               Annulla

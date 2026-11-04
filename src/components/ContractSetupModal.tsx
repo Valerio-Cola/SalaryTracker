@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ContractConfig, CustomAllowance, CustomHourlySurcharge, QuickTemplate, Shift, AppEvent } from '../types';
 import { DEFAULT_TEMPLATES } from '../utils/storage';
+import { useModalAnimation } from '../utils/useModalAnimation';
 import {
   X,
   Save,
@@ -123,25 +124,13 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
   const [successMsg, setSuccessMsg] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('sec-generale');
 
-  // Gestione animazione fluida di comparsa (entrata) e scomparsa (uscita)
-  const [isMounted, setIsMounted] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-
-  useEffect(() => {
-    // Attiva la transizione progressiva dopo che il primo frame a zero-blur è renderizzato
-    const timer = setTimeout(() => {
-      setIsMounted(true);
-    }, 25);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const triggerClose = () => {
-    if (isExiting) return;
-    setIsExiting(true);
-    setTimeout(() => {
-      onClose();
-    }, 220);
-  };
+  // Gestione animazione fluida di comparsa/scomparsa e blocco dello scroll di fondo
+  const { isMounted, isExiting, triggerClose, backdropClasses, cardAnimationClasses } = useModalAnimation({
+    isOpen,
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
 
   // Calcolo delle date dei turni per la cancellazione mirata
   const sortedShiftDates = useMemo(() => {
@@ -550,23 +539,15 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
       {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
       <div 
-        className={`fixed inset-0 transition-all ${
-          isMounted && !isExiting 
-            ? 'duration-300 ease-out bg-slate-900/60 backdrop-blur-xs opacity-100' 
-            : 'duration-200 ease-in bg-slate-900/0 backdrop-blur-none opacity-0 pointer-events-none'
-        }`}
+        className={backdropClasses}
         aria-hidden="true"
       />
 
       <div 
-        className={`relative bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto sm:my-6 flex flex-col max-h-[90vh] transition-all ${
-          isMounted && !isExiting 
-            ? 'duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] opacity-100 scale-100 translate-y-0' 
-            : 'duration-200 ease-in opacity-0 scale-95 translate-y-4 pointer-events-none'
-        }`}
+        className={`relative bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto sm:my-6 flex flex-col max-h-[90vh] overscroll-contain ${cardAnimationClasses}`}
       >
         
         {/* Header Modal - Sticky con Gradiente Elegante */}
@@ -690,7 +671,7 @@ export const ContractSetupModal: React.FC<ContractSetupModalProps> = ({
           ref={formRef}
           onScroll={handleFormScroll}
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scroll-smooth bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors"
+          className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-6 scroll-smooth bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors"
         >
           {/* 1. SEZIONE GENERALE & PAGA BASE */}
           <div id="sec-generale" className="space-y-3 scroll-mt-2">

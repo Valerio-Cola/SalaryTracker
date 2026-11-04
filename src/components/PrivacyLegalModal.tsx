@@ -15,6 +15,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { useDraggableScroll } from '../utils/useDraggableScroll';
+import { useModalAnimation } from '../utils/useModalAnimation';
 
 interface PrivacyLegalModalProps {
   isOpen: boolean;
@@ -27,11 +28,27 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
   const [activeTab, setActiveTab] = useState<TabType>('disclaimer');
   const { scrollProps, isGrabbing } = useDraggableScroll();
 
+  const { triggerClose, backdropClasses, cardAnimationClasses } = useModalAnimation({
+    isOpen,
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6 transition-colors flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+      {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
+      <div 
+        className={backdropClasses}
+        aria-hidden="true"
+        onClick={triggerClose}
+      />
+
+      <div 
+        className={`relative bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto sm:my-6 flex flex-col max-h-[90vh] overscroll-contain ${cardAnimationClasses}`}
+      >
         
         {/* Header Modal - Gradiente Elegante */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
@@ -49,7 +66,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -59,7 +76,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
         {/* Tab Navigation Scorrevole con Rotella, Drag & Drop e Scrollbar visibile */}
         <div
           {...scrollProps}
-          className={`flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3 pt-2.5 pb-1 gap-1.5 overflow-x-auto shrink-0 select-none ${
+          className={`flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3 pt-2.5 pb-1 gap-1.5 overflow-x-auto shrink-0 select-none overscroll-contain ${
             isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
           } scrollbar-thin [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.6)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-slate-200/50 dark:[&::-webkit-scrollbar-track]:bg-slate-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/80 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500/80 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-blue-500`}
         >
@@ -125,7 +142,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
         </div>
 
         {/* Modal Body Content */}
-        <div className="p-6 space-y-4 text-xs text-slate-700 dark:text-slate-300 overflow-y-auto flex-1 bg-white dark:bg-slate-900 transition-colors leading-relaxed">
+        <div className="p-6 space-y-4 text-xs text-slate-700 dark:text-slate-300 overflow-y-auto overscroll-contain flex-1 bg-white dark:bg-slate-900 transition-colors leading-relaxed">
 
           {/* TAB 1: DISCLAIMER LEGALE */}
           {activeTab === 'disclaimer' && (
@@ -481,7 +498,7 @@ export const PrivacyLegalModal: React.FC<PrivacyLegalModalProps> = ({ isOpen, on
             <span>Versione Informativa: 2.3 • Ultimo aggiornamento: Novembre 2026</span>
           </div>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="px-5 py-2 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
           >
             Chiudi e Ho Capito

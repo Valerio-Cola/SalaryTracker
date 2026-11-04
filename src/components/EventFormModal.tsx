@@ -21,6 +21,7 @@ import {
   resolveCategoryInfo,
 } from '../utils/eventTheme';
 import { getStoredCustomCategories, saveStoredCustomCategories } from '../utils/storage';
+import { useModalAnimation } from '../utils/useModalAnimation';
 
 interface EventFormModalProps {
   isOpen: boolean;
@@ -113,6 +114,14 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     setIsCreatingCategory(false);
     setNewCatLabel('');
   }, [eventToEdit, initialDate, isOpen]);
+
+  // Animazione fluida e blocco dello scroll del documento
+  const { backdropClasses, cardAnimationClasses, triggerClose } = useModalAnimation({
+    isOpen,
+    onClose,
+    exitDuration: 220,
+    lockScroll: true,
+  });
 
   if (!isOpen) return null;
 
@@ -221,6 +230,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     setColore(clean);
   };
 
+
+  if (!isOpen) return null;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!titolo.trim()) {
@@ -251,14 +263,14 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     };
 
     onSave(newEvent);
-    onClose();
+    triggerClose();
   };
 
   const handleDelete = () => {
     if (eventToEdit && onDelete) {
       if (confirm('Vuoi davvero cancellare questo evento?')) {
         onDelete(eventToEdit.id);
-        onClose();
+        triggerClose();
       }
     }
   };
@@ -268,8 +280,17 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   const isCustomActive = colore.startsWith('#');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-4 sm:my-6 flex flex-col max-h-[90vh] transition-colors animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+      {/* Sfondo oscurato con transizione progressiva e sfocatura graduale */}
+      <div 
+        className={backdropClasses}
+        aria-hidden="true"
+        onClick={triggerClose}
+      />
+
+      <div 
+        className={`relative bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto sm:my-6 flex flex-col max-h-[90vh] ${cardAnimationClasses}`}
+      >
         
         {/* Header Modal - Sticky con Gradiente Elegante */}
         <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
@@ -284,7 +305,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={triggerClose}
             className="p-2 text-slate-300 hover:text-white rounded-xl hover:bg-slate-700/50 transition-colors cursor-pointer"
             title="Chiudi"
           >
@@ -293,7 +314,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         </div>
 
         {/* Form Body - Scrollable */}
-        <form id="event-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-white dark:bg-slate-900">
+        <form id="event-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 bg-white dark:bg-slate-900">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-xs font-semibold text-rose-800 dark:text-rose-200">
               {errorMsg}
@@ -756,7 +777,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={triggerClose}
               className="px-4 py-2.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Annulla
