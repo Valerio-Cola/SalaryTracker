@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Shift, Expense, AppEvent } from '../types';
+import { Shift, Expense, AppEvent, ContractConfig } from '../types';
 import {
   Plus,
   Moon,
@@ -20,6 +20,7 @@ import {
 import { checkDayTypeInfo } from '../utils/holidays';
 import { COLOR_CLASSES } from './EventsSummaryCard';
 import { resolveCategoryInfo, resolveEventColor } from '../utils/eventTheme';
+import { SurchargeIcon } from '../utils/surchargeIcons';
 
 interface CalendarViewProps {
   currentMonthKey: string; // YYYY-MM
@@ -27,6 +28,7 @@ interface CalendarViewProps {
   shifts: Shift[];
   expenses?: Expense[];
   events?: AppEvent[];
+  config?: ContractConfig;
   calendarContentMode?: 'shifts' | 'events';
   onToggleCalendarContentMode?: (mode: 'shifts' | 'events') => void;
   onSelectDate: (dateIso: string) => void;
@@ -85,6 +87,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   shifts,
   expenses = [],
   events = [],
+  config,
   calendarContentMode = 'shifts',
   onToggleCalendarContentMode,
   onSelectDate,
@@ -95,6 +98,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onEditEvent,
   onMonthChange,
 }) => {
+  // Recupera le maggiorazioni orarie personalizzate attive per il turno
+  const getShiftSurcharges = (s: Shift) => {
+    if (s.tipoGiorno === 'ferie' || s.isFerie || s.oreTotali <= 0) return [];
+    if (config?.maggiorazioniOrariePersonalizzate && config.maggiorazioniOrariePersonalizzate.length > 0) {
+      const list = config.maggiorazioniOrariePersonalizzate.filter(
+        (m) => m.applicaDefault || (s.maggiorazioniOrarieAttive && s.maggiorazioniOrarieAttive.includes(m.id))
+      );
+      if (list.length > 0) return list;
+    }
+    if ((s.guadagnoMaggiorazioniOrarie || 0) > 0) {
+      return [{ id: 'extra', nome: 'Extra', importoOrario: 0 }];
+    }
+    return [];
+  };
+
   // Modalità Vista: 'month' (Mensile) oppure 'week' (Settimanale) con persistenza in localStorage
   const [viewMode, setViewMode] = useState<'month' | 'week'>(() => {
     try {
@@ -779,6 +797,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                       Festivo
                                     </span>
                                   )}
+
+                                  {/* Targhette Maggiorazioni Personalizzate */}
+                                  {!isFerie &&
+                                    getShiftSurcharges(s).map((m) => (
+                                      <span
+                                        key={m.id}
+                                        className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/90 text-amber-950 dark:text-amber-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs"
+                                        title={`${m.nome}${m.importoOrario > 0 ? `: +€${(s.oreTotali * m.importoOrario).toFixed(2)} (+€${m.importoOrario.toFixed(2)}/h)` : ''}`}
+                                      >
+                                        <SurchargeIcon iconId={m.icona} className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                        <span className="truncate max-w-[80px] sm:max-w-[100px]">{m.nome}</span>
+                                      </span>
+                                    ))}
                                 </div>
                               </div>
                             </div>
@@ -1123,6 +1154,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                       Festivo
                                     </span>
                                   )}
+
+                                  {/* Targhette Maggiorazioni Personalizzate */}
+                                  {!isFerie &&
+                                    getShiftSurcharges(s).map((m) => (
+                                      <span
+                                        key={m.id}
+                                        className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/90 text-amber-950 dark:text-amber-200 font-bold flex items-center gap-0.5 text-[10px] sm:text-xs"
+                                        title={`${m.nome}${m.importoOrario > 0 ? `: +€${(s.oreTotali * m.importoOrario).toFixed(2)} (+€${m.importoOrario.toFixed(2)}/h)` : ''}`}
+                                      >
+                                        <SurchargeIcon iconId={m.icona} className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                        <span className="truncate max-w-[70px] sm:max-w-[90px]">{m.nome}</span>
+                                      </span>
+                                    ))}
                                 </div>
                               </div>
                             </div>

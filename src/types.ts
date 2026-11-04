@@ -57,6 +57,9 @@ export interface ContractConfig {
 
   // Maggiorazioni orarie personalizzate (€/h)
   maggiorazioniOrariePersonalizzate?: CustomHourlySurcharge[];
+
+  // Gestione settimana a cavallo tra due mesi (CCNL secondo mese vs mese corrente solare)
+  gestioneSettimanaACavallo?: 'secondo_mese' | 'mese_corrente';
 }
 
 export interface CustomHourlySurcharge {
@@ -65,6 +68,7 @@ export interface CustomHourlySurcharge {
   importoOrario: number; // Valore in €/ora (es. 1.50)
   applicaDefault?: boolean; // Se true, applicata in automatico a tutti i turni lavorati
   descrizione?: string;
+  icona?: string; // Icona scelta (es. 'sparkles', 'star', 'zap', 'flame', 'coins', ecc.)
 }
 
 export interface Shift {

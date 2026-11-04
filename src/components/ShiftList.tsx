@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Shift } from '../types';
+import { Shift, ContractConfig } from '../types';
 import { Edit2, Trash2, Calendar, Moon, Sun, Clock, ChevronDown, ChevronUp, AlertCircle, Sparkles } from 'lucide-react';
+import { SurchargeIcon } from '../utils/surchargeIcons';
 
 interface ShiftListProps {
   shifts: Shift[];
+  config?: ContractConfig;
   onEditShift: (shift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onOpenAddShift: () => void;
@@ -12,6 +14,7 @@ interface ShiftListProps {
 
 export const ShiftList: React.FC<ShiftListProps> = ({
   shifts,
+  config,
   onEditShift,
   onDeleteShift,
   onOpenAddShift,
@@ -120,6 +123,24 @@ export const ShiftList: React.FC<ShiftListProps> = ({
                           {s.nomeFestivita || 'Festività'}
                         </span>
                       )}
+                      {!isFerie &&
+                        config?.maggiorazioniOrariePersonalizzate &&
+                        config.maggiorazioniOrariePersonalizzate
+                          .filter(
+                            (m) =>
+                              m.applicaDefault ||
+                              (s.maggiorazioniOrarieAttive && s.maggiorazioniOrarieAttive.includes(m.id))
+                          )
+                          .map((m) => (
+                            <span
+                              key={m.id}
+                              className="px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 text-xs font-bold flex items-center gap-1"
+                              title={`${m.nome}: +€${(s.oreTotali * m.importoOrario).toFixed(2)} (+€${m.importoOrario.toFixed(2)}/h)`}
+                            >
+                              <SurchargeIcon iconId={m.icona} className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                              {m.nome}
+                            </span>
+                          ))}
                     </div>
 
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 flex-wrap">

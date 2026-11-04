@@ -143,12 +143,18 @@ export default function App() {
 
   // Modali
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
+  const [configInitialSection, setConfigInitialSection] = useState<string>('sec-generale');
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState<boolean>(false);
   const [isEventFormOpen, setIsEventFormOpen] = useState<boolean>(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+
+  const handleOpenConfigWithSection = (sectionId?: string) => {
+    setConfigInitialSection(sectionId || 'sec-generale');
+    setIsConfigOpen(true);
+  };
 
   const [shiftToEdit, setShiftToEdit] = useState<Shift | null>(null);
   const [initialDateForShift, setInitialDateForShift] = useState<string | undefined>(undefined);
@@ -530,7 +536,7 @@ export default function App() {
         onOpenAddShift={() => handleOpenAddShift()}
         onOpenAddEvent={() => handleOpenAddEvent()}
         calendarContentMode={calendarContentMode}
-        onOpenConfig={() => setIsConfigOpen(true)}
+        onOpenConfig={() => handleOpenConfigWithSection('sec-generale')}
         onOpenCloudSync={() => setIsCloudSyncOpen(true)}
         onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         onOpenHelp={() => setIsHelpModalOpen(true)}
@@ -653,6 +659,7 @@ export default function App() {
             monthTitle={formattedMonthTitle}
             currentMonthKey={currentMonthKey}
             expenses={currentMonthExpenses}
+            onOpenConfig={handleOpenConfigWithSection}
           />
         )}
 
@@ -749,6 +756,7 @@ export default function App() {
             shifts={shifts}
             expenses={expenses}
             events={events}
+            config={config}
             calendarContentMode={calendarContentMode}
             onToggleCalendarContentMode={setCalendarContentMode}
             onSelectDate={(dateIso) => handleOpenAddShift(dateIso)}
@@ -764,6 +772,7 @@ export default function App() {
         {activeTab === 'list' && (
           <ShiftList
             shifts={currentMonthShifts}
+            config={config}
             onEditShift={handleOpenEditShift}
             onDeleteShift={handleDeleteShift}
             onOpenAddShift={() => handleOpenAddShift()}
@@ -826,6 +835,7 @@ export default function App() {
             onResetEventsOnly={handleResetEventsOnly}
             onDeleteShiftsInRange={handleDeleteShiftsInRange}
             templates={templates}
+            initialSection={configInitialSection}
             onSaveTemplates={(newTemplates) => {
               setTemplates(newTemplates);
               saveStoredTemplates(newTemplates);

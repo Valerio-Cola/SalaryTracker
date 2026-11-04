@@ -16,6 +16,7 @@ import {
   Briefcase,
   Sparkles,
 } from 'lucide-react';
+import { SurchargeIcon } from '../utils/surchargeIcons';
 
 interface ShiftFormModalProps {
   isOpen: boolean;
@@ -541,6 +542,7 @@ export const ShiftFormModal: React.FC<ShiftFormModalProps> = ({
                               }}
                               className="w-3.5 h-3.5 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
                             />
+                            <SurchargeIcon iconId={m.icona} className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                             <span>{m.nome}</span>
                           </div>
                           <span className="font-mono text-[11px] text-amber-700 dark:text-amber-300 font-bold">

@@ -41,6 +41,7 @@ export const DEFAULT_CONFIG: ContractConfig = {
   ferieResiduoIniziale: 0,
   vociPersonalizzate: [],
   maggiorazioniOrariePersonalizzate: [],
+  gestioneSettimanaACavallo: 'secondo_mese',
 };
 
 export const DEFAULT_TEMPLATES: QuickTemplate[] = [

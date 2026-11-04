@@ -94,21 +94,46 @@ export const Header: React.FC<HeaderProps> = ({
     onMonthChange(`${y}-${m}`);
   };
 
+  const handleReload = () => {
+    window.location.reload();
+  };
+
   return (
     <header id="app-header" className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between py-2.5 sm:py-3 gap-2.5 sm:gap-3 flex-wrap xl:flex-nowrap">
           {/* Logo e Titolo (con Aiuto e Sole/Luna in alto a destra SOLO su Mobile) */}
           <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-start">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/20 shrink-0">
+            <div 
+              onClick={handleReload}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleReload();
+                }
+              }}
+              className="flex items-center gap-2.5 cursor-pointer select-none group focus:outline-hidden"
+              title="Ricarica la pagina / Torna alla Home"
+            >
+              <div 
+                onClick={handleReload}
+                className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/20 shrink-0 cursor-pointer transition-transform duration-150 group-hover:scale-105 group-active:scale-95"
+              >
                 SK
               </div>
               <div>
-                <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-tight flex items-center gap-2">
+                <h1 
+                  onClick={handleReload}
+                  className="text-lg font-bold text-slate-900 dark:text-white leading-tight flex items-center gap-2 cursor-pointer transition-colors duration-150 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                >
                   Salary Tracker
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <p 
+                  onClick={handleReload}
+                  className="text-xs text-slate-500 dark:text-slate-400 font-medium cursor-pointer transition-colors duration-150 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                >
                   Calcolo Stipendio & Turni
                 </p>
               </div>
